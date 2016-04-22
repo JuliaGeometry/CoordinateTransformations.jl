@@ -1,5 +1,10 @@
 using CoordinateTransformations
-using Base.Test
+using BaseTestNext
 
-# write your own tests here
-@test 1 == 1
+@testset "CoordinateTransformations" begin
+
+    include("core.jl")
+    include("coordinatesystems.jl")
+    include("commontransformations.jl")
+
+end
