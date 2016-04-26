@@ -4,7 +4,7 @@ using FixedSizeArrays
 export Point # Use Point{N, T} from FixedSizedArrays for Cartesian frames
 
 # Core methods
-export transform, compose, ∘
+export transform, compose, ∘, transform_deriv, transform_deriv_params
 export AbstractTransformation, IdentityTransformation
 
 # 2D coordinate systems and their transformations

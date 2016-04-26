@@ -2,8 +2,8 @@
 ### Interface for transformations ###
 #####################################
 
-# The external interface consists of transform(), Base.inv(), and compose() (or ∘)
-# TODO add derivatives
+# The external interface consists of transform(), Base.inv(),  compose() (or ∘),
+# transform_deriv() and transform_deriv_params()
 
 """
 `AbstractTransformation{OutType, InType}` defines a simple interface for
@@ -27,14 +27,15 @@ immutable IdentityTransformation{T} <: AbstractTransformation{T,T}; end
 A transformation `trans` is explicitly applied to data x, returning the
 coordinates in the new coordinate system.
 """
-transform(trans::AbstractTransformation, x) = error("The transform of datatype $(typeof(x)) is not defined for transformation $trans.")
-
-transform{T}(::IdentityTransformation{T}, x::T) = x
-
-function transform{OutType, InType}(trans::AbstractTransformation{OutType, InType}, v::Vector{InType})
-    [transform(x) for x in v]
+function transform{OutType, InType}(trans::AbstractTransformation{OutType, InType}, x)
+    if isa(x, Vector) && eltype(x) <: InType
+        [transform(trans, point) for point in x]
+    else
+        error("The transform of datatype $(typeof(x)) is not defined for transformation $trans.")
+    end
 end
 
+transform{T}(::IdentityTransformation{T}, x::T) = x
 
 """
 A `ComposedTransformation` simply executes two transformations successively, and
@@ -96,3 +97,23 @@ end
 
 Base.inv(trans::ComposedTransformation) = inv(trans.t2) ∘ inv(trans.t1)
 Base.inv(trans::IdentityTransformation) = trans
+
+"""
+    transform_deriv(trans::AbstractTransformation, x)
+
+A matrix describing how differentials on the parameters of `x` flow through to
+the output of transformation `trans`.
+"""
+transform_deriv{T}(::IdentityTransformation{T}, x::T) = I
+
+transform_deriv(::AbstractTransformation, x) = error("Differential matrix of transform $trans with input $x not defined")
+
+"""
+    transform_deriv_params(trans::AbstractTransformation, x)
+
+A matrix describing how differentials on the parameters of `trans` flow through
+to the output of transformation `trans` given input `x`.
+"""
+transform_deriv_params{T}(::IdentityTransformation{T}, x::T) = error("IdentityTransformation has no parameters")
+
+transform_deriv(::AbstractTransformation, x) = error("Differential matrix of parameters of transform $trans with input $x not defined")
