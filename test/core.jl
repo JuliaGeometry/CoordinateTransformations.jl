@@ -7,6 +7,8 @@
 
     @test CoordinateTransformations.outtype(identity_trans) == T
     @test CoordinateTransformations.intype(identity_trans) == T
+    @test CoordinateTransformations.outtype(IdentityTransformation{T}) == T
+    @test CoordinateTransformations.intype(IdentityTransformation{T}) == T
 
     @test inv(identity_trans) == identity_trans
 

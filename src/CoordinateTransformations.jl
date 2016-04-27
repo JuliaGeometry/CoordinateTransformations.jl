@@ -18,7 +18,10 @@ export SphericalFromCartesian, CartesianFromSpherical,
        CylindricalFromSpherical, SphericalFromCylindrical
 
 # Common transformations
-export Translation, Rotation, RigidBodyTransformation, AffineTransformation
+export Translation
+export RotationPolar, Rotation2D
+
+#export RigidBodyTransformation, AffineTransformation
 
 include("core.jl")
 include("coordinatesystems.jl")

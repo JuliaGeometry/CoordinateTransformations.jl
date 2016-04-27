@@ -15,8 +15,36 @@ Efficient compositions can optionally be defined by `compose()` (equivalently `â
 abstract AbstractTransformation{OutType, InType}
 
 # Some basic introspection
-@inline intype{OutType, InType}(::Union{AbstractTransformation{OutType, InType}, Type{AbstractTransformation{OutType, InType}}}) = InType
-@inline outtype{OutType, InType}(::Union{AbstractTransformation{OutType, InType}, Type{AbstractTransformation{OutType, InType}}}) = OutType
+@inline intype{OutType, InType}(::AbstractTransformation{OutType, InType}) = InType
+@inline outtype{OutType, InType}(::AbstractTransformation{OutType, InType}) = OutType
+
+# Unfortunately some operations on abstract types are difficult
+@generated function intype{T <: AbstractTransformation}(::Type{T})
+    S = T
+    while S.name != AbstractTransformation.name
+        S = super(S)
+        if S == Any
+            str = "Error determining intype of $T"
+            return :(error(str))
+        end
+    end
+
+    return :($(S.parameters[2]))
+end
+
+@generated function outtype{T <: AbstractTransformation}(::Type{T})
+    S = T
+    while S.name != AbstractTransformation.name
+        S = super(S)
+        if S == Any
+            str = "Error determining outtype of $T"
+            return :(error(str))
+        end
+    end
+
+    return :($(S.parameters[1]))
+end
+
 
 # Built-in identity transform
 immutable IdentityTransformation{T} <: AbstractTransformation{T,T}; end
@@ -50,16 +78,17 @@ immutable ComposedTransformation{OutType, InType, T1 <: AbstractTransformation, 
         new(trans1,trans2)
     end
 end
-function check_composable{OutType, InType}(out_type::Type{OutType},in_type::Type{InType},trans1::AbstractTransformation, trans2::AbstractTransformation)
+@generated function check_composable{OutType, InType}(out_type::Type{OutType},in_type::Type{InType},trans1::AbstractTransformation, trans2::AbstractTransformation)
     if in_type != intype(trans2)
-        error("Can't compose transformations: input coordinates types $in_type and $(intype(trans2)) do not match.")
+        str = "Can't compose transformations: input coordinates types $in_type and $(intype(trans2)) do not match."
+        error(str)
     elseif out_type != outtype(trans1)
-        error("Can't compose transformations: output coordinates types $out_type and $(outtype(trans1)) do not match.")
-    elseif intype(trans1) != outtype(trans2)
-        error("Can't compose transformations: intermediate coordinates types $(intype(trans1)) and $(outtype(trans2)) do not match.")
+        str = "Can't compose transformations: output coordinates types $out_type and $(outtype(trans1)) do not match."
+        error(str)
+    elseif typeintersect(intype(trans1), outtype(trans2)) == Union{}
+        error("Can't compose transformations: intermediate coordinates types $(intype(trans1)) and $(outtype(trans2)) do not intersect.")
     else
-        # Shouldn't occur
-        error("Unknown error: can't compose transformations $trans1 with $trans2 with input $in_type and output $out_type.")
+        return nothing
     end
 end
 check_composable{OutType, InType, T}(::Type{OutType}, ::Type{InType}, ::AbstractTransformation{OutType,T}, ::AbstractTransformation{T,InType}) = nothing # Generates no code if they match... empty function
