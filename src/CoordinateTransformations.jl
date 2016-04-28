@@ -3,6 +3,9 @@ module CoordinateTransformations
 using FixedSizeArrays
 export Point # Use Point{N, T} from FixedSizedArrays for Cartesian frames
 
+using Rotations
+export RotMatrix, Quaternion, SpQuat, AngleAxis, EulerAngles, ProperEulerAngles
+
 # Core methods
 export transform, compose, ∘, transform_deriv, transform_deriv_params
 export AbstractTransformation, IdentityTransformation
@@ -20,6 +23,7 @@ export SphericalFromCartesian, CartesianFromSpherical,
 # Common transformations
 export Translation
 export RotationPolar, Rotation2D
+export Rotation
 
 #export RigidBodyTransformation, AffineTransformation
 

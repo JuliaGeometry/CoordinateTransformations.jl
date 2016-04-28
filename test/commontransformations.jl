@@ -80,5 +80,120 @@
         @test m ≈ m_gn
     end
 
+    @testset "Rotation (3D)" begin
+        @testset "Rotation{Void} (rotation matrix parameterization)" begin
+            θx = 0.1
+            θy = 0.2
+            θz = 0.3
+
+            sx = sin(θx)
+            cx = cos(θx)
+            sy = sin(θy)
+            cy = cos(θy)
+            sz = sin(θz)
+            cz = cos(θz)
+
+            Rx = [ cx  sx  0;
+                  -sx  cx  0;
+                    0   0  1]
+
+            Ry = [1   0  0 ;
+                  0  cy -sy;
+                  0  sy  cy]
+
+            Rz = [cx  0 -sx;
+                  0   1  0 ;
+                  sx  0  cx]
+
+            R = Mat{3,3,Float64}(Rx*Ry*Rz)
+
+            x = Point(1.0, 2.0, 3.0)
+            trans = Rotation(R)
+
+            @test inv(trans).matrix ≈ R'
+            @test (trans ∘ trans).matrix ≈ R*R
+
+            y = transform(trans, x)
+            @test y == R * Vec(1.0, 2.0, 3.0)
+
+            x_gn = Point(GradientNumber(1.0,(1.,0.,0.)), GradientNumber(2.0,(0.,1.,0.)), GradientNumber(3.0,(0.,0.,1.)))
+            y_gn = transform(trans, x_gn)
+            M_gn = Mat{3,3,Float64}(vcat(ntuple(i->[y_gn[i].partials.data[j] for j = 1:3].', 3)...))
+            M = transform_deriv(trans, x)
+            @test M ≈ M_gn
+
+            g11 = GradientNumber(R[1,1],(1.,0.,0.,0.,0.,0.,0.,0.,0.))
+            g12 = GradientNumber(R[1,2],(0.,1.,0.,0.,0.,0.,0.,0.,0.))
+            g13 = GradientNumber(R[1,3],(0.,0.,1.,0.,0.,0.,0.,0.,0.))
+            g21 = GradientNumber(R[2,1],(0.,0.,0.,1.,0.,0.,0.,0.,0.))
+            g22 = GradientNumber(R[2,2],(0.,0.,0.,0.,1.,0.,0.,0.,0.))
+            g23 = GradientNumber(R[2,3],(0.,0.,0.,0.,0.,1.,0.,0.,0.))
+            g31 = GradientNumber(R[3,1],(0.,0.,0.,0.,0.,0.,1.,0.,0.))
+            g32 = GradientNumber(R[3,2],(0.,0.,0.,0.,0.,0.,0.,1.,0.))
+            g33 = GradientNumber(R[3,3],(0.,0.,0.,0.,0.,0.,0.,0.,1.))
+
+            G = @fsa [g11 g12 g13;
+                      g21 g22 g23;
+                      g31 g32 g33 ]
+
+            trans_gn = Rotation(G)
+            y_gn = transform(trans_gn, x)
+
+            M_gn = Mat{3,9,Float64}(vcat(ntuple(i->[y_gn[i].partials.data[j] for j = 1:9].', 3)...))
+            M = transform_deriv_params(trans, x)
+            @test M ≈ M_gn
+        end
+
+        @testset "Rotation{Quaternion} (quaternion parameterization)" begin
+            v = [0.35, 0.45, 0.25, 0.15]
+            v = v / vecnorm(v)
+            q = Quaternion(v)
+
+            trans = Rotation(q)
+            x = Point(1.0, 2.0, 3.0)
+
+            @test inv(trans) ≈ Rotation(inv(Quaternion(v...)))
+            @test trans ∘ trans ≈ Rotation(trans.matrix * trans.matrix)
+
+            y = transform(trans, x)
+            @test y ≈ Point(3.439024390243902,-1.1463414634146332,0.9268292682926829)
+
+            x_gn = Point(GradientNumber(1.0,(1.,0.,0.)), GradientNumber(2.0,(0.,1.,0.)), GradientNumber(3.0,(0.,0.,1.)))
+            y_gn = transform(trans, x_gn)
+            M_gn = Mat{3,3,Float64}(vcat(ntuple(i->[y_gn[i].partials.data[j] for j = 1:3].', 3)...))
+            M = transform_deriv(trans, x)
+            @test M ≈ M_gn
+
+            v_gn = [GradientNumber(v[1],(1.,0.,0.,0.)), GradientNumber(v[2],(0.,1.,0.,0.)), GradientNumber(v[3],(0.,0.,1.,0.)), GradientNumber(v[4],(0.,0.,0.,1.))]
+            q_gn = Quaternion(v_gn...)
+            trans_gn = Rotation(q_gn)
+            y_gn = transform(trans_gn,x)
+            M_gn = Mat{3,4,Float64}(vcat(ntuple(i->[y_gn[i].partials.data[j] for j = 1:4].', 3)...))
+            M = transform_deriv_params(trans, x)
+            @test M ≈ M_gn
+        end
+
+        @testset "Rotation{EulerAngles} (Euler angle parameterization)" begin
+            θx = 0.1
+            θy = 0.2
+            θz = 0.3
+
+            trans = Rotation(EulerAngles(θx, θy, θz))
+            x = Point(1.0, 2.0, 3.0)
+
+            @test inv(trans) == Rotation(trans.matrix')
+            @test trans ∘ trans == Rotation(trans.matrix * trans.matrix)
+
+            y = transform(trans, x)
+            @test y == Point(0.9984766744283545,2.1054173473736495,2.92750100324502)
+
+            x_gn = Point(GradientNumber(1.0,(1.,0.,0.)), GradientNumber(2.0,(0.,1.,0.)), GradientNumber(3.0,(0.,0.,1.)))
+            y_gn = transform(trans, x_gn)
+            M_gn = Mat{3,3,Float64}(vcat(ntuple(i->[y_gn[i].partials.data[j] for j = 1:3].', 3)...))
+            M = transform_deriv(trans, x)
+            @test M ≈ M_gn
+
+        end
+    end
 
 end
