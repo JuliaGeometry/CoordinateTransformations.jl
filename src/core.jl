@@ -95,6 +95,10 @@ check_composable{OutType, InType, T}(::Type{OutType}, ::Type{InType}, ::Abstract
 
 Base.show(io::IO, trans::ComposedTransformation) = print(io, "($(trans.t1) ∘ $(trans.t2))")
 
+@inline function transform{OutType, InType}(trans::ComposedTransformation{OutType, InType}, x::InType)
+    transform(trans.t1, transform(trans.t2, x))
+end
+
 """
     compose(trans1, trans2)
     trans1 ∘ trans2
@@ -133,9 +137,16 @@ Base.inv(trans::IdentityTransformation) = trans
 A matrix describing how differentials on the parameters of `x` flow through to
 the output of transformation `trans`.
 """
+transform_deriv(::AbstractTransformation, x) = error("Differential matrix of transform $trans with input $x not defined")
+
 transform_deriv{T}(::IdentityTransformation{T}, x::T) = I
 
-transform_deriv(::AbstractTransformation, x) = error("Differential matrix of transform $trans with input $x not defined")
+function transform_deriv{OutType, InType}(trans::ComposedTransformation{OutType, InType}, x::InType)
+    x2 = transform(trans.t2, x)
+    m1 = transform_deriv(trans.t1, x2)
+    m2 = transform_deriv(trans.t2, x)
+    return m1 * m2
+end
 
 """
     transform_deriv_params(trans::AbstractTransformation, x)
@@ -143,6 +154,14 @@ transform_deriv(::AbstractTransformation, x) = error("Differential matrix of tra
 A matrix describing how differentials on the parameters of `trans` flow through
 to the output of transformation `trans` given input `x`.
 """
+transform_deriv(::AbstractTransformation, x) = error("Differential matrix of parameters of transform $trans with input $x not defined")
+
 transform_deriv_params{T}(::IdentityTransformation{T}, x::T) = error("IdentityTransformation has no parameters")
 
-transform_deriv(::AbstractTransformation, x) = error("Differential matrix of parameters of transform $trans with input $x not defined")
+function transform_deriv_params{OutType, InType}(trans::ComposedTransformation{OutType, InType}, x::InType)
+    x2 = transform(trans.t2, x)
+    m1 = transform_deriv(trans.t1, x2)
+    p2 = transform_deriv_params(trans.t2, x)
+    p1 = transform_deriv_params(trans.t1, x2)
+    return vcat(p1, m1*p2)
+end
