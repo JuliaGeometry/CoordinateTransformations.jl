@@ -193,6 +193,159 @@
             M = transform_deriv(trans, x)
             @test M ≈ M_gn
 
+            # Parameter derivative not defined
+            # TODO?
+        end
+
+        @testset "RotationXY, RotationYZ and RotationZX" begin
+            # RotationXY
+            x = Point(2.0, 0.0, 0.0)
+            x2 = transform(CartesianFromSpherical(), Spherical(2.0, 1.0, 0.0))
+            trans = RotationXY(1.0)
+
+            # Constructor
+            @test trans.cos == cos(1.0)
+            @test trans.sin == sin(1.0)
+
+            # Inverse
+            @test inv(trans) == RotationXY(-1.0)
+            @test RotationYX(1.0) == RotationXY(-1.0)
+
+            # Composition
+            @test trans ∘ trans == RotationXY(2.0)
+
+            # Transform
+            @test transform(trans, x) ≈ x2
+
+            # Transform derivative
+            x = Point(2.0,1.0,3.0)
+            x_gn = Point(GradientNumber(2.0, (1.0,0.0,0.0)), GradientNumber(1.0, (0.0,1.0,0.0)), GradientNumber(3.0, (0.0,0.0,1.0)))
+            x2_gn = transform(trans, x_gn)
+            m_gn = @fsa [x2_gn[1].partials.data[1] x2_gn[1].partials.data[2] x2_gn[1].partials.data[3];
+                         x2_gn[2].partials.data[1] x2_gn[2].partials.data[2] x2_gn[2].partials.data[3];
+                         x2_gn[3].partials.data[1] x2_gn[3].partials.data[2] x2_gn[3].partials.data[3] ]
+            m = transform_deriv(trans, x)
+            @test m ≈ m_gn
+
+            # Transform parameter derivative
+            trans_gn = RotationXY(GradientNumber(1.0, (1.0)))
+            x = Point(2.0,1.0,3.0)
+            x2_gn = transform(trans_gn, x)
+            m_gn = Mat(x2_gn[1].partials.data[1], x2_gn[2].partials.data[1], x2_gn[3].partials.data[1])
+            m = transform_deriv_params(trans, x)
+            @test m ≈ m_gn
+
+
+            # RotationYZ
+            x = Point(0.0, 2.0, 0.0)
+            x2 = transform(CartesianFromSpherical(), Spherical(2.0, pi/2, 1.0))
+            trans = RotationYZ(1.0)
+
+            # Constructor
+            @test trans.cos == cos(1.0)
+            @test trans.sin == sin(1.0)
+
+            # Inverse
+            @test inv(trans) == RotationYZ(-1.0)
+            @test RotationZY(1.0) == RotationYZ(-1.0)
+
+            # Composition
+            @test trans ∘ trans == RotationYZ(2.0)
+
+            # Transform
+            @test transform(trans, x) ≈ x2
+
+            # Transform derivative
+            x = Point(2.0,1.0,3.0)
+            x_gn = Point(GradientNumber(2.0, (1.0,0.0,0.0)), GradientNumber(1.0, (0.0,1.0,0.0)), GradientNumber(3.0, (0.0,0.0,1.0)))
+            x2_gn = transform(trans, x_gn)
+            m_gn = @fsa [x2_gn[1].partials.data[1] x2_gn[1].partials.data[2] x2_gn[1].partials.data[3];
+                         x2_gn[2].partials.data[1] x2_gn[2].partials.data[2] x2_gn[2].partials.data[3];
+                         x2_gn[3].partials.data[1] x2_gn[3].partials.data[2] x2_gn[3].partials.data[3] ]
+            m = transform_deriv(trans, x)
+            @test m ≈ m_gn
+
+            # Transform parameter derivative
+            trans_gn = RotationYZ(GradientNumber(1.0, (1.0)))
+            x = Point(2.0,1.0,3.0)
+            x2_gn = transform(trans_gn, x)
+            m_gn = Mat(x2_gn[1].partials.data[1], x2_gn[2].partials.data[1], x2_gn[3].partials.data[1])
+            m = transform_deriv_params(trans, x)
+            @test m ≈ m_gn
+
+
+            # RotationZX
+            x = Point(2.0, 0.0, 0.0)
+            x2 = transform(CartesianFromSpherical(), Spherical(2.0, 0.0, -1.0))
+            trans = RotationZX(1.0)
+
+            # Constructor
+            @test trans.cos == cos(1.0)
+            @test trans.sin == sin(1.0)
+
+            # Inverse
+            @test inv(trans) == RotationZX(-1.0)
+            @test RotationXZ(1.0) == RotationZX(-1.0)
+
+            # Composition
+            @test trans ∘ trans == RotationZX(2.0)
+
+            # Transform
+            @test transform(trans, x) ≈ x2
+
+            # Transform derivative
+            x = Point(2.0,1.0,3.0)
+            x_gn = Point(GradientNumber(2.0, (1.0,0.0,0.0)), GradientNumber(1.0, (0.0,1.0,0.0)), GradientNumber(3.0, (0.0,0.0,1.0)))
+            x2_gn = transform(trans, x_gn)
+            m_gn = @fsa [x2_gn[1].partials.data[1] x2_gn[1].partials.data[2] x2_gn[1].partials.data[3];
+                         x2_gn[2].partials.data[1] x2_gn[2].partials.data[2] x2_gn[2].partials.data[3];
+                         x2_gn[3].partials.data[1] x2_gn[3].partials.data[2] x2_gn[3].partials.data[3] ]
+            m = transform_deriv(trans, x)
+            @test m ≈ m_gn
+
+            # Transform parameter derivative
+            trans_gn = RotationZX(GradientNumber(1.0, (1.0)))
+            x = Point(2.0,1.0,3.0)
+            x2_gn = transform(trans_gn, x)
+            m_gn = Mat(x2_gn[1].partials.data[1], x2_gn[2].partials.data[1], x2_gn[3].partials.data[1])
+            m = transform_deriv_params(trans, x)
+            @test m ≈ m_gn
+        end
+
+        @testset "euler_rotation() and composed derivatives" begin
+            x = Point(2.0,1.0,3.0)
+            trans = euler_rotation(0.1,0.2,0.3)
+            x2 = Point(2.730537054338937,0.8047190852558106,2.428290466296628)
+
+            @test trans.t1.t1 == RotationXY(0.1)
+            @test trans.t1.t2 == RotationYZ(0.2)
+            @test trans.t2 == RotationZX(0.3)
+
+            @test inv(trans) == RotationZX(-0.3) ∘ (RotationYZ(-0.2) ∘ RotationXY(-0.1))
+
+            @test transform(trans, x) ≈ x2
+
+            # Transform derivative
+            x = Point(2.0,1.0,3.0)
+            x_gn = Point(GradientNumber(2.0, (1.0,0.0,0.0)), GradientNumber(1.0, (0.0,1.0,0.0)), GradientNumber(3.0, (0.0,0.0,1.0)))
+            x2_gn = transform(trans, x_gn)
+            m_gn = @fsa [x2_gn[1].partials.data[1] x2_gn[1].partials.data[2] x2_gn[1].partials.data[3];
+                         x2_gn[2].partials.data[1] x2_gn[2].partials.data[2] x2_gn[2].partials.data[3];
+                         x2_gn[3].partials.data[1] x2_gn[3].partials.data[2] x2_gn[3].partials.data[3] ]
+            m = transform_deriv(trans, x)
+            @test m ≈ m_gn
+
+            # Transform parameter derivative
+
+            trans_gn = euler_rotation(GradientNumber(0.1, (1.0, 0.0, 0.0)), GradientNumber(0.2, (0.0, 1.0, 0.0)), GradientNumber(0.3, (0.0, 0.0, 1.0)))
+            x = Point(2.0,1.0,3.0)
+            x2_gn = transform(trans_gn, x)
+            m_gn = @fsa [x2_gn[1].partials.data[1] x2_gn[1].partials.data[2] x2_gn[1].partials.data[3];
+                         x2_gn[2].partials.data[1] x2_gn[2].partials.data[2] x2_gn[2].partials.data[3];
+                         x2_gn[3].partials.data[1] x2_gn[3].partials.data[2] x2_gn[3].partials.data[3] ]
+            m = transform_deriv_params(trans, x)
+            @test m ≈ m_gn
+
         end
     end
 

@@ -39,7 +39,8 @@ export SphericalFromCartesian, CartesianFromSpherical,
 # Common transformations
 export Translation
 export RotationPolar, Rotation2D
-export Rotation
+export Rotation, RotationXY, RotationYZ, RotationZX
+export RotationYX, RotationZY, RotationXZ, euler_rotation
 
 #export RigidBodyTransformation, AffineTransformation
 

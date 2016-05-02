@@ -38,6 +38,8 @@ end
 immutable RotationPolar{T} <: AbstractTransformation{Polar, Polar}
     angle::T
 end
+Base.show(io::IO, r::RotationPolar) = print(io, "RotationPolar($(r.angle))")
+
 
 function transform(trans::RotationPolar, x::Polar)
     Polar(x.r, x.θ + trans.angle)
@@ -58,11 +60,12 @@ Base.inv(trans::RotationPolar) = RotationPolar(-trans.angle)
 compose(t1::RotationPolar, t2::RotationPolar) = RotationPolar(t1.angle + t2.angle)
 
 # In Cartesian coordinates
-immutable Rotation2D{T} <: AbstractTransformation{FixedVector{2}, FixedVector{2}}
+immutable Rotation2D{T} <: AbstractTransformation{FixedVector, FixedVector{2}}
     angle::T
     sin::T
     cos::T
 end
+Base.show(io::IO, r::Rotation2D) = print(io, "Rotation2D($(r.angle))")
 
 function Rotation2D(a)
     s = sin(a)
@@ -98,6 +101,9 @@ immutable Rotation{R, T} <: AbstractTransformation{FixedVector{3}, FixedVector{3
     rotation::R
     matrix::Mat{3,3,T}
 end
+Base.show(io::IO, r::Rotation) = print(io, "Rotation($(r.rotation))")
+Base.show(io::IO, r::Rotation{Void}) = print(io, "Rotation($(r.matrix))")
+
 
 Rotation{T}(r::RotMatrix{T}) = Rotation(nothing, r) # R=Void represents direct parameterization by the marix (assumed to be Hermitian)
 Rotation{T}(r::Matrix{T}) = Rotation(nothing, Mat{3,3,T}(r))
@@ -123,14 +129,15 @@ end
 transform_deriv(trans::Rotation, x::FixedVector{3}) = trans.matrix # It's a linear transformation, so this is easy!
 
 function transform_deriv_params{T1,T2}(trans::Rotation{Void,T1}, x::FixedVector{3,T2})
-    # TODO should this derivative be projected into the orthogonal/Hermition tangent plane or not?
-    # Δ -> (Δ - R Δ' R) /2
+    # This derivative isn't projected into the orthogonal/Hermition tangent
+    # plane. It would be acheived by:
+    # Δ -> (Δ - R Δ' R) / 2
 
     # The matrix gives 9 parameters...
     Z = zero(promote_type(T1,T2))
     @fsa [ x[1] x[2] x[3] Z Z Z Z Z Z;
            Z Z Z x[1] x[2] x[3] Z Z Z;
-           Z Z Z Z Z Z x[1] x[2] x[3]; ]
+           Z Z Z Z Z Z x[1] x[2] x[3] ]
 end
 
 
@@ -192,3 +199,154 @@ Base.inv(trans::Rotation) = Rotation(nothing, trans.matrix')
 Base.inv{T <: Union{Quaternion, SpQuat}}(trans::Rotation{T}) = Rotation(inv(trans.rotation), trans.matrix')
 
 compose(t1::Rotation, t2::Rotation) = Rotation(nothing, t1.matrix*t2.matrix) # A bit lossy for transform_deriv_params, but otherwise probably the most efficient choice
+
+
+#############################
+# Individual axis rotations #
+#############################
+immutable RotationXY{T} <: AbstractTransformation{FixedVector{3}, FixedVector{3}}
+    angle::T
+    sin::T
+    cos::T
+end
+immutable RotationYZ{T} <: AbstractTransformation{FixedVector{3}, FixedVector{3}}
+    angle::T
+    sin::T
+    cos::T
+end
+immutable RotationZX{T} <: AbstractTransformation{FixedVector{3}, FixedVector{3}}
+    angle::T
+    sin::T
+    cos::T
+end
+
+function RotationXY(a)
+    s = sin(a)
+    c = cos(a)
+    return RotationXY(a,s,c)
+end
+RotationYX(a) = RotationXY(-a)
+function RotationYZ(a)
+    s = sin(a)
+    c = cos(a)
+    return RotationYZ(a,s,c)
+end
+RotationZY(a) = RotationYZ(-a)
+function RotationZX(a)
+    s = sin(a)
+    c = cos(a)
+    return RotationZX(a,s,c)
+end
+RotationXZ(a) = RotationZX(-a)
+
+Base.show(io::IO, r::RotationXY) = print(io, "RotationXY($(r.angle))")
+Base.show(io::IO, r::RotationYZ) = print(io, "RotationYZ($(r.angle))")
+Base.show(io::IO, r::RotationZX) = print(io, "RotationZX($(r.angle))")
+
+function transform(trans::RotationXY, x::FixedVector{3})
+    (sincos, x2) = promote(Vec(trans.sin, trans.cos), x)
+    (typeof(x2))(x[1]*sincos[2] - x[2]*sincos[1], x[1]*sincos[1] + x[2]*sincos[2], x2[3])
+end
+function transform(trans::RotationYZ, x::FixedVector{3})
+    (sincos, x2) = promote(Vec(trans.sin, trans.cos), x)
+    (typeof(x2))(x2[1], x[2]*sincos[2] - x[3]*sincos[1], x[2]*sincos[1] + x[3]*sincos[2])
+end
+function transform(trans::RotationZX, x::FixedVector{3})
+    (sincos, x2) = promote(Vec(trans.sin, trans.cos), x)
+    (typeof(x2))(x[3]*sincos[1] + x[1]*sincos[2], x2[2], x[3]*sincos[2] - x[1]*sincos[1])
+end
+
+function transform_deriv(trans::RotationXY, x::FixedVector{3})
+    Z = zero(trans.cos)
+    I = one(trans.cos)
+    @fsa [ trans.cos -trans.sin Z;
+           trans.sin  trans.cos Z;
+           Z          Z         I]
+end
+function transform_deriv(trans::RotationYZ, x::FixedVector{3})
+    Z = zero(trans.cos)
+    I = one(trans.cos)
+    @fsa [ I  Z         Z;
+           Z  trans.cos -trans.sin;
+           Z  trans.sin  trans.cos ]
+end
+function transform_deriv(trans::RotationZX, x::FixedVector{3})
+    Z = zero(trans.cos)
+    I = one(trans.cos)
+    @fsa [ trans.cos Z trans.sin;
+           Z         I Z        ;
+          -trans.sin Z trans.cos ]
+end
+
+function transform_deriv_params(trans::RotationXY, x::FixedVector{3})
+    # 2x1 transformation matrix
+    Z = zero(promote_type(typeof(trans.cos), eltype(x)))
+    Mat(-trans.sin*x[1] - trans.cos*x[2],
+         trans.cos*x[1] - trans.sin*x[2],
+         Z)
+end
+function transform_deriv_params(trans::RotationYZ, x::FixedVector{3})
+    # 2x1 transformation matrix
+    Z = zero(promote_type(typeof(trans.cos), eltype(x)))
+    Mat( Z,
+        -trans.sin*x[2] - trans.cos*x[3],
+         trans.cos*x[2] - trans.sin*x[3])
+end
+function transform_deriv_params(trans::RotationZX, x::FixedVector{3})
+    # 2x1 transformation matrix
+    Z = zero(promote_type(typeof(trans.cos), eltype(x)))
+    Mat( trans.cos*x[3] - trans.sin*x[1],
+         Z,
+        -trans.sin*x[3] - trans.cos*x[1])
+end
+
+Base.inv(trans::RotationXY) = RotationXY(-trans.angle, -trans.sin, trans.cos)
+Base.inv(trans::RotationYZ) = RotationYZ(-trans.angle, -trans.sin, trans.cos)
+Base.inv(trans::RotationZX) = RotationZX(-trans.angle, -trans.sin, trans.cos)
+
+compose(t1::RotationXY, t2::RotationXY) = RotationXY(t1.angle + t2.angle)
+compose(t1::RotationYZ, t2::RotationYZ) = RotationYZ(t1.angle + t2.angle)
+compose(t1::RotationZX, t2::RotationZX) = RotationZX(t1.angle + t2.angle)
+
+# defualts to EulerZXY
+euler_rotation(θ₁, θ₂, θ₃) = euler_rotation(θ₁, θ₂, θ₃, Rotations.EulerZXY)
+
+# Tait-Bryant orderings
+function euler_rotation(θ₁, θ₂, θ₃, order::Union{Rotations.EulerZYX, Type{Rotations.EulerZYX}})
+    RotationXY(θ₁) ∘ RotationZX(θ₂) ∘ RotationYZ(θ₃)
+end
+function euler_rotation(θ₁, θ₂, θ₃, order::Union{Rotations.EulerZXY, Type{Rotations.EulerZXY}})
+    RotationXY(θ₁) ∘ RotationYZ(θ₂) ∘ RotationZX(θ₃)
+end
+function euler_rotation(θ₁, θ₂, θ₃, order::Union{Rotations.EulerYZX, Type{Rotations.EulerYZX}})
+    RotationZX(θ₁) ∘ RotationXY(θ₂) ∘ RotationYZ(θ₃)
+end
+function euler_rotation(θ₁, θ₂, θ₃, order::Union{Rotations.EulerYXZ, Type{Rotations.EulerYXZ}})
+    RotationZX(θ₁) ∘ RotationYZ(θ₂) ∘ RotationXY(θ₃)
+end
+function euler_rotation(θ₁, θ₂, θ₃, order::Union{Rotations.EulerXYZ, Type{Rotations.EulerXYZ}})
+    RotationYZ(θ₁) ∘ RotationZX(θ₂) ∘ RotationXY(θ₃)
+end
+function euler_rotation(θ₁, θ₂, θ₃, order::Union{Rotations.EulerXZY, Type{Rotations.EulerXZY}})
+    RotationYZ(θ₁) ∘ RotationXY(θ₂) ∘ RotationZX(θ₃)
+end
+
+# Proper Euler orderings
+function euler_rotation(θ₁, θ₂, θ₃, order::Union{Rotations.EulerZYZ, Type{Rotations.EulerZYZ}})
+    RotationXY(θ₁) ∘ RotationZX(θ₂) ∘ RotationXY(θ₃)
+end
+function euler_rotation(θ₁, θ₂, θ₃, order::Union{Rotations.EulerZXZ, Type{Rotations.EulerZXZ}})
+    RotationXY(θ₁) ∘ RotationYZ(θ₂) ∘ RotationXY(θ₃)
+end
+function euler_rotation(θ₁, θ₂, θ₃, order::Union{Rotations.EulerYZY, Type{Rotations.EulerYZY}})
+    RotationZX(θ₁) ∘ RotationXY(θ₂) ∘ RotationZX(θ₃)
+end
+function euler_rotation(θ₁, θ₂, θ₃, order::Union{Rotations.EulerYXY, Type{Rotations.EulerYXY}})
+    RotationZX(θ₁) ∘ RotationYZ(θ₂) ∘ RotationZX(θ₃)
+end
+function euler_rotation(θ₁, θ₂, θ₃, order::Union{Rotations.EulerXYX, Type{Rotations.EulerXYX}})
+    RotationYZ(θ₁) ∘ RotationZX(θ₂) ∘ RotationYZ(θ₃)
+end
+function euler_rotation(θ₁, θ₂, θ₃, order::Union{Rotations.EulerXZX, Type{Rotations.EulerXZX}})
+    RotationYZ(θ₁) ∘ RotationXY(θ₂) ∘ RotationYZ(θ₃)
+end

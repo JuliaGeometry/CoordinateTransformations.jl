@@ -79,11 +79,11 @@ immutable ComposedTransformation{OutType, InType, T1 <: AbstractTransformation, 
     end
 end
 @generated function check_composable{OutType, InType}(out_type::Type{OutType},in_type::Type{InType},trans1::AbstractTransformation, trans2::AbstractTransformation)
-    if in_type != intype(trans2)
-        str = "Can't compose transformations: input coordinates types $in_type and $(intype(trans2)) do not match."
+    if InType != intype(trans2)
+        str = "Can't compose transformations: input coordinates types $InType and $(intype(trans2)) do not match."
         error(str)
-    elseif out_type != outtype(trans1)
-        str = "Can't compose transformations: output coordinates types $out_type and $(outtype(trans1)) do not match."
+    elseif OutType != outtype(trans1)
+        str = "Can't compose transformations: output coordinates types $OutType and $(outtype(trans1)) do not match."
         error(str)
     elseif typeintersect(intype(trans1), outtype(trans2)) == Union{}
         error("Can't compose transformations: intermediate coordinates types $(intype(trans1)) and $(outtype(trans2)) do not intersect.")
@@ -163,5 +163,5 @@ function transform_deriv_params{OutType, InType}(trans::ComposedTransformation{O
     m1 = transform_deriv(trans.t1, x2)
     p2 = transform_deriv_params(trans.t2, x)
     p1 = transform_deriv_params(trans.t1, x2)
-    return vcat(p1, m1*p2)
+    return hcat(p1, m1*p2)
 end

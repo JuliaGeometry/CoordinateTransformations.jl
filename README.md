@@ -153,3 +153,12 @@ parameterization of the quaternion, Euler angles, etc. **Note:** the derivative
 is only guaranteed to be correct in the tangent plane of the constrained variable,
 such as normalized quaternions, and optimization techniques should take this
 into account as necessary.
+
+Also included are built-in `RotationXY`, `RotationYZ` and `RotationZX` for
+rotating about the *z*, *x* and *y* axes, respectively. A helper function for
+constructing a composed transformation of Euler angles is
+`euler_rotation(θ₁, θ₂, θ₃, [order = EulerZXY])`, where `order` can be any of
+*Rotations*' orderings (`EulerXYZ`, etc). The default `EulerZXY` first rotates
+around the *y* axis (*z-x* plane) by `θ₃`, then the *x* axis (*y-z* plane) by
+`θ₂`, and finally about the *z* axis (*x-y* plane) by `θ₁`, and is therefore
+equivalent to `RotationXY(θ₁) ∘ RotationYZ(θ₂) ∘ RotationZX(θ₃)`.
