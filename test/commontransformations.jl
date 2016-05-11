@@ -81,6 +81,7 @@
     end
 
     @testset "Rotation (3D)" begin
+
         @testset "Rotation{Void} (rotation matrix parameterization)" begin
             θx = 0.1
             θy = 0.2
@@ -147,12 +148,12 @@
         @testset "Rotation{Quaternion} (quaternion parameterization)" begin
             v = [0.35, 0.45, 0.25, 0.15]
             v = v / vecnorm(v)
-            q = Quaternion(v)
+            q = Quaternion(v[1],v[2],v[3],v[4],true)
 
             trans = Rotation(q)
             x = Point(1.0, 2.0, 3.0)
 
-            @test inv(trans) ≈ Rotation(inv(Quaternion(v...)))
+            @test inv(trans) ≈ Rotation(inv(Quaternion(v[1],v[2],v[3],v[4])))
             @test trans ∘ trans ≈ Rotation(trans.matrix * trans.matrix)
 
             y = transform(trans, x)
@@ -165,12 +166,14 @@
             @test M ≈ M_gn
 
             v_gn = [GradientNumber(v[1],(1.,0.,0.,0.)), GradientNumber(v[2],(0.,1.,0.,0.)), GradientNumber(v[3],(0.,0.,1.,0.)), GradientNumber(v[4],(0.,0.,0.,1.))]
-            q_gn = Quaternion(v_gn...)
+            q_gn = Quaternion(v_gn[1],v_gn[2],v_gn[3],v_gn[4],true)
             trans_gn = Rotation(q_gn)
             y_gn = transform(trans_gn,x)
             M_gn = Mat{3,4,Float64}(vcat(ntuple(i->[y_gn[i].partials.data[j] for j = 1:4].', 3)...))
             M = transform_deriv_params(trans, x)
-            @test M ≈ M_gn
+            # Project both to tangent plane of normalized quaternions (there seems to be a change in definition...)
+            proj = Mat{4,4,Float64}(eye(4) - v*v')
+            @test M*proj ≈ M_gn*proj
         end
 
         @testset "Rotation{EulerAngles} (Euler angle parameterization)" begin

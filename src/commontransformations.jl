@@ -3,7 +3,14 @@
 ###################
 ### Translation ###
 ###################
+"""
+    Translation{N, T}(dx) <: AbstractTransformation{FixedVector{N}, FixedVector{N}}
+    Translation(x, y)        (2D)
+    Translation(x, y, z)     (3D)
 
+Construct the `Translation` transformation for translating Cartesian points
+(`FixedVector`s).
+"""
 immutable Translation{N, T} <: AbstractTransformation{FixedVector{N}, FixedVector{N}}
     dx::Vec{N, T}
 end
@@ -34,7 +41,12 @@ end
 ### 2D Rotations ###
 ####################
 
-# In polar coordinates
+"""
+    RotationPolar(angle)
+
+Construct the `RotationPolar` transformation for rotating `Polar` points about
+the origin.
+"""
 immutable RotationPolar{T} <: AbstractTransformation{Polar, Polar}
     angle::T
 end
@@ -59,7 +71,12 @@ Base.inv(trans::RotationPolar) = RotationPolar(-trans.angle)
 
 compose(t1::RotationPolar, t2::RotationPolar) = RotationPolar(t1.angle + t2.angle)
 
-# In Cartesian coordinates
+"""
+    Rotation2D(angle)
+
+Construct the `Rotation2D` transformation for rotating 2D Cartesian points
+(i.e. `FixedVector{2}`s) about the origin.
+"""
 immutable Rotation2D{T} <: AbstractTransformation{FixedVector, FixedVector{2}}
     angle::T
     sin::T
@@ -93,10 +110,15 @@ Base.inv(trans::Rotation2D) = Rotation2D(-trans.angle, -trans.sin, trans.cos)
 
 compose(t1::Rotation2D, t2::Rotation2D) = Rotation2D(t1.angle + t2.angle)
 
-##########################
-### EulerRotation (3D) ###
-##########################
+#####################
+### Rotation (3D) ###
+#####################
+"""
+    Rotation(R)
 
+Construct the `Rotation` transformation for rotating 3D Cartesian points
+(i.e. `FixedVector{3}`s) about the origin. I
+"""
 immutable Rotation{R, T} <: AbstractTransformation{FixedVector{3}, FixedVector{3}}
     rotation::R
     matrix::Mat{3,3,T}
@@ -104,14 +126,32 @@ end
 Base.show(io::IO, r::Rotation) = print(io, "Rotation($(r.rotation))")
 Base.show(io::IO, r::Rotation{Void}) = print(io, "Rotation($(r.matrix))")
 
+"""
+    Rotation(matrix)
 
+Construct the `Rotation` transformation for rotating 3D Cartesian points
+(i.e. `FixedVector{3}`s) about the origin. `matrix` is a 3×3 `Matrix` or `Mat`,
+and is assumed to be orthogonal.
+"""
 Rotation{T}(r::RotMatrix{T}) = Rotation(nothing, r) # R=Void represents direct parameterization by the marix (assumed to be Hermitian)
 Rotation{T}(r::Matrix{T}) = Rotation(nothing, Mat{3,3,T}(r))
-Rotation{T}(r::Quaternion{T}) = Rotation(r, convert_rotation(RotMatrix{T}, r))
-Rotation{T}(r::SpQuat{T}) = Rotation(r, convert_rotation(RotMatrix{T}, r))
-Rotation{T}(r::AngleAxis{T}) = Rotation(r, convert_rotation(RotMatrix{T}, r))
-Rotation{Order,T}(r::EulerAngles{Order,T}) = Rotation(r, convert_rotation(RotMatrix{T}, r))
-Rotation{Order,T}(r::ProperEulerAngles{Order,T}) = Rotation(r, convert_rotation(RotMatrix{T}, r))
+"""
+    Rotation(R)
+
+Construct the `Rotation` transformation for rotating 3D Cartesian points
+(i.e. `FixedVector{3}`s) about the origin. `R` is a rotation object defined
+in the Rotations package (`Quaternion`, `SpQuat`, `AngleAxis`, `EulerAngles`
+or `ProperEulerAngles`). From these a 3×3 rotation matrix is constructed and
+cached, along with the original parameter specifications (which is used for
+`transform_deriv_params`).
+
+(see also `RotationXY`, `RotationYZ`, `RotationZX` and `euler_rotation`)
+"""
+Rotation{T}(r::Quaternion{T}) = Rotation(r, convert(RotMatrix{T}, r))
+Rotation{T}(r::SpQuat{T}) = Rotation(r, convert(RotMatrix{T}, r))
+Rotation{T}(r::AngleAxis{T}) = Rotation(r, convert(RotMatrix{T}, r))
+Rotation{Order,T}(r::EulerAngles{Order,T}) = Rotation(r, convert(RotMatrix{T}, r))
+Rotation{Order,T}(r::ProperEulerAngles{Order,T}) = Rotation(r, convert(RotMatrix{T}, r))
 
 import Base.==
 ==(a::Rotation, b::Rotation; kwargs...) = a.matrix == b.matrix
@@ -119,7 +159,6 @@ import Base.==
 Base.isapprox(a::Rotation, b::Rotation; kwargs...) = isapprox(a.matrix, b.matrix; kwargs...)
 Base.isapprox{T}(a::Rotation{T}, b::Rotation{T}; kwargs...) = isapprox(a.matrix, b.matrix; kwargs...) && isapprox(a.rotation, b.rotation; kwargs...)
 Base.isapprox(a::Rotation{Void}, b::Rotation{Void}; kwargs...) = isapprox(a.matrix, b.matrix; kwargs...)
-
 
 function transform(trans::Rotation, x::FixedVector{3})
     (m, x2) = promote(trans.matrix, x)
@@ -204,16 +243,41 @@ compose(t1::Rotation, t2::Rotation) = Rotation(nothing, t1.matrix*t2.matrix) # A
 #############################
 # Individual axis rotations #
 #############################
+
+"""
+    RotationXY(angle)
+
+Construct the `RotationXY` transformation for rotating 3D Cartesian points
+(i.e. `FixedVector{3}`s) through the X-Y plane (around the Z axis).
+
+(see also `Rotation`, `RotationYZ`, `RotationZX` and `euler_rotation`)
+"""
 immutable RotationXY{T} <: AbstractTransformation{FixedVector{3}, FixedVector{3}}
     angle::T
     sin::T
     cos::T
 end
+"""
+    RotationYZ(angle)
+
+Construct the `RotationYZ` transformation for rotating 3D Cartesian points
+(i.e. `FixedVector{3}`s) through the Y-Z plane (around the X axis).
+
+(see also `Rotation`, `RotationXY`, `RotationZX` and `euler_rotation`)
+"""
 immutable RotationYZ{T} <: AbstractTransformation{FixedVector{3}, FixedVector{3}}
     angle::T
     sin::T
     cos::T
 end
+"""
+    RotationZX(angle)
+
+Construct the `RotationZX` transformation for rotating 3D Cartesian points
+(i.e. `FixedVector{3}`s) through the Z-X plane (around the Y axis).
+
+(see also `Rotation`, `RotationXY`, `RotationYZ` and `euler_rotation`)
+"""
 immutable RotationZX{T} <: AbstractTransformation{FixedVector{3}, FixedVector{3}}
     angle::T
     sin::T
@@ -225,18 +289,21 @@ function RotationXY(a)
     c = cos(a)
     return RotationXY(a,s,c)
 end
+"RotationYX(angle) - constructs RotationXY(-angle)"
 RotationYX(a) = RotationXY(-a)
 function RotationYZ(a)
     s = sin(a)
     c = cos(a)
     return RotationYZ(a,s,c)
 end
+"RotationZY(angle) - constructs RotationYZ(-angle)"
 RotationZY(a) = RotationYZ(-a)
 function RotationZX(a)
     s = sin(a)
     c = cos(a)
     return RotationZX(a,s,c)
 end
+"RotationXZ(angle) - constructs RotationZX(-angle)"
 RotationXZ(a) = RotationZX(-a)
 
 Base.show(io::IO, r::RotationXY) = print(io, "RotationXY($(r.angle))")
@@ -279,21 +346,21 @@ function transform_deriv(trans::RotationZX, x::FixedVector{3})
 end
 
 function transform_deriv_params(trans::RotationXY, x::FixedVector{3})
-    # 2x1 transformation matrix
+    # 3x1 transformation matrix
     Z = zero(promote_type(typeof(trans.cos), eltype(x)))
     Mat(-trans.sin*x[1] - trans.cos*x[2],
          trans.cos*x[1] - trans.sin*x[2],
          Z)
 end
 function transform_deriv_params(trans::RotationYZ, x::FixedVector{3})
-    # 2x1 transformation matrix
+    # 3x1 transformation matrix
     Z = zero(promote_type(typeof(trans.cos), eltype(x)))
     Mat( Z,
         -trans.sin*x[2] - trans.cos*x[3],
          trans.cos*x[2] - trans.sin*x[3])
 end
 function transform_deriv_params(trans::RotationZX, x::FixedVector{3})
-    # 2x1 transformation matrix
+    # 3x1 transformation matrix
     Z = zero(promote_type(typeof(trans.cos), eltype(x)))
     Mat( trans.cos*x[3] - trans.sin*x[1],
          Z,
@@ -312,6 +379,15 @@ compose(t1::RotationZX, t2::RotationZX) = RotationZX(t1.angle + t2.angle)
 euler_rotation(θ₁, θ₂, θ₃) = euler_rotation(θ₁, θ₂, θ₃, Rotations.EulerZXY)
 
 # Tait-Bryant orderings
+"""
+    euler_rotation(θ₁, θ₂, θ₃, [order = Rotations.EulerZXY])
+
+Constructs a composed set of elementary (planar) rotations from the three given
+Euler angles. `order` is defined in the Rotations package, and can be either
+a Tait-Bryant ordering (ABC) or proper Euler ordering (ABA).
+
+(see also `Rotation`, `RotationXY`, `RotationYZ` and `RotationZX`)
+"""
 function euler_rotation(θ₁, θ₂, θ₃, order::Union{Rotations.EulerZYX, Type{Rotations.EulerZYX}})
     RotationXY(θ₁) ∘ RotationZX(θ₂) ∘ RotationYZ(θ₃)
 end

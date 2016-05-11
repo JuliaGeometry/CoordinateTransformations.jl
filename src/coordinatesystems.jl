@@ -1,6 +1,9 @@
 #############################
 ### 2D Coordinate systems ###
 #############################
+"""
+`Polar{T}(r::T, θ::T)` - 2D polar coordinates
+"""
 immutable Polar{T}
     r::T
     θ::T
@@ -8,7 +11,9 @@ end
 Base.show(io::IO, x::Polar) = print(io, "Polar(r=$(x.r), θ=$(x.θ) rad)")
 Base.isapprox(p1::Polar, p2::Polar; kwargs...) = isapprox(p1.r, p2.r; kwargs...) && isapprox(p1.θ, p2.θ; kwargs...)
 
+"`PolarFromCartesian()` - transformation from `Point{2}` type to `Polar` type"
 immutable PolarFromCartesian <: AbstractTransformation{Polar, Point{2}}; end
+"`CartesianFromPolar()` - transformation from `Polar` type to `Point{2}` type"
 immutable CartesianFromPolar <: AbstractTransformation{Point{2}, Polar}; end
 
 Base.show(io::IO, trans::PolarFromCartesian) = print(io, "PolarFromCartesian()")
@@ -47,6 +52,9 @@ compose(::CartesianFromPolar, ::PolarFromCartesian) = IdentityTransformation{Poi
 #############################
 ### 3D Coordinate Systems ###
 #############################
+"""
+Spherical(r, θ, ϕ) - 3D spherical coordinates
+"""
 immutable Spherical{T}
     r::T
     θ::T
@@ -55,6 +63,9 @@ end
 Base.show(io::IO, x::Spherical) = print(io, "Spherical(r=$(x.r), θ=$(x.θ) rad, ϕ=$(x.ϕ) rad)")
 Base.isapprox(p1::Spherical, p2::Spherical; kwargs...) = isapprox(p1.r, p2.r; kwargs...) && isapprox(p1.θ, p2.θ; kwargs...) && isapprox(p1.ϕ, p2.ϕ; kwargs...)
 
+"""
+Cylindrical(r, θ, z) - 3D cylindrical coordinates
+"""
 immutable Cylindrical{T}
     r::T
     θ::T
@@ -63,11 +74,17 @@ end
 Base.show(io::IO, x::Cylindrical) = print(io, "Cylindrical(r=$(x.r), θ=$(x.θ) rad, z=$(x.z))")
 Base.isapprox(p1::Cylindrical, p2::Cylindrical; kwargs...) = isapprox(p1.r, p2.r; kwargs...) && isapprox(p1.θ, p2.θ; kwargs...) && isapprox(p1.z, p2.z; kwargs...)
 
+"`SphericalFromCartesian()` - transformation from `Point{3}` type to `Spherical` type"
 immutable SphericalFromCartesian <: AbstractTransformation{Spherical, Point{3}}; end
+"`CartesianFromSpherical()` - transformation from `Spherical` type to `Point{3}` type"
 immutable CartesianFromSpherical <: AbstractTransformation{Point{3}, Spherical}; end
+"`CylindricalFromCartesian()` - transformation from `Point{3}` type to `Cylindrical` type"
 immutable CylindricalFromCartesian <: AbstractTransformation{Cylindrical, Point{3}}; end
+"`CartesianFromCylindrical()` - transformation from `Cylindrical` type to `Point{3}` type"
 immutable CartesianFromCylindrical <: AbstractTransformation{Point{3}, Cylindrical}; end
+"`CylindricalFromSpherical()` - transformation from `Spherical` type to `Cylindrical` type"
 immutable CylindricalFromSpherical <: AbstractTransformation{Cylindrical, Spherical}; end
+"`SphericalFromCylindrical()` - transformation from `Cylindrical` type to `Spherical` type"
 immutable SphericalFromCylindrical <: AbstractTransformation{Spherical, Cylindrical}; end
 
 Base.show(io::IO, trans::SphericalFromCartesian) = print(io, "SphericalFromCartesian()")

@@ -101,9 +101,9 @@ We also have `IdentityTransform{InOutType}` and `ComposedTransformation{InType,O
 which allows us to nest together arbitrary transformations to create a
 complex yet efficient transformation chain.
 
-#### Coordinate system types
+#### Coordinate types
 
-The canonical Cartesian coordinate systems are any type which inherited from
+The canonical Cartesian coordinate data types are any type which inherited from
 *FixedSizeArrays*' `FixedVector{2}` and `FixedVector{3}` in 2D and 3D,
 respectively. The concrete datatypes `Point` and `Vec` are provided by
 *FixedSizeArrays*, and here we tend to favor `Point` for output where it is not
@@ -116,13 +116,13 @@ in 3D we have defined `Spherical(r, θ, ϕ)` and `Cylindrical(r, θ, z)`.
 
 #### Coordinate system transformations
 
-Two-dimensional coordinates may be converted using these parameterless
+Two-dimensional coordinates may be converted using these parameterless (singleton)
 transformations:
 
 1. `PolarFromCartesian()`
 2. `CartesianFromPolar()`
 
-Three-dimensional coordinates may be converted using these singleton
+Three-dimensional coordinates may be converted using these parameterless
 transformations:
 
 1. `SphericalFromCartesian()`
