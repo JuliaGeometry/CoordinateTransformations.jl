@@ -24,6 +24,7 @@
         @test transform(p_from_c, xy) ≈ rθ
         @test transform(c_from_p, rθ) ≈ xy
 
+        # TODO - define some convenience functions to create the gradient numbers and unpack the arrays.
         xy_gn = Point(GradientNumber(1.0, (1.0,0.0)), GradientNumber(2.0, (0.0,1.0)))
         rθ_gn = transform(p_from_c, xy_gn)
         m_gn = @fsa [rθ_gn.r.partials.data[1] rθ_gn.r.partials.data[2];

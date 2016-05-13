@@ -2,6 +2,8 @@ module CoordinateTransformations
 
 using FixedSizeArrays
 export Point # Use Point{N, T} from FixedSizedArrays for Cartesian frames
+
+# TODO: move these over to FixedSizeArrays at some point
 function Base.vcat(v1::Vec, v2::Vec)
     (v1p, v2p) = promote(v1, v2)
     Vec(v1p._..., v2p._...)

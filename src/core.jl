@@ -56,7 +56,7 @@ A transformation `trans` is explicitly applied to data x, returning the
 coordinates in the new coordinate system.
 """
 function transform{OutType, InType}(trans::AbstractTransformation{OutType, InType}, x)
-    if isa(x, Vector) && eltype(x) <: InType
+    if isa(x, Vector) && eltype(x) <: InType # TODO remove this function for julia-0.5 where vectorized functions are falling out of favour
         [transform(trans, point) for point in x]
     else
         error("The transform of datatype $(typeof(x)) is not defined for transformation $trans.")
