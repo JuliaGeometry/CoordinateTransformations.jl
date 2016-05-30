@@ -11,6 +11,11 @@ performing transformations. Subtypes should be able to apply a coordinate system
 transformation on the correct data types by overloading `transform()`, and
 usually would have the corresponding inverse transformation defined by `Base.inv()`.
 Efficient compositions can optionally be defined by `compose()` (equivalently `∘`).
+
+Furthermore, transformations can be combined in a tuple to be applied in parallel
+to a tuple of inputs (for example, performing a rotation on a spatial variable
+while leaving the time variable constant). This becomes particularly powerful
+when
 """
 abstract AbstractTransformation{OutType, InType}
 
@@ -45,6 +50,8 @@ end
     return :($(S.parameters[1]))
 end
 
+# TODO generated functions for intype and outtype of tuples of AbstractTransformations
+
 
 # Built-in identity transform
 immutable IdentityTransformation{T} <: AbstractTransformation{T,T}; end
@@ -63,13 +70,25 @@ function transform{OutType, InType}(trans::AbstractTransformation{OutType, InTyp
     end
 end
 
+"""
+transform((trans1, trans2, ...), (x1, x2, ...))
+
+A set of transformations `trans1`, etc, are applied in parallel to data `x1`, etc,
+returning a tuple of the transformed coordinates.
+"""
+function transform{N}(trans::NTuple{N,AbstractTransformation}, x::NTuple{N})
+    # TODO generated function for type stability in Julia 0.4
+    return ntuple(i->transform(trans[i], x[i]), Val{N})
+end
+
 transform{T}(::IdentityTransformation{T}, x::T) = x
+
 
 """
 A `ComposedTransformation` simply executes two transformations successively, and
 is the fallback output type of `compose()`.
 """
-immutable ComposedTransformation{OutType, InType, T1 <: AbstractTransformation, T2 <: AbstractTransformation} <: AbstractTransformation{OutType, InType}
+immutable ComposedTransformation{OutType, InType, T1 <: Union{AbstractTransformation, Tuple{Vararg{AbstractTransformation}}}, T2 <: Union{AbstractTransformation, Tuple{Vararg{AbstractTransformation}}}} <: AbstractTransformation{OutType, InType}
     t1::T1
     t2::T2
 
@@ -78,7 +97,7 @@ immutable ComposedTransformation{OutType, InType, T1 <: AbstractTransformation, 
         new(trans1,trans2)
     end
 end
-@generated function check_composable{OutType, InType}(out_type::Type{OutType},in_type::Type{InType},trans1::AbstractTransformation, trans2::AbstractTransformation)
+@generated function check_composable{OutType, InType}(out_type::Type{OutType},in_type::Type{InType},trans1::Union{AbstractTransformation, Tuple{Vararg{AbstractTransformation}}}, trans2::Union{AbstractTransformation, Tuple{Vararg{AbstractTransformation}}})
     if InType != intype(trans2)
         str = "Can't compose transformations: input coordinates types $InType and $(intype(trans2)) do not match."
         error(str)
@@ -117,6 +136,8 @@ compose{InOutType}(trans::IdentityTransformation{InOutType}, ::IdentityTransform
 compose{OutType, InType}(::IdentityTransformation{OutType}, trans::AbstractTransformation{OutType, InType}) = trans
 compose{OutType, InType}(trans::AbstractTransformation{OutType, InType}, ::IdentityTransformation{InType}) = trans
 
+# TODO compose for tuples of AbstractTransformations (generated function)
+
 const ∘ = compose
 
 """
@@ -130,6 +151,8 @@ end
 
 Base.inv(trans::ComposedTransformation) = inv(trans.t2) ∘ inv(trans.t1)
 Base.inv(trans::IdentityTransformation) = trans
+
+# TODO compose for inverse of AbstractTransformations (generated function)
 
 """
     transform_deriv(trans::AbstractTransformation, x)
@@ -148,6 +171,8 @@ function transform_deriv{OutType, InType}(trans::ComposedTransformation{OutType,
     return m1 * m2
 end
 
+# TODO compose for derivatives of AbstractTransformations (generated function)
+
 """
     transform_deriv_params(trans::AbstractTransformation, x)
 
@@ -165,3 +190,5 @@ function transform_deriv_params{OutType, InType}(trans::ComposedTransformation{O
     p1 = transform_deriv_params(trans.t1, x2)
     return hcat(p1, m1*p2)
 end
+
+# TODO compose for parameter derivatives of AbstractTransformations (generated function)
