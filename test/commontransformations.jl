@@ -64,18 +64,18 @@
 
         # Transform derivative
         x = Point(2.0,1.0)
-        x_gn = Point(GradientNumber(2.0, (1.0,0.0)), GradientNumber(1.0, (0.0,1.0)))
+        x_gn = Point(Dual(2.0, (1.0,0.0)), Dual(1.0, (0.0,1.0)))
         x2_gn = transform(trans, x_gn)
-        m_gn = @fsa [x2_gn[1].partials.data[1] x2_gn[1].partials.data[2];
-                     x2_gn[2].partials.data[1] x2_gn[2].partials.data[2] ]
+        m_gn = @fsa [partials(x2_gn[1], 1) partials(x2_gn[1], 2);
+                     partials(x2_gn[2], 1) partials(x2_gn[2], 2) ]
         m = transform_deriv(trans, x)
         @test m ≈ m_gn
 
         # Transform parameter derivative
-        trans_gn = Rotation2D(GradientNumber(1.0, (1.0)))
+        trans_gn = Rotation2D(Dual(1.0, (1.0)))
         x = Point(2.0,1.0)
         x2_gn = transform(trans_gn, x)
-        m_gn = Mat(x2_gn[1].partials.data[1], x2_gn[2].partials.data[1])
+        m_gn = Mat(partials(x2_gn[1], 1), partials(x2_gn[2], 1))
         m = transform_deriv_params(trans, x)
         @test m ≈ m_gn
     end
@@ -117,21 +117,21 @@
             y = transform(trans, x)
             @test y == R * Vec(1.0, 2.0, 3.0)
 
-            x_gn = Point(GradientNumber(1.0,(1.,0.,0.)), GradientNumber(2.0,(0.,1.,0.)), GradientNumber(3.0,(0.,0.,1.)))
+            x_gn = Point(Dual(1.0,(1.,0.,0.)), Dual(2.0,(0.,1.,0.)), Dual(3.0,(0.,0.,1.)))
             y_gn = transform(trans, x_gn)
-            M_gn = Mat{3,3,Float64}(vcat(ntuple(i->[y_gn[i].partials.data[j] for j = 1:3].', 3)...))
+            M_gn = Mat{3,3,Float64}(vcat(ntuple(i->[partials(y_gn[i], j) for j = 1:3].', 3)...))
             M = transform_deriv(trans, x)
             @test M ≈ M_gn
 
-            g11 = GradientNumber(R[1,1],(1.,0.,0.,0.,0.,0.,0.,0.,0.))
-            g12 = GradientNumber(R[1,2],(0.,1.,0.,0.,0.,0.,0.,0.,0.))
-            g13 = GradientNumber(R[1,3],(0.,0.,1.,0.,0.,0.,0.,0.,0.))
-            g21 = GradientNumber(R[2,1],(0.,0.,0.,1.,0.,0.,0.,0.,0.))
-            g22 = GradientNumber(R[2,2],(0.,0.,0.,0.,1.,0.,0.,0.,0.))
-            g23 = GradientNumber(R[2,3],(0.,0.,0.,0.,0.,1.,0.,0.,0.))
-            g31 = GradientNumber(R[3,1],(0.,0.,0.,0.,0.,0.,1.,0.,0.))
-            g32 = GradientNumber(R[3,2],(0.,0.,0.,0.,0.,0.,0.,1.,0.))
-            g33 = GradientNumber(R[3,3],(0.,0.,0.,0.,0.,0.,0.,0.,1.))
+            g11 = Dual(R[1,1],(1.,0.,0.,0.,0.,0.,0.,0.,0.))
+            g12 = Dual(R[1,2],(0.,1.,0.,0.,0.,0.,0.,0.,0.))
+            g13 = Dual(R[1,3],(0.,0.,1.,0.,0.,0.,0.,0.,0.))
+            g21 = Dual(R[2,1],(0.,0.,0.,1.,0.,0.,0.,0.,0.))
+            g22 = Dual(R[2,2],(0.,0.,0.,0.,1.,0.,0.,0.,0.))
+            g23 = Dual(R[2,3],(0.,0.,0.,0.,0.,1.,0.,0.,0.))
+            g31 = Dual(R[3,1],(0.,0.,0.,0.,0.,0.,1.,0.,0.))
+            g32 = Dual(R[3,2],(0.,0.,0.,0.,0.,0.,0.,1.,0.))
+            g33 = Dual(R[3,3],(0.,0.,0.,0.,0.,0.,0.,0.,1.))
 
             G = @fsa [g11 g12 g13;
                       g21 g22 g23;
@@ -140,7 +140,7 @@
             trans_gn = Rotation(G)
             y_gn = transform(trans_gn, x)
 
-            M_gn = Mat{3,9,Float64}(vcat(ntuple(i->[y_gn[i].partials.data[j] for j = 1:9].', 3)...))
+            M_gn = Mat{3,9,Float64}(vcat(ntuple(i->[partials(y_gn[i], j) for j = 1:9].', 3)...))
             M = transform_deriv_params(trans, x)
             @test M ≈ M_gn
         end
@@ -159,17 +159,17 @@
             y = transform(trans, x)
             @test y ≈ Point(3.439024390243902,-1.1463414634146332,0.9268292682926829)
 
-            x_gn = Point(GradientNumber(1.0,(1.,0.,0.)), GradientNumber(2.0,(0.,1.,0.)), GradientNumber(3.0,(0.,0.,1.)))
+            x_gn = Point(Dual(1.0,(1.,0.,0.)), Dual(2.0,(0.,1.,0.)), Dual(3.0,(0.,0.,1.)))
             y_gn = transform(trans, x_gn)
-            M_gn = Mat{3,3,Float64}(vcat(ntuple(i->[y_gn[i].partials.data[j] for j = 1:3].', 3)...))
+            M_gn = Mat{3,3,Float64}(vcat(ntuple(i->[partials(y_gn[i], j) for j = 1:3].', 3)...))
             M = transform_deriv(trans, x)
             @test M ≈ M_gn
 
-            v_gn = [GradientNumber(v[1],(1.,0.,0.,0.)), GradientNumber(v[2],(0.,1.,0.,0.)), GradientNumber(v[3],(0.,0.,1.,0.)), GradientNumber(v[4],(0.,0.,0.,1.))]
+            v_gn = [Dual(v[1],(1.,0.,0.,0.)), Dual(v[2],(0.,1.,0.,0.)), Dual(v[3],(0.,0.,1.,0.)), Dual(v[4],(0.,0.,0.,1.))]
             q_gn = Quaternion(v_gn[1],v_gn[2],v_gn[3],v_gn[4],true)
             trans_gn = Rotation(q_gn)
             y_gn = transform(trans_gn,x)
-            M_gn = Mat{3,4,Float64}(vcat(ntuple(i->[y_gn[i].partials.data[j] for j = 1:4].', 3)...))
+            M_gn = Mat{3,4,Float64}(vcat(ntuple(i->[partials(y_gn[i], j) for j = 1:4].', 3)...))
             M = transform_deriv_params(trans, x)
             # Project both to tangent plane of normalized quaternions (there seems to be a change in definition...)
             proj = Mat{4,4,Float64}(eye(4) - v*v')
@@ -190,9 +190,9 @@
             y = transform(trans, x)
             @test y == Point(0.9984766744283545,2.1054173473736495,2.92750100324502)
 
-            x_gn = Point(GradientNumber(1.0,(1.,0.,0.)), GradientNumber(2.0,(0.,1.,0.)), GradientNumber(3.0,(0.,0.,1.)))
+            x_gn = Point(Dual(1.0,(1.,0.,0.)), Dual(2.0,(0.,1.,0.)), Dual(3.0,(0.,0.,1.)))
             y_gn = transform(trans, x_gn)
-            M_gn = Mat{3,3,Float64}(vcat(ntuple(i->[y_gn[i].partials.data[j] for j = 1:3].', 3)...))
+            M_gn = Mat{3,3,Float64}(vcat(ntuple(i->[partials(y_gn[i], j) for j = 1:3].', 3)...))
             M = transform_deriv(trans, x)
             @test M ≈ M_gn
 
@@ -222,19 +222,19 @@
 
             # Transform derivative
             x = Point(2.0,1.0,3.0)
-            x_gn = Point(GradientNumber(2.0, (1.0,0.0,0.0)), GradientNumber(1.0, (0.0,1.0,0.0)), GradientNumber(3.0, (0.0,0.0,1.0)))
+            x_gn = Point(Dual(2.0, (1.0,0.0,0.0)), Dual(1.0, (0.0,1.0,0.0)), Dual(3.0, (0.0,0.0,1.0)))
             x2_gn = transform(trans, x_gn)
-            m_gn = @fsa [x2_gn[1].partials.data[1] x2_gn[1].partials.data[2] x2_gn[1].partials.data[3];
-                         x2_gn[2].partials.data[1] x2_gn[2].partials.data[2] x2_gn[2].partials.data[3];
-                         x2_gn[3].partials.data[1] x2_gn[3].partials.data[2] x2_gn[3].partials.data[3] ]
+            m_gn = @fsa [partials(x2_gn[1], 1) partials(x2_gn[1], 2) partials(x2_gn[1], 3);
+                         partials(x2_gn[2], 1) partials(x2_gn[2], 2) partials(x2_gn[2], 3);
+                         partials(x2_gn[3], 1) partials(x2_gn[3], 2) partials(x2_gn[3], 3) ]
             m = transform_deriv(trans, x)
             @test m ≈ m_gn
 
             # Transform parameter derivative
-            trans_gn = RotationXY(GradientNumber(1.0, (1.0)))
+            trans_gn = RotationXY(Dual(1.0, (1.0)))
             x = Point(2.0,1.0,3.0)
             x2_gn = transform(trans_gn, x)
-            m_gn = Mat(x2_gn[1].partials.data[1], x2_gn[2].partials.data[1], x2_gn[3].partials.data[1])
+            m_gn = Mat(partials(x2_gn[1], 1), partials(x2_gn[2], 1), partials(x2_gn[3], 1))
             m = transform_deriv_params(trans, x)
             @test m ≈ m_gn
 
@@ -260,19 +260,19 @@
 
             # Transform derivative
             x = Point(2.0,1.0,3.0)
-            x_gn = Point(GradientNumber(2.0, (1.0,0.0,0.0)), GradientNumber(1.0, (0.0,1.0,0.0)), GradientNumber(3.0, (0.0,0.0,1.0)))
+            x_gn = Point(Dual(2.0, (1.0,0.0,0.0)), Dual(1.0, (0.0,1.0,0.0)), Dual(3.0, (0.0,0.0,1.0)))
             x2_gn = transform(trans, x_gn)
-            m_gn = @fsa [x2_gn[1].partials.data[1] x2_gn[1].partials.data[2] x2_gn[1].partials.data[3];
-                         x2_gn[2].partials.data[1] x2_gn[2].partials.data[2] x2_gn[2].partials.data[3];
-                         x2_gn[3].partials.data[1] x2_gn[3].partials.data[2] x2_gn[3].partials.data[3] ]
+            m_gn = @fsa [partials(x2_gn[1], 1) partials(x2_gn[1], 2) partials(x2_gn[1], 3);
+                         partials(x2_gn[2], 1) partials(x2_gn[2], 2) partials(x2_gn[2], 3);
+                         partials(x2_gn[3], 1) partials(x2_gn[3], 2) partials(x2_gn[3], 3) ]
             m = transform_deriv(trans, x)
             @test m ≈ m_gn
 
             # Transform parameter derivative
-            trans_gn = RotationYZ(GradientNumber(1.0, (1.0)))
+            trans_gn = RotationYZ(Dual(1.0, (1.0)))
             x = Point(2.0,1.0,3.0)
             x2_gn = transform(trans_gn, x)
-            m_gn = Mat(x2_gn[1].partials.data[1], x2_gn[2].partials.data[1], x2_gn[3].partials.data[1])
+            m_gn = Mat(partials(x2_gn[1], 1), partials(x2_gn[2], 1), partials(x2_gn[3], 1))
             m = transform_deriv_params(trans, x)
             @test m ≈ m_gn
 
@@ -298,19 +298,19 @@
 
             # Transform derivative
             x = Point(2.0,1.0,3.0)
-            x_gn = Point(GradientNumber(2.0, (1.0,0.0,0.0)), GradientNumber(1.0, (0.0,1.0,0.0)), GradientNumber(3.0, (0.0,0.0,1.0)))
+            x_gn = Point(Dual(2.0, (1.0,0.0,0.0)), Dual(1.0, (0.0,1.0,0.0)), Dual(3.0, (0.0,0.0,1.0)))
             x2_gn = transform(trans, x_gn)
-            m_gn = @fsa [x2_gn[1].partials.data[1] x2_gn[1].partials.data[2] x2_gn[1].partials.data[3];
-                         x2_gn[2].partials.data[1] x2_gn[2].partials.data[2] x2_gn[2].partials.data[3];
-                         x2_gn[3].partials.data[1] x2_gn[3].partials.data[2] x2_gn[3].partials.data[3] ]
+            m_gn = @fsa [partials(x2_gn[1], 1) partials(x2_gn[1], 2) partials(x2_gn[1], 3);
+                         partials(x2_gn[2], 1) partials(x2_gn[2], 2) partials(x2_gn[2], 3);
+                         partials(x2_gn[3], 1) partials(x2_gn[3], 2) partials(x2_gn[3], 3) ]
             m = transform_deriv(trans, x)
             @test m ≈ m_gn
 
             # Transform parameter derivative
-            trans_gn = RotationZX(GradientNumber(1.0, (1.0)))
+            trans_gn = RotationZX(Dual(1.0, (1.0)))
             x = Point(2.0,1.0,3.0)
             x2_gn = transform(trans_gn, x)
-            m_gn = Mat(x2_gn[1].partials.data[1], x2_gn[2].partials.data[1], x2_gn[3].partials.data[1])
+            m_gn = Mat(partials(x2_gn[1], 1), partials(x2_gn[2], 1), partials(x2_gn[3], 1))
             m = transform_deriv_params(trans, x)
             @test m ≈ m_gn
         end
@@ -330,22 +330,22 @@
 
             # Transform derivative
             x = Point(2.0,1.0,3.0)
-            x_gn = Point(GradientNumber(2.0, (1.0,0.0,0.0)), GradientNumber(1.0, (0.0,1.0,0.0)), GradientNumber(3.0, (0.0,0.0,1.0)))
+            x_gn = Point(Dual(2.0, (1.0,0.0,0.0)), Dual(1.0, (0.0,1.0,0.0)), Dual(3.0, (0.0,0.0,1.0)))
             x2_gn = transform(trans, x_gn)
-            m_gn = @fsa [x2_gn[1].partials.data[1] x2_gn[1].partials.data[2] x2_gn[1].partials.data[3];
-                         x2_gn[2].partials.data[1] x2_gn[2].partials.data[2] x2_gn[2].partials.data[3];
-                         x2_gn[3].partials.data[1] x2_gn[3].partials.data[2] x2_gn[3].partials.data[3] ]
+            m_gn = @fsa [partials(x2_gn[1], 1) partials(x2_gn[1], 2) partials(x2_gn[1], 3);
+                         partials(x2_gn[2], 1) partials(x2_gn[2], 2) partials(x2_gn[2], 3);
+                         partials(x2_gn[3], 1) partials(x2_gn[3], 2) partials(x2_gn[3], 3) ]
             m = transform_deriv(trans, x)
             @test m ≈ m_gn
 
             # Transform parameter derivative
 
-            trans_gn = euler_rotation(GradientNumber(0.1, (1.0, 0.0, 0.0)), GradientNumber(0.2, (0.0, 1.0, 0.0)), GradientNumber(0.3, (0.0, 0.0, 1.0)))
+            trans_gn = euler_rotation(Dual(0.1, (1.0, 0.0, 0.0)), Dual(0.2, (0.0, 1.0, 0.0)), Dual(0.3, (0.0, 0.0, 1.0)))
             x = Point(2.0,1.0,3.0)
             x2_gn = transform(trans_gn, x)
-            m_gn = @fsa [x2_gn[1].partials.data[1] x2_gn[1].partials.data[2] x2_gn[1].partials.data[3];
-                         x2_gn[2].partials.data[1] x2_gn[2].partials.data[2] x2_gn[2].partials.data[3];
-                         x2_gn[3].partials.data[1] x2_gn[3].partials.data[2] x2_gn[3].partials.data[3] ]
+            m_gn = @fsa [partials(x2_gn[1], 1) partials(x2_gn[1], 2) partials(x2_gn[1], 3);
+                         partials(x2_gn[2], 1) partials(x2_gn[2], 2) partials(x2_gn[2], 3);
+                         partials(x2_gn[3], 1) partials(x2_gn[3], 2) partials(x2_gn[3], 3)]
             m = transform_deriv_params(trans, x)
             @test m ≈ m_gn
 

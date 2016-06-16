@@ -16,7 +16,7 @@
         @test identity_p ∘ p_from_c == p_from_c
 
         # Test all four quadrants of the plane (for consistency of branch-cut)
-        # Include derivative tests... compare with automatic differentiation (forward mode from ForwardDiff.GradientNumber)
+        # Include derivative tests... compare with automatic differentiation (forward mode from ForwardDiff.Dual)
 
         # 1st quadrant
         xy = Point(1.0, 2.0)
@@ -25,17 +25,17 @@
         @test transform(c_from_p, rθ) ≈ xy
 
         # TODO - define some convenience functions to create the gradient numbers and unpack the arrays.
-        xy_gn = Point(GradientNumber(1.0, (1.0,0.0)), GradientNumber(2.0, (0.0,1.0)))
+        xy_gn = Point(Dual(1.0, (1.0,0.0)), Dual(2.0, (0.0,1.0)))
         rθ_gn = transform(p_from_c, xy_gn)
-        m_gn = @fsa [rθ_gn.r.partials.data[1] rθ_gn.r.partials.data[2];
-                     rθ_gn.θ.partials.data[1] rθ_gn.θ.partials.data[2] ]
+        m_gn = @fsa [partials(rθ_gn.r, 1) partials(rθ_gn.r, 2);
+                    partials(rθ_gn.θ, 1) partials(rθ_gn.θ, 2) ]
         m = transform_deriv(p_from_c, xy)
         @test m ≈ m_gn
 
-        rθ_gn = Polar(GradientNumber(2.23606797749979, (1.0, 0.0)), GradientNumber(1.1071487177940904, (0.0, 1.0)))
+        rθ_gn = Polar(Dual(2.23606797749979, (1.0, 0.0)), Dual(1.1071487177940904, (0.0, 1.0)))
         xy_gn = transform(c_from_p, rθ_gn)
-        m_gn = @fsa [xy_gn[1].partials.data[1] xy_gn[1].partials.data[2];
-                     xy_gn[2].partials.data[1] xy_gn[2].partials.data[2] ]
+        m_gn = @fsa [partials(xy_gn[1], 1) partials(xy_gn[1], 2);
+                    partials(xy_gn[2], 1) partials(xy_gn[2], 2) ]
         m = transform_deriv(c_from_p, rθ)
         @test m ≈ m_gn
 
@@ -45,17 +45,17 @@
         @test transform(p_from_c, xy) ≈ rθ
         @test transform(c_from_p, rθ) ≈ xy
 
-        xy_gn = Point(GradientNumber(-1.0, (1.0,0.0)), GradientNumber(2.0, (0.0,1.0)))
+        xy_gn = Point(Dual(-1.0, (1.0,0.0)), Dual(2.0, (0.0,1.0)))
         rθ_gn = transform(p_from_c, xy_gn)
-        m_gn = @fsa [rθ_gn.r.partials.data[1] rθ_gn.r.partials.data[2];
-                     rθ_gn.θ.partials.data[1] rθ_gn.θ.partials.data[2] ]
+        m_gn = @fsa [partials(rθ_gn.r, 1) partials(rθ_gn.r, 2);
+                    partials(rθ_gn.θ, 1) partials(rθ_gn.θ, 2) ]
         m = transform_deriv(p_from_c, xy)
         @test m ≈ m_gn
 
-        rθ_gn = Polar(GradientNumber(2.23606797749979, (1.0, 0.0)), GradientNumber(2.0344439357957027, (0.0, 1.0)))
+        rθ_gn = Polar(Dual(2.23606797749979, (1.0, 0.0)), Dual(2.0344439357957027, (0.0, 1.0)))
         xy_gn = transform(c_from_p, rθ_gn)
-        m_gn = @fsa [xy_gn[1].partials.data[1] xy_gn[1].partials.data[2];
-                     xy_gn[2].partials.data[1] xy_gn[2].partials.data[2] ]
+        m_gn = @fsa [partials(xy_gn[1], 1) partials(xy_gn[1], 2);
+                    partials(xy_gn[2], 1) partials(xy_gn[2], 2) ]
         m = transform_deriv(c_from_p, rθ)
         @test m ≈ m_gn
 
@@ -65,17 +65,17 @@
         @test transform(p_from_c, xy) ≈ rθ
         @test transform(c_from_p, rθ) ≈ xy
 
-        xy_gn = Point(GradientNumber(1.0, (1.0,0.0)), GradientNumber(-2.0, (0.0,1.0)))
+        xy_gn = Point(Dual(1.0, (1.0,0.0)), Dual(-2.0, (0.0,1.0)))
         rθ_gn = transform(p_from_c, xy_gn)
-        m_gn = @fsa [rθ_gn.r.partials.data[1] rθ_gn.r.partials.data[2];
-                     rθ_gn.θ.partials.data[1] rθ_gn.θ.partials.data[2] ]
+        m_gn = @fsa [partials(rθ_gn.r, 1) partials(rθ_gn.r, 2);
+                    partials(rθ_gn.θ, 1) partials(rθ_gn.θ, 2) ]
         m = transform_deriv(p_from_c, xy)
         @test m ≈ m_gn
 
-        rθ_gn = Polar(GradientNumber(2.23606797749979, (1.0, 0.0)), GradientNumber(-1.1071487177940904, (0.0, 1.0)))
+        rθ_gn = Polar(Dual(2.23606797749979, (1.0, 0.0)), Dual(-1.1071487177940904, (0.0, 1.0)))
         xy_gn = transform(c_from_p, rθ_gn)
-        m_gn = @fsa [xy_gn[1].partials.data[1] xy_gn[1].partials.data[2];
-                     xy_gn[2].partials.data[1] xy_gn[2].partials.data[2] ]
+        m_gn = @fsa [partials(xy_gn[1], 1) partials(xy_gn[1], 2);
+                    partials(xy_gn[2], 1) partials(xy_gn[2], 2) ]
         m = transform_deriv(c_from_p, rθ)
         @test m ≈ m_gn
 
@@ -85,17 +85,17 @@
         @test transform(p_from_c, xy) ≈ rθ
         @test transform(c_from_p, rθ) ≈ xy
 
-        xy_gn = Point(GradientNumber(-1.0, (1.0,0.0)), GradientNumber(-2.0, (0.0,1.0)))
+        xy_gn = Point(Dual(-1.0, (1.0,0.0)), Dual(-2.0, (0.0,1.0)))
         rθ_gn = transform(p_from_c, xy_gn)
-        m_gn = @fsa [rθ_gn.r.partials.data[1] rθ_gn.r.partials.data[2];
-                     rθ_gn.θ.partials.data[1] rθ_gn.θ.partials.data[2] ]
+        m_gn = @fsa [partials(rθ_gn.r, 1) partials(rθ_gn.r, 2);
+                    partials(rθ_gn.θ, 1) partials(rθ_gn.θ, 2) ]
         m = transform_deriv(p_from_c, xy)
         @test m ≈ m_gn
 
-        rθ_gn = Polar(GradientNumber(2.23606797749979, (1.0, 0.0)), GradientNumber(-2.0344439357957027, (0.0, 1.0)))
+        rθ_gn = Polar(Dual(2.23606797749979, (1.0, 0.0)), Dual(-2.0344439357957027, (0.0, 1.0)))
         xy_gn = transform(c_from_p, rθ_gn)
-        m_gn = @fsa [xy_gn[1].partials.data[1] xy_gn[1].partials.data[2];
-                     xy_gn[2].partials.data[1] xy_gn[2].partials.data[2] ]
+        m_gn = @fsa [partials(xy_gn[1], 1) partials(xy_gn[1], 2);
+                    partials(xy_gn[2], 1) partials(xy_gn[2], 2) ]
         m = transform_deriv(c_from_p, rθ)
         @test m ≈ m_gn
     end
@@ -144,19 +144,19 @@
         @test transform(s_from_cart, xyz) ≈ rθϕ
         @test transform(cart_from_s, rθϕ) ≈ xyz
 
-        xyz_gn = Point(GradientNumber(1.0, (1.0, 0.0, 0.0)), GradientNumber(2.0, (0.0, 1.0, 0.0)), GradientNumber(3.0, (0.0, 0.0, 1.0)))
+        xyz_gn = Point(Dual(1.0, (1.0, 0.0, 0.0)), Dual(2.0, (0.0, 1.0, 0.0)), Dual(3.0, (0.0, 0.0, 1.0)))
         rθϕ_gn = transform(s_from_cart, xyz_gn)
-        m_gn = @fsa [rθϕ_gn.r.partials.data[1] rθϕ_gn.r.partials.data[2] rθϕ_gn.r.partials.data[3];
-                     rθϕ_gn.θ.partials.data[1] rθϕ_gn.θ.partials.data[2] rθϕ_gn.θ.partials.data[3];
-                     rθϕ_gn.ϕ.partials.data[1] rθϕ_gn.ϕ.partials.data[2] rθϕ_gn.ϕ.partials.data[3] ]
+        m_gn = @fsa [partials(rθϕ_gn.r, 1) partials(rθϕ_gn.r, 2) partials(rθϕ_gn.r, 3);
+                     partials(rθϕ_gn.θ, 1) partials(rθϕ_gn.θ, 2) partials(rθϕ_gn.θ, 3);
+                     partials(rθϕ_gn.ϕ, 1) partials(rθϕ_gn.ϕ, 2) partials(rθϕ_gn.ϕ, 3) ]
         m = transform_deriv(s_from_cart, xyz)
         @test m ≈ m_gn
 
-        rθϕ_gn = Spherical(GradientNumber(3.7416573867739413, (1.0, 0.0, 0.0)), GradientNumber(1.1071487177940904, (0.0, 1.0, 0.0)), GradientNumber(0.9302740141154721, (0.0, 0.0, 1.0)))
+        rθϕ_gn = Spherical(Dual(3.7416573867739413, (1.0, 0.0, 0.0)), Dual(1.1071487177940904, (0.0, 1.0, 0.0)), Dual(0.9302740141154721, (0.0, 0.0, 1.0)))
         xyz_gn = transform(cart_from_s, rθϕ_gn)
-        m_gn = @fsa [xyz_gn[1].partials.data[1] xyz_gn[1].partials.data[2] xyz_gn[1].partials.data[3];
-                     xyz_gn[2].partials.data[1] xyz_gn[2].partials.data[2] xyz_gn[2].partials.data[3];
-                     xyz_gn[3].partials.data[1] xyz_gn[3].partials.data[2] xyz_gn[3].partials.data[3] ]
+        m_gn = @fsa [partials(xyz_gn[1], 1) partials(xyz_gn[1], 2) partials(xyz_gn[1], 3);
+                     partials(xyz_gn[2], 1) partials(xyz_gn[2], 2) partials(xyz_gn[2], 3);
+                     partials(xyz_gn[3], 1) partials(xyz_gn[3], 2) partials(xyz_gn[3], 3) ]
         m = transform_deriv(cart_from_s, rθϕ)
         @test m ≈ m_gn
 
@@ -166,19 +166,19 @@
         @test transform(s_from_cart, xyz) ≈ rθϕ
         @test transform(cart_from_s, rθϕ) ≈ xyz
 
-        xyz_gn = Point(GradientNumber(-1.0, (1.0, 0.0, 0.0)), GradientNumber(2.0, (0.0, 1.0, 0.0)), GradientNumber(3.0, (0.0, 0.0, 1.0)))
+        xyz_gn = Point(Dual(-1.0, (1.0, 0.0, 0.0)), Dual(2.0, (0.0, 1.0, 0.0)), Dual(3.0, (0.0, 0.0, 1.0)))
         rθϕ_gn = transform(s_from_cart, xyz_gn)
-        m_gn = @fsa [rθϕ_gn.r.partials.data[1] rθϕ_gn.r.partials.data[2] rθϕ_gn.r.partials.data[3];
-                     rθϕ_gn.θ.partials.data[1] rθϕ_gn.θ.partials.data[2] rθϕ_gn.θ.partials.data[3];
-                     rθϕ_gn.ϕ.partials.data[1] rθϕ_gn.ϕ.partials.data[2] rθϕ_gn.ϕ.partials.data[3] ]
+        m_gn = @fsa [partials(rθϕ_gn.r, 1) partials(rθϕ_gn.r, 2) partials(rθϕ_gn.r, 3);
+                     partials(rθϕ_gn.θ, 1) partials(rθϕ_gn.θ, 2) partials(rθϕ_gn.θ, 3);
+                     partials(rθϕ_gn.ϕ, 1) partials(rθϕ_gn.ϕ, 2) partials(rθϕ_gn.ϕ, 3) ]
         m = transform_deriv(s_from_cart, xyz)
         @test m ≈ m_gn
 
-        rθϕ_gn = Spherical(GradientNumber(3.7416573867739413, (1.0, 0.0, 0.0)), GradientNumber(2.0344439357957027, (0.0, 1.0, 0.0)), GradientNumber(0.9302740141154721, (0.0, 0.0, 1.0)))
+        rθϕ_gn = Spherical(Dual(3.7416573867739413, (1.0, 0.0, 0.0)), Dual(2.0344439357957027, (0.0, 1.0, 0.0)), Dual(0.9302740141154721, (0.0, 0.0, 1.0)))
         xyz_gn = transform(cart_from_s, rθϕ_gn)
-        m_gn = @fsa [xyz_gn[1].partials.data[1] xyz_gn[1].partials.data[2] xyz_gn[1].partials.data[3];
-                     xyz_gn[2].partials.data[1] xyz_gn[2].partials.data[2] xyz_gn[2].partials.data[3];
-                     xyz_gn[3].partials.data[1] xyz_gn[3].partials.data[2] xyz_gn[3].partials.data[3] ]
+        m_gn = @fsa [partials(xyz_gn[1], 1) partials(xyz_gn[1], 2) partials(xyz_gn[1], 3);
+                     partials(xyz_gn[2], 1) partials(xyz_gn[2], 2) partials(xyz_gn[2], 3);
+                     partials(xyz_gn[3], 1) partials(xyz_gn[3], 2) partials(xyz_gn[3], 3) ]
         m = transform_deriv(cart_from_s, rθϕ)
         @test m ≈ m_gn
 
@@ -188,19 +188,19 @@
         @test transform(s_from_cart, xyz) ≈ rθϕ
         @test transform(cart_from_s, rθϕ) ≈ xyz
 
-        xyz_gn = Point(GradientNumber(1.0, (1.0, 0.0, 0.0)), GradientNumber(-2.0, (0.0, 1.0, 0.0)), GradientNumber(3.0, (0.0, 0.0, 1.0)))
+        xyz_gn = Point(Dual(1.0, (1.0, 0.0, 0.0)), Dual(-2.0, (0.0, 1.0, 0.0)), Dual(3.0, (0.0, 0.0, 1.0)))
         rθϕ_gn = transform(s_from_cart, xyz_gn)
-        m_gn = @fsa [rθϕ_gn.r.partials.data[1] rθϕ_gn.r.partials.data[2] rθϕ_gn.r.partials.data[3];
-                     rθϕ_gn.θ.partials.data[1] rθϕ_gn.θ.partials.data[2] rθϕ_gn.θ.partials.data[3];
-                     rθϕ_gn.ϕ.partials.data[1] rθϕ_gn.ϕ.partials.data[2] rθϕ_gn.ϕ.partials.data[3] ]
+        m_gn = @fsa [partials(rθϕ_gn.r, 1) partials(rθϕ_gn.r, 2) partials(rθϕ_gn.r, 3);
+                     partials(rθϕ_gn.θ, 1) partials(rθϕ_gn.θ, 2) partials(rθϕ_gn.θ, 3);
+                     partials(rθϕ_gn.ϕ, 1) partials(rθϕ_gn.ϕ, 2) partials(rθϕ_gn.ϕ, 3) ]
         m = transform_deriv(s_from_cart, xyz)
         @test m ≈ m_gn
 
-        rθϕ_gn = Spherical(GradientNumber(3.7416573867739413, (1.0, 0.0, 0.0)), GradientNumber(-1.1071487177940904, (0.0, 1.0, 0.0)), GradientNumber(0.9302740141154721, (0.0, 0.0, 1.0)))
+        rθϕ_gn = Spherical(Dual(3.7416573867739413, (1.0, 0.0, 0.0)), Dual(-1.1071487177940904, (0.0, 1.0, 0.0)), Dual(0.9302740141154721, (0.0, 0.0, 1.0)))
         xyz_gn = transform(cart_from_s, rθϕ_gn)
-        m_gn = @fsa [xyz_gn[1].partials.data[1] xyz_gn[1].partials.data[2] xyz_gn[1].partials.data[3];
-                     xyz_gn[2].partials.data[1] xyz_gn[2].partials.data[2] xyz_gn[2].partials.data[3];
-                     xyz_gn[3].partials.data[1] xyz_gn[3].partials.data[2] xyz_gn[3].partials.data[3] ]
+        m_gn = @fsa [partials(xyz_gn[1], 1) partials(xyz_gn[1], 2) partials(xyz_gn[1], 3);
+                     partials(xyz_gn[2], 1) partials(xyz_gn[2], 2) partials(xyz_gn[2], 3);
+                     partials(xyz_gn[3], 1) partials(xyz_gn[3], 2) partials(xyz_gn[3], 3) ]
         m = transform_deriv(cart_from_s, rθϕ)
         @test m ≈ m_gn
 
@@ -210,19 +210,19 @@
         @test transform(s_from_cart, xyz) ≈ rθϕ
         @test transform(cart_from_s, rθϕ) ≈ xyz
 
-        xyz_gn = Point(GradientNumber(-1.0, (1.0, 0.0, 0.0)), GradientNumber(-2.0, (0.0, 1.0, 0.0)), GradientNumber(3.0, (0.0, 0.0, 1.0)))
+        xyz_gn = Point(Dual(-1.0, (1.0, 0.0, 0.0)), Dual(-2.0, (0.0, 1.0, 0.0)), Dual(3.0, (0.0, 0.0, 1.0)))
         rθϕ_gn = transform(s_from_cart, xyz_gn)
-        m_gn = @fsa [rθϕ_gn.r.partials.data[1] rθϕ_gn.r.partials.data[2] rθϕ_gn.r.partials.data[3];
-                     rθϕ_gn.θ.partials.data[1] rθϕ_gn.θ.partials.data[2] rθϕ_gn.θ.partials.data[3];
-                     rθϕ_gn.ϕ.partials.data[1] rθϕ_gn.ϕ.partials.data[2] rθϕ_gn.ϕ.partials.data[3] ]
+        m_gn = @fsa [partials(rθϕ_gn.r, 1) partials(rθϕ_gn.r, 2) partials(rθϕ_gn.r, 3);
+                     partials(rθϕ_gn.θ, 1) partials(rθϕ_gn.θ, 2) partials(rθϕ_gn.θ, 3);
+                     partials(rθϕ_gn.ϕ, 1) partials(rθϕ_gn.ϕ, 2) partials(rθϕ_gn.ϕ, 3) ]
         m = transform_deriv(s_from_cart, xyz)
         @test m ≈ m_gn
 
-        rθϕ_gn = Spherical(GradientNumber(3.7416573867739413, (1.0, 0.0, 0.0)), GradientNumber(-2.0344439357957027, (0.0, 1.0, 0.0)), GradientNumber(0.9302740141154721, (0.0, 0.0, 1.0)))
+        rθϕ_gn = Spherical(Dual(3.7416573867739413, (1.0, 0.0, 0.0)), Dual(-2.0344439357957027, (0.0, 1.0, 0.0)), Dual(0.9302740141154721, (0.0, 0.0, 1.0)))
         xyz_gn = transform(cart_from_s, rθϕ_gn)
-        m_gn = @fsa [xyz_gn[1].partials.data[1] xyz_gn[1].partials.data[2] xyz_gn[1].partials.data[3];
-                     xyz_gn[2].partials.data[1] xyz_gn[2].partials.data[2] xyz_gn[2].partials.data[3];
-                     xyz_gn[3].partials.data[1] xyz_gn[3].partials.data[2] xyz_gn[3].partials.data[3] ]
+        m_gn = @fsa [partials(xyz_gn[1], 1) partials(xyz_gn[1], 2) partials(xyz_gn[1], 3);
+                     partials(xyz_gn[2], 1) partials(xyz_gn[2], 2) partials(xyz_gn[2], 3);
+                     partials(xyz_gn[3], 1) partials(xyz_gn[3], 2) partials(xyz_gn[3], 3) ]
         m = transform_deriv(cart_from_s, rθϕ)
         @test m ≈ m_gn
 
@@ -232,19 +232,19 @@
         @test transform(s_from_cart, xyz) ≈ rθϕ
         @test transform(cart_from_s, rθϕ) ≈ xyz
 
-        xyz_gn = Point(GradientNumber(1.0, (1.0, 0.0, 0.0)), GradientNumber(2.0, (0.0, 1.0, 0.0)), GradientNumber(-3.0, (0.0, 0.0, 1.0)))
+        xyz_gn = Point(Dual(1.0, (1.0, 0.0, 0.0)), Dual(2.0, (0.0, 1.0, 0.0)), Dual(-3.0, (0.0, 0.0, 1.0)))
         rθϕ_gn = transform(s_from_cart, xyz_gn)
-        m_gn = @fsa [rθϕ_gn.r.partials.data[1] rθϕ_gn.r.partials.data[2] rθϕ_gn.r.partials.data[3];
-                     rθϕ_gn.θ.partials.data[1] rθϕ_gn.θ.partials.data[2] rθϕ_gn.θ.partials.data[3];
-                     rθϕ_gn.ϕ.partials.data[1] rθϕ_gn.ϕ.partials.data[2] rθϕ_gn.ϕ.partials.data[3] ]
+        m_gn = @fsa [partials(rθϕ_gn.r, 1) partials(rθϕ_gn.r, 2) partials(rθϕ_gn.r, 3);
+                     partials(rθϕ_gn.θ, 1) partials(rθϕ_gn.θ, 2) partials(rθϕ_gn.θ, 3);
+                     partials(rθϕ_gn.ϕ, 1) partials(rθϕ_gn.ϕ, 2) partials(rθϕ_gn.ϕ, 3) ]
         m = transform_deriv(s_from_cart, xyz)
         @test m ≈ m_gn
 
-        rθϕ_gn = Spherical(GradientNumber(3.7416573867739413, (1.0, 0.0, 0.0)), GradientNumber(1.1071487177940904, (0.0, 1.0, 0.0)), GradientNumber(-0.9302740141154721, (0.0, 0.0, 1.0)))
+        rθϕ_gn = Spherical(Dual(3.7416573867739413, (1.0, 0.0, 0.0)), Dual(1.1071487177940904, (0.0, 1.0, 0.0)), Dual(-0.9302740141154721, (0.0, 0.0, 1.0)))
         xyz_gn = transform(cart_from_s, rθϕ_gn)
-        m_gn = @fsa [xyz_gn[1].partials.data[1] xyz_gn[1].partials.data[2] xyz_gn[1].partials.data[3];
-                     xyz_gn[2].partials.data[1] xyz_gn[2].partials.data[2] xyz_gn[2].partials.data[3];
-                     xyz_gn[3].partials.data[1] xyz_gn[3].partials.data[2] xyz_gn[3].partials.data[3] ]
+        m_gn = @fsa [partials(xyz_gn[1], 1) partials(xyz_gn[1], 2) partials(xyz_gn[1], 3);
+                     partials(xyz_gn[2], 1) partials(xyz_gn[2], 2) partials(xyz_gn[2], 3);
+                     partials(xyz_gn[3], 1) partials(xyz_gn[3], 2) partials(xyz_gn[3], 3) ]
         m = transform_deriv(cart_from_s, rθϕ)
         @test m ≈ m_gn
 
@@ -254,19 +254,19 @@
         @test transform(s_from_cart, xyz) ≈ rθϕ
         @test transform(cart_from_s, rθϕ) ≈ xyz
 
-        xyz_gn = Point(GradientNumber(-1.0, (1.0, 0.0, 0.0)), GradientNumber(2.0, (0.0, 1.0, 0.0)), GradientNumber(-3.0, (0.0, 0.0, 1.0)))
+        xyz_gn = Point(Dual(-1.0, (1.0, 0.0, 0.0)), Dual(2.0, (0.0, 1.0, 0.0)), Dual(-3.0, (0.0, 0.0, 1.0)))
         rθϕ_gn = transform(s_from_cart, xyz_gn)
-        m_gn = @fsa [rθϕ_gn.r.partials.data[1] rθϕ_gn.r.partials.data[2] rθϕ_gn.r.partials.data[3];
-                     rθϕ_gn.θ.partials.data[1] rθϕ_gn.θ.partials.data[2] rθϕ_gn.θ.partials.data[3];
-                     rθϕ_gn.ϕ.partials.data[1] rθϕ_gn.ϕ.partials.data[2] rθϕ_gn.ϕ.partials.data[3] ]
+        m_gn = @fsa [partials(rθϕ_gn.r, 1) partials(rθϕ_gn.r, 2) partials(rθϕ_gn.r, 3);
+                     partials(rθϕ_gn.θ, 1) partials(rθϕ_gn.θ, 2) partials(rθϕ_gn.θ, 3);
+                     partials(rθϕ_gn.ϕ, 1) partials(rθϕ_gn.ϕ, 2) partials(rθϕ_gn.ϕ, 3) ]
         m = transform_deriv(s_from_cart, xyz)
         @test m ≈ m_gn
 
-        rθϕ_gn = Spherical(GradientNumber(3.7416573867739413, (1.0, 0.0, 0.0)), GradientNumber(2.0344439357957027, (0.0, 1.0, 0.0)), GradientNumber(-0.9302740141154721, (0.0, 0.0, 1.0)))
+        rθϕ_gn = Spherical(Dual(3.7416573867739413, (1.0, 0.0, 0.0)), Dual(2.0344439357957027, (0.0, 1.0, 0.0)), Dual(-0.9302740141154721, (0.0, 0.0, 1.0)))
         xyz_gn = transform(cart_from_s, rθϕ_gn)
-        m_gn = @fsa [xyz_gn[1].partials.data[1] xyz_gn[1].partials.data[2] xyz_gn[1].partials.data[3];
-                     xyz_gn[2].partials.data[1] xyz_gn[2].partials.data[2] xyz_gn[2].partials.data[3];
-                     xyz_gn[3].partials.data[1] xyz_gn[3].partials.data[2] xyz_gn[3].partials.data[3] ]
+        m_gn = @fsa [partials(xyz_gn[1], 1) partials(xyz_gn[1], 2) partials(xyz_gn[1], 3);
+                     partials(xyz_gn[2], 1) partials(xyz_gn[2], 2) partials(xyz_gn[2], 3);
+                     partials(xyz_gn[3], 1) partials(xyz_gn[3], 2) partials(xyz_gn[3], 3) ]
         m = transform_deriv(cart_from_s, rθϕ)
         @test m ≈ m_gn
 
@@ -276,19 +276,19 @@
         @test transform(s_from_cart, xyz) ≈ rθϕ
         @test transform(cart_from_s, rθϕ) ≈ xyz
 
-        xyz_gn = Point(GradientNumber(1.0, (1.0, 0.0, 0.0)), GradientNumber(-2.0, (0.0, 1.0, 0.0)), GradientNumber(-3.0, (0.0, 0.0, 1.0)))
+        xyz_gn = Point(Dual(1.0, (1.0, 0.0, 0.0)), Dual(-2.0, (0.0, 1.0, 0.0)), Dual(-3.0, (0.0, 0.0, 1.0)))
         rθϕ_gn = transform(s_from_cart, xyz_gn)
-        m_gn = @fsa [rθϕ_gn.r.partials.data[1] rθϕ_gn.r.partials.data[2] rθϕ_gn.r.partials.data[3];
-                     rθϕ_gn.θ.partials.data[1] rθϕ_gn.θ.partials.data[2] rθϕ_gn.θ.partials.data[3];
-                     rθϕ_gn.ϕ.partials.data[1] rθϕ_gn.ϕ.partials.data[2] rθϕ_gn.ϕ.partials.data[3] ]
+        m_gn = @fsa [partials(rθϕ_gn.r, 1) partials(rθϕ_gn.r, 2) partials(rθϕ_gn.r, 3);
+                     partials(rθϕ_gn.θ, 1) partials(rθϕ_gn.θ, 2) partials(rθϕ_gn.θ, 3);
+                     partials(rθϕ_gn.ϕ, 1) partials(rθϕ_gn.ϕ, 2) partials(rθϕ_gn.ϕ, 3) ]
         m = transform_deriv(s_from_cart, xyz)
         @test m ≈ m_gn
 
-        rθϕ_gn = Spherical(GradientNumber(3.7416573867739413, (1.0, 0.0, 0.0)), GradientNumber(-1.1071487177940904, (0.0, 1.0, 0.0)), GradientNumber(-0.9302740141154721, (0.0, 0.0, 1.0)))
+        rθϕ_gn = Spherical(Dual(3.7416573867739413, (1.0, 0.0, 0.0)), Dual(-1.1071487177940904, (0.0, 1.0, 0.0)), Dual(-0.9302740141154721, (0.0, 0.0, 1.0)))
         xyz_gn = transform(cart_from_s, rθϕ_gn)
-        m_gn = @fsa [xyz_gn[1].partials.data[1] xyz_gn[1].partials.data[2] xyz_gn[1].partials.data[3];
-                     xyz_gn[2].partials.data[1] xyz_gn[2].partials.data[2] xyz_gn[2].partials.data[3];
-                     xyz_gn[3].partials.data[1] xyz_gn[3].partials.data[2] xyz_gn[3].partials.data[3] ]
+        m_gn = @fsa [partials(xyz_gn[1], 1) partials(xyz_gn[1], 2) partials(xyz_gn[1], 3);
+                     partials(xyz_gn[2], 1) partials(xyz_gn[2], 2) partials(xyz_gn[2], 3);
+                     partials(xyz_gn[3], 1) partials(xyz_gn[3], 2) partials(xyz_gn[3], 3) ]
         m = transform_deriv(cart_from_s, rθϕ)
         @test m ≈ m_gn
 
@@ -298,19 +298,19 @@
         @test transform(s_from_cart, xyz) ≈ rθϕ
         @test transform(cart_from_s, rθϕ) ≈ xyz
 
-        xyz_gn = Point(GradientNumber(-1.0, (1.0, 0.0, 0.0)), GradientNumber(-2.0, (0.0, 1.0, 0.0)), GradientNumber(-3.0, (0.0, 0.0, 1.0)))
+        xyz_gn = Point(Dual(-1.0, (1.0, 0.0, 0.0)), Dual(-2.0, (0.0, 1.0, 0.0)), Dual(-3.0, (0.0, 0.0, 1.0)))
         rθϕ_gn = transform(s_from_cart, xyz_gn)
-        m_gn = @fsa [rθϕ_gn.r.partials.data[1] rθϕ_gn.r.partials.data[2] rθϕ_gn.r.partials.data[3];
-                     rθϕ_gn.θ.partials.data[1] rθϕ_gn.θ.partials.data[2] rθϕ_gn.θ.partials.data[3];
-                     rθϕ_gn.ϕ.partials.data[1] rθϕ_gn.ϕ.partials.data[2] rθϕ_gn.ϕ.partials.data[3] ]
+        m_gn = @fsa [partials(rθϕ_gn.r, 1) partials(rθϕ_gn.r, 2) partials(rθϕ_gn.r, 3);
+                     partials(rθϕ_gn.θ, 1) partials(rθϕ_gn.θ, 2) partials(rθϕ_gn.θ, 3);
+                     partials(rθϕ_gn.ϕ, 1) partials(rθϕ_gn.ϕ, 2) partials(rθϕ_gn.ϕ, 3) ]
         m = transform_deriv(s_from_cart, xyz)
         @test m ≈ m_gn
 
-        rθϕ_gn = Spherical(GradientNumber(3.7416573867739413, (1.0, 0.0, 0.0)), GradientNumber(-2.0344439357957027, (0.0, 1.0, 0.0)), GradientNumber(-0.9302740141154721, (0.0, 0.0, 1.0)))
+        rθϕ_gn = Spherical(Dual(3.7416573867739413, (1.0, 0.0, 0.0)), Dual(-2.0344439357957027, (0.0, 1.0, 0.0)), Dual(-0.9302740141154721, (0.0, 0.0, 1.0)))
         xyz_gn = transform(cart_from_s, rθϕ_gn)
-        m_gn = @fsa [xyz_gn[1].partials.data[1] xyz_gn[1].partials.data[2] xyz_gn[1].partials.data[3];
-                     xyz_gn[2].partials.data[1] xyz_gn[2].partials.data[2] xyz_gn[2].partials.data[3];
-                     xyz_gn[3].partials.data[1] xyz_gn[3].partials.data[2] xyz_gn[3].partials.data[3] ]
+        m_gn = @fsa [partials(xyz_gn[1], 1) partials(xyz_gn[1], 2) partials(xyz_gn[1], 3);
+                     partials(xyz_gn[2], 1) partials(xyz_gn[2], 2) partials(xyz_gn[2], 3);
+                     partials(xyz_gn[3], 1) partials(xyz_gn[3], 2) partials(xyz_gn[3], 3) ]
         m = transform_deriv(cart_from_s, rθϕ)
         @test m ≈ m_gn
 
@@ -323,19 +323,19 @@
         @test transform(cyl_from_cart, xyz) ≈ rθz
         @test transform(cart_from_cyl, rθz) ≈ xyz
 
-        xyz_gn = Point(GradientNumber(1.0, (1.0, 0.0, 0.0)), GradientNumber(2.0, (0.0, 1.0, 0.0)), GradientNumber(3.0, (0.0, 0.0, 1.0)))
+        xyz_gn = Point(Dual(1.0, (1.0, 0.0, 0.0)), Dual(2.0, (0.0, 1.0, 0.0)), Dual(3.0, (0.0, 0.0, 1.0)))
         rθz_gn = transform(cyl_from_cart, xyz_gn)
-        m_gn = @fsa [rθz_gn.r.partials.data[1] rθz_gn.r.partials.data[2] rθz_gn.r.partials.data[3];
-                     rθz_gn.θ.partials.data[1] rθz_gn.θ.partials.data[2] rθz_gn.θ.partials.data[3];
-                     rθz_gn.z.partials.data[1] rθz_gn.z.partials.data[2] rθz_gn.z.partials.data[3] ]
+        m_gn = @fsa [partials(rθz_gn.r, 1) partials(rθz_gn.r, 2) partials(rθz_gn.r, 3);
+                     partials(rθz_gn.θ, 1) partials(rθz_gn.θ, 2) partials(rθz_gn.θ, 3);
+                     partials(rθz_gn.z, 1) partials(rθz_gn.z, 2) partials(rθz_gn.z, 3) ]
         m = transform_deriv(cyl_from_cart, xyz)
         @test m ≈ m_gn
 
-        rθz_gn = Cylindrical(GradientNumber(2.23606797749979, (1.0, 0.0, 0.0)), GradientNumber(1.1071487177940904, (0.0, 1.0, 0.0)), GradientNumber(3.0, (0.0, 0.0, 1.0)))
+        rθz_gn = Cylindrical(Dual(2.23606797749979, (1.0, 0.0, 0.0)), Dual(1.1071487177940904, (0.0, 1.0, 0.0)), Dual(3.0, (0.0, 0.0, 1.0)))
         xyz_gn = transform(cart_from_cyl, rθz_gn)
-        m_gn = @fsa [xyz_gn[1].partials.data[1] xyz_gn[1].partials.data[2] xyz_gn[1].partials.data[3];
-                     xyz_gn[2].partials.data[1] xyz_gn[2].partials.data[2] xyz_gn[2].partials.data[3];
-                     xyz_gn[3].partials.data[1] xyz_gn[3].partials.data[2] xyz_gn[3].partials.data[3] ]
+        m_gn = @fsa [partials(xyz_gn[1], 1) partials(xyz_gn[1], 2) partials(xyz_gn[1], 3);
+                     partials(xyz_gn[2], 1) partials(xyz_gn[2], 2) partials(xyz_gn[2], 3);
+                     partials(xyz_gn[3], 1) partials(xyz_gn[3], 2) partials(xyz_gn[3], 3) ]
         m = transform_deriv(cart_from_cyl, rθz)
         @test m ≈ m_gn
 
@@ -345,19 +345,19 @@
         @test transform(cyl_from_cart, xyz) ≈ rθz
         @test transform(cart_from_cyl, rθz) ≈ xyz
 
-        xyz_gn = Point(GradientNumber(-1.0, (1.0, 0.0, 0.0)), GradientNumber(2.0, (0.0, 1.0, 0.0)), GradientNumber(3.0, (0.0, 0.0, 1.0)))
+        xyz_gn = Point(Dual(-1.0, (1.0, 0.0, 0.0)), Dual(2.0, (0.0, 1.0, 0.0)), Dual(3.0, (0.0, 0.0, 1.0)))
         rθz_gn = transform(cyl_from_cart, xyz_gn)
-        m_gn = @fsa [rθz_gn.r.partials.data[1] rθz_gn.r.partials.data[2] rθz_gn.r.partials.data[3];
-                     rθz_gn.θ.partials.data[1] rθz_gn.θ.partials.data[2] rθz_gn.θ.partials.data[3];
-                     rθz_gn.z.partials.data[1] rθz_gn.z.partials.data[2] rθz_gn.z.partials.data[3] ]
+        m_gn = @fsa [partials(rθz_gn.r, 1) partials(rθz_gn.r, 2) partials(rθz_gn.r, 3);
+                     partials(rθz_gn.θ, 1) partials(rθz_gn.θ, 2) partials(rθz_gn.θ, 3);
+                     partials(rθz_gn.z, 1) partials(rθz_gn.z, 2) partials(rθz_gn.z, 3) ]
         m = transform_deriv(cyl_from_cart, xyz)
         @test m ≈ m_gn
 
-        rθz_gn = Cylindrical(GradientNumber(2.23606797749979, (1.0, 0.0, 0.0)), GradientNumber(2.0344439357957027, (0.0, 1.0, 0.0)), GradientNumber(3.0, (0.0, 0.0, 1.0)))
+        rθz_gn = Cylindrical(Dual(2.23606797749979, (1.0, 0.0, 0.0)), Dual(2.0344439357957027, (0.0, 1.0, 0.0)), Dual(3.0, (0.0, 0.0, 1.0)))
         xyz_gn = transform(cart_from_cyl, rθz_gn)
-        m_gn = @fsa [xyz_gn[1].partials.data[1] xyz_gn[1].partials.data[2] xyz_gn[1].partials.data[3];
-                     xyz_gn[2].partials.data[1] xyz_gn[2].partials.data[2] xyz_gn[2].partials.data[3];
-                     xyz_gn[3].partials.data[1] xyz_gn[3].partials.data[2] xyz_gn[3].partials.data[3] ]
+        m_gn = @fsa [partials(xyz_gn[1], 1) partials(xyz_gn[1], 2) partials(xyz_gn[1], 3);
+                     partials(xyz_gn[2], 1) partials(xyz_gn[2], 2) partials(xyz_gn[2], 3);
+                     partials(xyz_gn[3], 1) partials(xyz_gn[3], 2) partials(xyz_gn[3], 3) ]
         m = transform_deriv(cart_from_cyl, rθz)
         @test m ≈ m_gn
 
@@ -367,19 +367,19 @@
         @test transform(cyl_from_cart, xyz) ≈ rθz
         @test transform(cart_from_cyl, rθz) ≈ xyz
 
-        xyz_gn = Point(GradientNumber(1.0, (1.0, 0.0, 0.0)), GradientNumber(-2.0, (0.0, 1.0, 0.0)), GradientNumber(3.0, (0.0, 0.0, 1.0)))
+        xyz_gn = Point(Dual(1.0, (1.0, 0.0, 0.0)), Dual(-2.0, (0.0, 1.0, 0.0)), Dual(3.0, (0.0, 0.0, 1.0)))
         rθz_gn = transform(cyl_from_cart, xyz_gn)
-        m_gn = @fsa [rθz_gn.r.partials.data[1] rθz_gn.r.partials.data[2] rθz_gn.r.partials.data[3];
-                     rθz_gn.θ.partials.data[1] rθz_gn.θ.partials.data[2] rθz_gn.θ.partials.data[3];
-                     rθz_gn.z.partials.data[1] rθz_gn.z.partials.data[2] rθz_gn.z.partials.data[3] ]
+        m_gn = @fsa [partials(rθz_gn.r, 1) partials(rθz_gn.r, 2) partials(rθz_gn.r, 3);
+                     partials(rθz_gn.θ, 1) partials(rθz_gn.θ, 2) partials(rθz_gn.θ, 3);
+                     partials(rθz_gn.z, 1) partials(rθz_gn.z, 2) partials(rθz_gn.z, 3) ]
         m = transform_deriv(cyl_from_cart, xyz)
         @test m ≈ m_gn
 
-        rθz_gn = Cylindrical(GradientNumber(2.23606797749979, (1.0, 0.0, 0.0)), GradientNumber(-1.1071487177940904, (0.0, 1.0, 0.0)), GradientNumber(3.0, (0.0, 0.0, 1.0)))
+        rθz_gn = Cylindrical(Dual(2.23606797749979, (1.0, 0.0, 0.0)), Dual(-1.1071487177940904, (0.0, 1.0, 0.0)), Dual(3.0, (0.0, 0.0, 1.0)))
         xyz_gn = transform(cart_from_cyl, rθz_gn)
-        m_gn = @fsa [xyz_gn[1].partials.data[1] xyz_gn[1].partials.data[2] xyz_gn[1].partials.data[3];
-                     xyz_gn[2].partials.data[1] xyz_gn[2].partials.data[2] xyz_gn[2].partials.data[3];
-                     xyz_gn[3].partials.data[1] xyz_gn[3].partials.data[2] xyz_gn[3].partials.data[3] ]
+        m_gn = @fsa [partials(xyz_gn[1], 1) partials(xyz_gn[1], 2) partials(xyz_gn[1], 3);
+                     partials(xyz_gn[2], 1) partials(xyz_gn[2], 2) partials(xyz_gn[2], 3);
+                     partials(xyz_gn[3], 1) partials(xyz_gn[3], 2) partials(xyz_gn[3], 3) ]
         m = transform_deriv(cart_from_cyl, rθz)
         @test m ≈ m_gn
 
@@ -389,19 +389,19 @@
         @test transform(cyl_from_cart, xyz) ≈ rθz
         @test transform(cart_from_cyl, rθz) ≈ xyz
 
-        xyz_gn = Point(GradientNumber(-1.0, (1.0, 0.0, 0.0)), GradientNumber(-2.0, (0.0, 1.0, 0.0)), GradientNumber(3.0, (0.0, 0.0, 1.0)))
+        xyz_gn = Point(Dual(-1.0, (1.0, 0.0, 0.0)), Dual(-2.0, (0.0, 1.0, 0.0)), Dual(3.0, (0.0, 0.0, 1.0)))
         rθz_gn = transform(cyl_from_cart, xyz_gn)
-        m_gn = @fsa [rθz_gn.r.partials.data[1] rθz_gn.r.partials.data[2] rθz_gn.r.partials.data[3];
-                     rθz_gn.θ.partials.data[1] rθz_gn.θ.partials.data[2] rθz_gn.θ.partials.data[3];
-                     rθz_gn.z.partials.data[1] rθz_gn.z.partials.data[2] rθz_gn.z.partials.data[3] ]
+        m_gn = @fsa [partials(rθz_gn.r, 1) partials(rθz_gn.r, 2) partials(rθz_gn.r, 3);
+                     partials(rθz_gn.θ, 1) partials(rθz_gn.θ, 2) partials(rθz_gn.θ, 3);
+                     partials(rθz_gn.z, 1) partials(rθz_gn.z, 2) partials(rθz_gn.z, 3) ]
         m = transform_deriv(cyl_from_cart, xyz)
         @test m ≈ m_gn
 
-        rθz_gn = Cylindrical(GradientNumber(2.23606797749979, (1.0, 0.0, 0.0)), GradientNumber(-2.0344439357957027, (0.0, 1.0, 0.0)), GradientNumber(3.0, (0.0, 0.0, 1.0)))
+        rθz_gn = Cylindrical(Dual(2.23606797749979, (1.0, 0.0, 0.0)), Dual(-2.0344439357957027, (0.0, 1.0, 0.0)), Dual(3.0, (0.0, 0.0, 1.0)))
         xyz_gn = transform(cart_from_cyl, rθz_gn)
-        m_gn = @fsa [xyz_gn[1].partials.data[1] xyz_gn[1].partials.data[2] xyz_gn[1].partials.data[3];
-                     xyz_gn[2].partials.data[1] xyz_gn[2].partials.data[2] xyz_gn[2].partials.data[3];
-                     xyz_gn[3].partials.data[1] xyz_gn[3].partials.data[2] xyz_gn[3].partials.data[3] ]
+        m_gn = @fsa [partials(xyz_gn[1], 1) partials(xyz_gn[1], 2) partials(xyz_gn[1], 3);
+                     partials(xyz_gn[2], 1) partials(xyz_gn[2], 2) partials(xyz_gn[2], 3);
+                     partials(xyz_gn[3], 1) partials(xyz_gn[3], 2) partials(xyz_gn[3], 3) ]
         m = transform_deriv(cart_from_cyl, rθz)
         @test m ≈ m_gn
 
@@ -412,22 +412,22 @@
         @test transform(cyl_from_s, rθϕ) ≈ rθz
         @test transform(s_from_cyl, rθz) ≈ rθϕ
 
-        rθϕ_gn = Spherical(GradientNumber(3.7416573867739413, (1.0, 0.0, 0.0)), GradientNumber(1.1071487177940904, (0.0, 1.0, 0.0)), GradientNumber(0.9302740141154721, (0.0, 0.0, 1.0)))
+        rθϕ_gn = Spherical(Dual(3.7416573867739413, (1.0, 0.0, 0.0)), Dual(1.1071487177940904, (0.0, 1.0, 0.0)), Dual(0.9302740141154721, (0.0, 0.0, 1.0)))
         rθz_gn = transform(cyl_from_s, rθϕ_gn)
-        m_gn = @fsa [rθz_gn.r.partials.data[1] rθz_gn.r.partials.data[2] rθz_gn.r.partials.data[3];
-                     rθz_gn.θ.partials.data[1] rθz_gn.θ.partials.data[2] rθz_gn.θ.partials.data[3];
-                     rθz_gn.z.partials.data[1] rθz_gn.z.partials.data[2] rθz_gn.z.partials.data[3] ]
+        m_gn = @fsa [partials(rθz_gn.r, 1) partials(rθz_gn.r, 2) partials(rθz_gn.r, 3);
+                     partials(rθz_gn.θ, 1) partials(rθz_gn.θ, 2) partials(rθz_gn.θ, 3);
+                     partials(rθz_gn.z, 1) partials(rθz_gn.z, 2) partials(rθz_gn.z, 3) ]
         m = transform_deriv(cyl_from_s, rθϕ)
         #@test isapprox(m, m_gn; atol = 1e-12)
         for (m1,m2) in zip(m,m_gn) # Unfortunately, FixedSizeArrays doesn't pass the keyword arguments to isapprox...
             @test isapprox(m1, m2; atol=1e-12)
         end
 
-        rθz_gn = Cylindrical(GradientNumber(2.23606797749979, (1.0, 0.0, 0.0)), GradientNumber(1.1071487177940904, (0.0, 1.0, 0.0)), GradientNumber(3.0, (0.0, 0.0, 1.0)))
+        rθz_gn = Cylindrical(Dual(2.23606797749979, (1.0, 0.0, 0.0)), Dual(1.1071487177940904, (0.0, 1.0, 0.0)), Dual(3.0, (0.0, 0.0, 1.0)))
         rθϕ_gn = transform(s_from_cyl, rθz_gn)
-        m_gn = @fsa [rθϕ_gn.r.partials.data[1] rθϕ_gn.r.partials.data[2] rθϕ_gn.r.partials.data[3];
-                     rθϕ_gn.θ.partials.data[1] rθϕ_gn.θ.partials.data[2] rθϕ_gn.θ.partials.data[3];
-                     rθϕ_gn.ϕ.partials.data[1] rθϕ_gn.ϕ.partials.data[2] rθϕ_gn.ϕ.partials.data[3] ]
+        m_gn = @fsa [partials(rθϕ_gn.r, 1) partials(rθϕ_gn.r, 2) partials(rθϕ_gn.r, 3);
+                     partials(rθϕ_gn.θ, 1) partials(rθϕ_gn.θ, 2) partials(rθϕ_gn.θ, 3);
+                     partials(rθϕ_gn.ϕ, 1) partials(rθϕ_gn.ϕ, 2) partials(rθϕ_gn.ϕ, 3) ]
         m = transform_deriv(s_from_cyl, rθz)
 #        @test isapprox(m, m_gn; atol = 1e-12)
         @test m ≈ m_gn
