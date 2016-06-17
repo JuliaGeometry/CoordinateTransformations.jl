@@ -1,8 +1,7 @@
 using CoordinateTransformations
 using BaseTestNext
 using FixedSizeArrays
-import ForwardDiff.GradientNumber
-Base.show(io::IO, g::GradientNumber) = print(io, "GradientNumber($(g.value), $(g.partials.data))") # Output was incomprehensible!
+using ForwardDiff: Dual, partials
 
 @testset "CoordinateTransformations" begin
 

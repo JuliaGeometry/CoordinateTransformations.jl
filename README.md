@@ -92,7 +92,7 @@ of how the output depends on the transformation parameters is accessed via
 `transform_deriv_params(trans, x)`. Users currently have to overload these methods,
 as no fall-back automatic differentiation is currently included. Alternatively,
 all the built-in types and transformations are compatible with automatic differentiation
-techniques, and can be parameterized by *DualNumbers*' `DualNumber` or *ForwardDiff*'s `GradientNumber`.
+techniques, and can be parameterized by *DualNumbers*' `DualNumber` or *ForwardDiff*'s `Dual`.
 
 ### Built-in transformations
 
