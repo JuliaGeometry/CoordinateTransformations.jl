@@ -56,7 +56,7 @@ Base.show(io::IO, r::Rotation2D) = print(io, "Rotation2D($(r.angle) rad)")
 function Rotation2D(a)
     s = sin(a)
     c = cos(a)
-    return Rotation2D(a,s,c)
+    return Rotation2D(promote(a,s,c)...)
 end
 
 # A variety of specializations for all occassions!
@@ -299,21 +299,21 @@ end
 function RotationXY(a)
     s = sin(a)
     c = cos(a)
-    return RotationXY(a,s,c)
+    return RotationXY(promote(a,s,c)...)
 end
 "RotationYX(angle) - constructs RotationXY(-angle)"
 RotationYX(a) = RotationXY(-a)
 function RotationYZ(a)
     s = sin(a)
     c = cos(a)
-    return RotationYZ(a,s,c)
+    return RotationYZ(promote(a,s,c)...)
 end
 "RotationZY(angle) - constructs RotationYZ(-angle)"
 RotationZY(a) = RotationYZ(-a)
 function RotationZX(a)
     s = sin(a)
     c = cos(a)
-    return RotationZX(a,s,c)
+    return RotationZX(promote(a,s,c)...)
 end
 "RotationXZ(angle) - constructs RotationZX(-angle)"
 RotationXZ(a) = RotationZX(-a)
