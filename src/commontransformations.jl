@@ -11,6 +11,7 @@ Construct the `Translation` transformation for translating Cartesian points.
 immutable Translation{T} <: Transformation
     dx::T
 end
+Translation(x::Tuple) = Translation(Vec(x))
 Translation(x,y) = Translation(Vec(x,y))
 Translation(x,y,z) = Translation(Vec(x,y,z))
 Base.show(io::IO, trans::Translation) = print(io, "Translation$((trans.dx...))")
@@ -18,6 +19,8 @@ Base.show(io::IO, trans::Translation) = print(io, "Translation$((trans.dx...))")
 function transform(trans::Translation, x)
     x + trans.dx
 end
+
+transform(trans::Translation, x::Tuple) = Tuple(Vec(x) + trans.dx)
 
 Base.inv(trans::Translation) = Translation(-trans.dx)
 
@@ -168,6 +171,8 @@ function transform(trans::Rotation, x::FixedVector{3})
     (m, x2) = promote(trans.matrix, x)
     (typeof(x2))(m * Vec(x2))
 end
+
+transform(trans::Rotation, x::Tuple) = Tuple(transform(trans, Vec(x)))
 
 transform_deriv(trans::Rotation, x) = trans.matrix # It's a linear transformation, so this is easy!
 
@@ -339,7 +344,7 @@ function transform(trans::RotationYZ, x::FixedVector{3})
     (sincos, x2) = promote(Vec(trans.sin, trans.cos), x)
     (typeof(x2))(x2[1], x[2]*sincos[2] - x[3]*sincos[1], x[2]*sincos[1] + x[3]*sincos[2])
 end
-function transform{T}(trans::RotationXY{T}, x)
+function transform{T}(trans::RotationYZ{T}, x)
     Z = zero(T)
     I = one(T)
 
@@ -348,13 +353,13 @@ function transform{T}(trans::RotationXY{T}, x)
      Z trans.sin  trans.cos] * x
 end
 
-transform(trans::RotationZX, x::Vector) =    [x[3]*trans.cos - x[1]*trans.sin, x[2], x[3]*trans.sin + x[1]*trans.cos]
-transform(trans::RotationZX, x::NTuple{3}) = (x[3]*trans.cos - x[1]*trans.sin, x[2], x[3]*trans.sin + x[1]*trans.cos)
+transform(trans::RotationZX, x::Vector) =    [x[3]*trans.sin + x[1]*trans.cos, x[2], x[3]*trans.cos - x[1]*trans.sin]
+transform(trans::RotationZX, x::NTuple{3}) = (x[3]*trans.sin + x[1]*trans.cos, x[2], x[3]*trans.cos - x[1]*trans.sin)
 function transform(trans::RotationZX, x::FixedVector{3})
     (sincos, x2) = promote(Vec(trans.sin, trans.cos), x)
     (typeof(x2))(x[3]*sincos[1] + x[1]*sincos[2], x2[2], x[3]*sincos[2] - x[1]*sincos[1])
 end
-function transform{T}(trans::RotationXY{T}, x)
+function transform{T}(trans::RotationZX{T}, x)
     Z = zero(T)
     I = one(T)
 

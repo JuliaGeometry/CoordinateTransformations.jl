@@ -11,6 +11,8 @@
 
         # Transform
         @test transform(trans, x) === Point(3.0, 1.0)
+        @test transform(trans, Tuple(x)) === (3.0, 1.0)
+        @test transform(trans, collect(x)) === Vec(3.0, 1.0)
 
         # Transform derivative
         m1 = transform_deriv(trans, x)
@@ -61,6 +63,8 @@
 
         # Transform
         @test transform(trans, x) ≈ x2
+        @test Vec(transform(trans, Tuple(x))) ≈ x2
+        @test transform(trans, collect(x)) ≈ collect(x2)
 
         # Transform derivative
         x = Point(2.0,1.0)
@@ -116,6 +120,9 @@
 
             y = transform(trans, x)
             @test y == R * Vec(1.0, 2.0, 3.0)
+            @test transform(trans, Tuple(x)) == Tuple(R * Vec(1.0, 2.0, 3.0))
+            @test transform(trans, collect(x)) == R * Vec(1.0, 2.0, 3.0)
+
 
             x_gn = Point(Dual(1.0,(1.,0.,0.)), Dual(2.0,(0.,1.,0.)), Dual(3.0,(0.,0.,1.)))
             y_gn = transform(trans, x_gn)
@@ -219,6 +226,8 @@
 
             # Transform
             @test transform(trans, x) ≈ x2
+            @test Vec(transform(trans, Tuple(x))) ≈ x2
+            @test Vec(transform(trans, collect(x))) ≈ x2
 
             # Transform derivative
             x = Point(2.0,1.0,3.0)
@@ -257,6 +266,8 @@
 
             # Transform
             @test transform(trans, x) ≈ x2
+            @test Vec(transform(trans, Tuple(x))) ≈ x2
+            @test Vec(transform(trans, collect(x))) ≈ x2
 
             # Transform derivative
             x = Point(2.0,1.0,3.0)
@@ -295,6 +306,8 @@
 
             # Transform
             @test transform(trans, x) ≈ x2
+            @test Vec(transform(trans, Tuple(x))) ≈ x2
+            @test Vec(transform(trans, collect(x))) ≈ x2
 
             # Transform derivative
             x = Point(2.0,1.0,3.0)
