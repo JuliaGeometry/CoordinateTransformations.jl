@@ -2,8 +2,8 @@
     @testset "2D" begin
         c_from_p = CartesianFromPolar()
         p_from_c = PolarFromCartesian()
-        identity_c = IdentityTransformation{Point{2}}()
-        identity_p = IdentityTransformation{Polar}()
+        identity_c = IdentityTransformation()
+        identity_p = IdentityTransformation()
 
         @test inv(c_from_p) == p_from_c
         @test inv(p_from_c) == c_from_p
@@ -107,9 +107,9 @@
         cart_from_cyl = CartesianFromCylindrical()
         cyl_from_s = CylindricalFromSpherical()
         s_from_cyl = SphericalFromCylindrical()
-        identity_cart = IdentityTransformation{Point{3}}()
-        identity_s = IdentityTransformation{Spherical}()
-        identity_cyl = IdentityTransformation{Cylindrical}()
+        identity_cart = IdentityTransformation()
+        identity_s = IdentityTransformation()
+        identity_cyl = IdentityTransformation()
 
         # inverses
         @test inv(s_from_cart) == cart_from_s

@@ -26,7 +26,7 @@ export RotMatrix, Quaternion, SpQuat, AngleAxis, EulerAngles, ProperEulerAngles
 
 # Core methods
 export transform, compose, ∘, transform_deriv, transform_deriv_params
-export AbstractTransformation, IdentityTransformation
+export Transformation, IdentityTransformation
 
 # 2D coordinate systems and their transformations
 export Polar

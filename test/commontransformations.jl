@@ -23,15 +23,15 @@
         @test m2 == eye(2)
     end
 
-    @testset "RotationPolar" begin
+    @testset "Rotation2D on Polar" begin
         p = Polar(2.0, 1.0)
-        trans = RotationPolar(1.0)
+        trans = Rotation2D(1.0)
 
         # Inverse
-        @test inv(trans) == RotationPolar(-1.0)
+        @test inv(trans) == Rotation2D(-1.0)
 
         # Composition
-        @test trans ∘ trans == RotationPolar(2.0)
+        @test trans ∘ trans == Rotation2D(2.0)
 
         # Transform
         @test transform(trans, p) == Polar(2.0, 2.0)
