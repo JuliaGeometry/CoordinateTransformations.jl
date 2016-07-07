@@ -6,14 +6,14 @@ export Point # Use Point{N, T} from FixedSizedArrays for Cartesian frames
 # TODO: move these over to FixedSizeArrays at some point
 function Base.vcat(v1::Vec, v2::Vec)
     (v1p, v2p) = promote(v1, v2)
-    Vec(v1p._..., v2p._...)
+    Vec(Tuple(v1p)..., Tuple(v2p)...)
 end
 function Base.hcat{N,M,P}(m1::Mat{N,M}, m2::Mat{N,P})
     (m1p, m2p) = promote(m1, m2)
-    Mat(m1p._..., m2p._...)
+    Mat(Tuple(m1p)..., Tuple(m2p)...)
 end
 @generated function Base.vcat{N,M,P}(m1::Mat{M,N}, m2::Mat{P,N})
-    exprs = ntuple(i -> :( (m1p._[$i]..., m2p._[$i]...) ) , N)
+    exprs = ntuple(i -> :( (Tuple(m1p)[$i]..., Tuple(m2p)[$i]...) ) , N)
     expr = Expr(:tuple, exprs...)
     quote
         (m1p, m2p) = promote(m1, m2)
