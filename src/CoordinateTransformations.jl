@@ -1,5 +1,6 @@
 module CoordinateTransformations
 
+using Compat
 using FixedSizeArrays
 export Point # Use Point{N, T} from FixedSizedArrays for Cartesian frames
 

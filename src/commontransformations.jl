@@ -16,11 +16,11 @@ Translation(x,y) = Translation(Vec(x,y))
 Translation(x,y,z) = Translation(Vec(x,y,z))
 Base.show(io::IO, trans::Translation) = print(io, "Translation$((trans.dx...))")
 
-function transform(trans::Translation, x)
+@compat function (trans::Translation)(x)
     x + trans.dx
 end
 
-transform(trans::Translation, x::Tuple) = Tuple(Vec(x) + trans.dx)
+@compat (trans::Translation)(x::Tuple) = Tuple(Vec(x) + trans.dx)
 
 Base.inv(trans::Translation) = Translation(-trans.dx)
 
@@ -60,28 +60,28 @@ function Rotation2D(a)
 end
 
 # A variety of specializations for all occassions!
-function transform(trans::Rotation2D, x::FixedVector{2})
+@compat function (trans::Rotation2D)(x::FixedVector{2})
     (sincos, x2) = promote(Vec(trans.sin, trans.cos), x)
     (typeof(x2))(x[1]*sincos[2] - x[2]*sincos[1], x[1]*sincos[1] + x[2]*sincos[2])
 end
 
-transform(trans::Rotation2D, x::NTuple{2})             = (x[1]*trans.cos - x[2]*trans.sin, x[1]*trans.sin + x[2]*trans.cos)
-transform{T1,T2}(trans::Rotation2D{T1}, x::Vector{T2}) = [x[1]*trans.cos - x[2]*trans.sin, x[1]*trans.sin + x[2]*trans.cos]
+@compat (trans::Rotation2D)(x::NTuple{2})             = (x[1]*trans.cos - x[2]*trans.sin, x[1]*trans.sin + x[2]*trans.cos)
+@compat (trans::Rotation2D{T1}){T1,T2}(x::Vector{T2}) = [x[1]*trans.cos - x[2]*trans.sin, x[1]*trans.sin + x[2]*trans.cos]
 
 # E.g. for ArrayFire, this might work better than the below?
-function transform{T1,T2}(trans::Rotation2D{T1}, x::AbstractVector{T2})
+@compat function (trans::Rotation2D{T1}){T1,T2}(x::AbstractVector{T2})
     out = similar(x, promote_type(T1,T2))
     out[1] = x[1]*trans.cos - x[2]*trans.sin
     out[2] = x[1]*trans.sin + x[2]*trans.cos
     return out
 end
 
-function transform(trans::Rotation2D, x)
+@compat function (trans::Rotation2D)(x)
     [ trans.cos -trans.sin;
       trans.sin  trans.cos ] * x
 end
 
-function transform(trans::Rotation2D, x::Polar)
+@compat function (trans::Rotation2D)(x::Polar)
     Polar(x.r, x.θ + trans.angle)
 end
 
@@ -163,16 +163,16 @@ Base.isapprox(a::Rotation, b::Rotation; kwargs...) = isapprox(a.matrix, b.matrix
 Base.isapprox{T}(a::Rotation{T}, b::Rotation{T}; kwargs...) = isapprox(a.matrix, b.matrix; kwargs...) && isapprox(a.rotation, b.rotation; kwargs...)
 Base.isapprox(a::Rotation{Void}, b::Rotation{Void}; kwargs...) = isapprox(a.matrix, b.matrix; kwargs...)
 
-function transform(trans::Rotation, x)
+@compat function (trans::Rotation)(x)
     trans.matrix * x
 end
 
-function transform(trans::Rotation, x::FixedVector{3})
+@compat function (trans::Rotation)(x::FixedVector{3})
     (m, x2) = promote(trans.matrix, x)
     (typeof(x2))(m * Vec(x2))
 end
 
-transform(trans::Rotation, x::Tuple) = Tuple(transform(trans, Vec(x)))
+@compat (trans::Rotation)(x::Tuple) = Tuple(trans(Vec(x)))
 
 transform_deriv(trans::Rotation, x) = trans.matrix # It's a linear transformation, so this is easy!
 
@@ -323,13 +323,13 @@ Base.show(io::IO, r::RotationYZ) = print(io, "RotationYZ($(r.angle))")
 Base.show(io::IO, r::RotationZX) = print(io, "RotationZX($(r.angle))")
 
 # It's a little fiddly to support all possible point container types, but this should do a good majority of them!
-transform(trans::RotationXY, x::Vector) =    [x[1]*trans.cos - x[2]*trans.sin, x[1]*trans.sin + x[2]*trans.cos, x[3]]
-transform(trans::RotationXY, x::NTuple{3}) = (x[1]*trans.cos - x[2]*trans.sin, x[1]*trans.sin + x[2]*trans.cos, x[3])
-function transform(trans::RotationXY, x::FixedVector{3})
+@compat (trans::RotationXY)(x::Vector) =    [x[1]*trans.cos - x[2]*trans.sin, x[1]*trans.sin + x[2]*trans.cos, x[3]]
+@compat (trans::RotationXY)(x::NTuple{3}) = (x[1]*trans.cos - x[2]*trans.sin, x[1]*trans.sin + x[2]*trans.cos, x[3])
+@compat function (trans::RotationXY)(x::FixedVector{3})
     (sincos, x2) = promote(Vec(trans.sin, trans.cos), x)
     (typeof(x2))(x[1]*sincos[2] - x[2]*sincos[1], x[1]*sincos[1] + x[2]*sincos[2], x2[3])
 end
-function transform{T}(trans::RotationXY{T}, x)
+@compat function (trans::RotationXY{T}){T}(x)
     Z = zero(T)
     I = one(T)
 
@@ -338,13 +338,13 @@ function transform{T}(trans::RotationXY{T}, x)
     Z          Z         I ] * x
 end
 
-transform(trans::RotationYZ, x::Vector) =    [x[1], x[2]*trans.cos - x[3]*trans.sin, x[2]*trans.sin + x[3]*trans.cos]
-transform(trans::RotationYZ, x::NTuple{3}) = (x[1], x[2]*trans.cos - x[3]*trans.sin, x[2]*trans.sin + x[3]*trans.cos)
-function transform(trans::RotationYZ, x::FixedVector{3})
+@compat (trans::RotationYZ)(x::Vector) =    [x[1], x[2]*trans.cos - x[3]*trans.sin, x[2]*trans.sin + x[3]*trans.cos]
+@compat (trans::RotationYZ)(x::NTuple{3}) = (x[1], x[2]*trans.cos - x[3]*trans.sin, x[2]*trans.sin + x[3]*trans.cos)
+@compat function (trans::RotationYZ)(x::FixedVector{3})
     (sincos, x2) = promote(Vec(trans.sin, trans.cos), x)
     (typeof(x2))(x2[1], x[2]*sincos[2] - x[3]*sincos[1], x[2]*sincos[1] + x[3]*sincos[2])
 end
-function transform{T}(trans::RotationYZ{T}, x)
+@compat function (trans::RotationYZ{T}){T}(x)
     Z = zero(T)
     I = one(T)
 
@@ -353,13 +353,13 @@ function transform{T}(trans::RotationYZ{T}, x)
      Z trans.sin  trans.cos] * x
 end
 
-transform(trans::RotationZX, x::Vector) =    [x[3]*trans.sin + x[1]*trans.cos, x[2], x[3]*trans.cos - x[1]*trans.sin]
-transform(trans::RotationZX, x::NTuple{3}) = (x[3]*trans.sin + x[1]*trans.cos, x[2], x[3]*trans.cos - x[1]*trans.sin)
-function transform(trans::RotationZX, x::FixedVector{3})
+@compat (trans::RotationZX)(x::Vector) =    [x[3]*trans.sin + x[1]*trans.cos, x[2], x[3]*trans.cos - x[1]*trans.sin]
+@compat (trans::RotationZX)(x::NTuple{3}) = (x[3]*trans.sin + x[1]*trans.cos, x[2], x[3]*trans.cos - x[1]*trans.sin)
+@compat function (trans::RotationZX)(x::FixedVector{3})
     (sincos, x2) = promote(Vec(trans.sin, trans.cos), x)
     (typeof(x2))(x[3]*sincos[1] + x[1]*sincos[2], x2[2], x[3]*sincos[2] - x[1]*sincos[1])
 end
-function transform{T}(trans::RotationZX{T}, x)
+@compat function (trans::RotationZX{T}){T}(x)
     Z = zero(T)
     I = one(T)
 

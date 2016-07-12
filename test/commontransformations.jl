@@ -10,9 +10,9 @@
         @test trans ∘ trans == Translation(4.0, -2.0)
 
         # Transform
-        @test transform(trans, x) === Point(3.0, 1.0)
-        @test transform(trans, Tuple(x)) === (3.0, 1.0)
-        @test transform(trans, collect(x)) === Vec(3.0, 1.0)
+        @test trans(x) === Point(3.0, 1.0)
+        @test trans(Tuple(x)) === (3.0, 1.0)
+        @test trans(collect(x)) === Vec(3.0, 1.0)
 
         # Transform derivative
         m1 = transform_deriv(trans, x)
@@ -36,7 +36,7 @@
         @test trans ∘ trans == Rotation2D(2.0)
 
         # Transform
-        @test transform(trans, p) == Polar(2.0, 2.0)
+        @test trans(p) == Polar(2.0, 2.0)
 
         # Transform derivative
         @test transform_deriv(trans, p) == [0 0; 0 1]
@@ -48,7 +48,7 @@
 
     @testset "Rotation2D" begin
         x = Point(2.0, 0.0)
-        x2 = transform(CartesianFromPolar(), Polar(2.0, 1.0))
+        x2 = CartesianFromPolar()(Polar(2.0, 1.0))
         trans = Rotation2D(1.0)
 
         # Constructor
@@ -62,14 +62,14 @@
         @test trans ∘ trans == Rotation2D(2.0)
 
         # Transform
-        @test transform(trans, x) ≈ x2
-        @test Vec(transform(trans, Tuple(x))) ≈ x2
-        @test transform(trans, collect(x)) ≈ collect(x2)
+        @test trans(x) ≈ x2
+        @test Vec(trans(Tuple(x))) ≈ x2
+        @test trans(collect(x)) ≈ collect(x2)
 
         # Transform derivative
         x = Point(2.0,1.0)
         x_gn = Point(Dual(2.0, (1.0,0.0)), Dual(1.0, (0.0,1.0)))
-        x2_gn = transform(trans, x_gn)
+        x2_gn = trans(x_gn)
         m_gn = @fsa [partials(x2_gn[1], 1) partials(x2_gn[1], 2);
                      partials(x2_gn[2], 1) partials(x2_gn[2], 2) ]
         m = transform_deriv(trans, x)
@@ -78,7 +78,7 @@
         # Transform parameter derivative
         trans_gn = Rotation2D(Dual(1.0, (1.0)))
         x = Point(2.0,1.0)
-        x2_gn = transform(trans_gn, x)
+        x2_gn = trans_gn(x)
         m_gn = Mat(partials(x2_gn[1], 1), partials(x2_gn[2], 1))
         m = transform_deriv_params(trans, x)
         @test m ≈ m_gn
@@ -118,14 +118,14 @@
             @test inv(trans).matrix ≈ R'
             @test (trans ∘ trans).matrix ≈ R*R
 
-            y = transform(trans, x)
+            y = trans(x)
             @test y == R * Vec(1.0, 2.0, 3.0)
-            @test transform(trans, Tuple(x)) == Tuple(R * Vec(1.0, 2.0, 3.0))
-            @test transform(trans, collect(x)) == R * Vec(1.0, 2.0, 3.0)
+            @test trans(Tuple(x)) == Tuple(R * Vec(1.0, 2.0, 3.0))
+            @test trans(collect(x)) == R * Vec(1.0, 2.0, 3.0)
 
 
             x_gn = Point(Dual(1.0,(1.,0.,0.)), Dual(2.0,(0.,1.,0.)), Dual(3.0,(0.,0.,1.)))
-            y_gn = transform(trans, x_gn)
+            y_gn = trans(x_gn)
             M_gn = Mat{3,3,Float64}(vcat(ntuple(i->[partials(y_gn[i], j) for j = 1:3].', 3)...))
             M = transform_deriv(trans, x)
             @test M ≈ M_gn
@@ -145,7 +145,7 @@
                       g31 g32 g33 ]
 
             trans_gn = Rotation(G)
-            y_gn = transform(trans_gn, x)
+            y_gn = trans_gn(x)
 
             M_gn = Mat{3,9,Float64}(vcat(ntuple(i->[partials(y_gn[i], j) for j = 1:9].', 3)...))
             M = transform_deriv_params(trans, x)
@@ -163,11 +163,11 @@
             @test inv(trans) ≈ Rotation(inv(Quaternion(v[1],v[2],v[3],v[4])))
             @test trans ∘ trans ≈ Rotation(trans.matrix * trans.matrix)
 
-            y = transform(trans, x)
+            y = trans(x)
             @test y ≈ Point(3.439024390243902,-1.1463414634146332,0.9268292682926829)
 
             x_gn = Point(Dual(1.0,(1.,0.,0.)), Dual(2.0,(0.,1.,0.)), Dual(3.0,(0.,0.,1.)))
-            y_gn = transform(trans, x_gn)
+            y_gn = trans(x_gn)
             M_gn = Mat{3,3,Float64}(vcat(ntuple(i->[partials(y_gn[i], j) for j = 1:3].', 3)...))
             M = transform_deriv(trans, x)
             @test M ≈ M_gn
@@ -175,7 +175,7 @@
             v_gn = [Dual(v[1],(1.,0.,0.,0.)), Dual(v[2],(0.,1.,0.,0.)), Dual(v[3],(0.,0.,1.,0.)), Dual(v[4],(0.,0.,0.,1.))]
             q_gn = Quaternion(v_gn[1],v_gn[2],v_gn[3],v_gn[4],true)
             trans_gn = Rotation(q_gn)
-            y_gn = transform(trans_gn,x)
+            y_gn = trans_gn(x)
             M_gn = Mat{3,4,Float64}(vcat(ntuple(i->[partials(y_gn[i], j) for j = 1:4].', 3)...))
             M = transform_deriv_params(trans, x)
             # Project both to tangent plane of normalized quaternions (there seems to be a change in definition...)
@@ -194,11 +194,11 @@
             @test inv(trans) == Rotation(trans.matrix')
             @test trans ∘ trans == Rotation(trans.matrix * trans.matrix)
 
-            y = transform(trans, x)
+            y = trans(x)
             @test y == Point(0.9984766744283545,2.1054173473736495,2.92750100324502)
 
             x_gn = Point(Dual(1.0,(1.,0.,0.)), Dual(2.0,(0.,1.,0.)), Dual(3.0,(0.,0.,1.)))
-            y_gn = transform(trans, x_gn)
+            y_gn = trans(x_gn)
             M_gn = Mat{3,3,Float64}(vcat(ntuple(i->[partials(y_gn[i], j) for j = 1:3].', 3)...))
             M = transform_deriv(trans, x)
             @test M ≈ M_gn
@@ -210,7 +210,7 @@
         @testset "RotationXY, RotationYZ and RotationZX" begin
             # RotationXY
             x = Point(2.0, 0.0, 0.0)
-            x2 = transform(CartesianFromSpherical(), Spherical(2.0, 1.0, 0.0))
+            x2 = CartesianFromSpherical()(Spherical(2.0, 1.0, 0.0))
             trans = RotationXY(1.0)
 
             # Constructor
@@ -225,14 +225,14 @@
             @test trans ∘ trans == RotationXY(2.0)
 
             # Transform
-            @test transform(trans, x) ≈ x2
-            @test Vec(transform(trans, Tuple(x))) ≈ x2
-            @test Vec(transform(trans, collect(x))) ≈ x2
+            @test trans(x) ≈ x2
+            @test Vec(trans(Tuple(x))) ≈ x2
+            @test Vec(trans(collect(x))) ≈ x2
 
             # Transform derivative
             x = Point(2.0,1.0,3.0)
             x_gn = Point(Dual(2.0, (1.0,0.0,0.0)), Dual(1.0, (0.0,1.0,0.0)), Dual(3.0, (0.0,0.0,1.0)))
-            x2_gn = transform(trans, x_gn)
+            x2_gn = trans(x_gn)
             m_gn = @fsa [partials(x2_gn[1], 1) partials(x2_gn[1], 2) partials(x2_gn[1], 3);
                          partials(x2_gn[2], 1) partials(x2_gn[2], 2) partials(x2_gn[2], 3);
                          partials(x2_gn[3], 1) partials(x2_gn[3], 2) partials(x2_gn[3], 3) ]
@@ -242,7 +242,7 @@
             # Transform parameter derivative
             trans_gn = RotationXY(Dual(1.0, (1.0)))
             x = Point(2.0,1.0,3.0)
-            x2_gn = transform(trans_gn, x)
+            x2_gn = trans_gn(x)
             m_gn = Mat(partials(x2_gn[1], 1), partials(x2_gn[2], 1), partials(x2_gn[3], 1))
             m = transform_deriv_params(trans, x)
             @test m ≈ m_gn
@@ -250,7 +250,7 @@
 
             # RotationYZ
             x = Point(0.0, 2.0, 0.0)
-            x2 = transform(CartesianFromSpherical(), Spherical(2.0, pi/2, 1.0))
+            x2 = CartesianFromSpherical()(Spherical(2.0, pi/2, 1.0))
             trans = RotationYZ(1.0)
 
             # Constructor
@@ -265,14 +265,14 @@
             @test trans ∘ trans == RotationYZ(2.0)
 
             # Transform
-            @test transform(trans, x) ≈ x2
-            @test Vec(transform(trans, Tuple(x))) ≈ x2
-            @test Vec(transform(trans, collect(x))) ≈ x2
+            @test trans(x) ≈ x2
+            @test Vec(trans(Tuple(x))) ≈ x2
+            @test Vec(trans(collect(x))) ≈ x2
 
             # Transform derivative
             x = Point(2.0,1.0,3.0)
             x_gn = Point(Dual(2.0, (1.0,0.0,0.0)), Dual(1.0, (0.0,1.0,0.0)), Dual(3.0, (0.0,0.0,1.0)))
-            x2_gn = transform(trans, x_gn)
+            x2_gn = trans(x_gn)
             m_gn = @fsa [partials(x2_gn[1], 1) partials(x2_gn[1], 2) partials(x2_gn[1], 3);
                          partials(x2_gn[2], 1) partials(x2_gn[2], 2) partials(x2_gn[2], 3);
                          partials(x2_gn[3], 1) partials(x2_gn[3], 2) partials(x2_gn[3], 3) ]
@@ -282,7 +282,7 @@
             # Transform parameter derivative
             trans_gn = RotationYZ(Dual(1.0, (1.0)))
             x = Point(2.0,1.0,3.0)
-            x2_gn = transform(trans_gn, x)
+            x2_gn = trans_gn(x)
             m_gn = Mat(partials(x2_gn[1], 1), partials(x2_gn[2], 1), partials(x2_gn[3], 1))
             m = transform_deriv_params(trans, x)
             @test m ≈ m_gn
@@ -290,7 +290,7 @@
 
             # RotationZX
             x = Point(2.0, 0.0, 0.0)
-            x2 = transform(CartesianFromSpherical(), Spherical(2.0, 0.0, -1.0))
+            x2 = CartesianFromSpherical()(Spherical(2.0, 0.0, -1.0))
             trans = RotationZX(1.0)
 
             # Constructor
@@ -305,14 +305,14 @@
             @test trans ∘ trans == RotationZX(2.0)
 
             # Transform
-            @test transform(trans, x) ≈ x2
-            @test Vec(transform(trans, Tuple(x))) ≈ x2
-            @test Vec(transform(trans, collect(x))) ≈ x2
+            @test trans(x) ≈ x2
+            @test Vec(trans(Tuple(x))) ≈ x2
+            @test Vec(trans(collect(x))) ≈ x2
 
             # Transform derivative
             x = Point(2.0,1.0,3.0)
             x_gn = Point(Dual(2.0, (1.0,0.0,0.0)), Dual(1.0, (0.0,1.0,0.0)), Dual(3.0, (0.0,0.0,1.0)))
-            x2_gn = transform(trans, x_gn)
+            x2_gn = trans(x_gn)
             m_gn = @fsa [partials(x2_gn[1], 1) partials(x2_gn[1], 2) partials(x2_gn[1], 3);
                          partials(x2_gn[2], 1) partials(x2_gn[2], 2) partials(x2_gn[2], 3);
                          partials(x2_gn[3], 1) partials(x2_gn[3], 2) partials(x2_gn[3], 3) ]
@@ -322,7 +322,7 @@
             # Transform parameter derivative
             trans_gn = RotationZX(Dual(1.0, (1.0)))
             x = Point(2.0,1.0,3.0)
-            x2_gn = transform(trans_gn, x)
+            x2_gn = trans_gn(x)
             m_gn = Mat(partials(x2_gn[1], 1), partials(x2_gn[2], 1), partials(x2_gn[3], 1))
             m = transform_deriv_params(trans, x)
             @test m ≈ m_gn
@@ -339,12 +339,12 @@
 
             @test inv(trans) == RotationZX(-0.3) ∘ (RotationYZ(-0.2) ∘ RotationXY(-0.1))
 
-            @test transform(trans, x) ≈ x2
+            @test trans(x) ≈ x2
 
             # Transform derivative
             x = Point(2.0,1.0,3.0)
             x_gn = Point(Dual(2.0, (1.0,0.0,0.0)), Dual(1.0, (0.0,1.0,0.0)), Dual(3.0, (0.0,0.0,1.0)))
-            x2_gn = transform(trans, x_gn)
+            x2_gn = trans(x_gn)
             m_gn = @fsa [partials(x2_gn[1], 1) partials(x2_gn[1], 2) partials(x2_gn[1], 3);
                          partials(x2_gn[2], 1) partials(x2_gn[2], 2) partials(x2_gn[2], 3);
                          partials(x2_gn[3], 1) partials(x2_gn[3], 2) partials(x2_gn[3], 3) ]
@@ -355,7 +355,7 @@
 
             trans_gn = euler_rotation(Dual(0.1, (1.0, 0.0, 0.0)), Dual(0.2, (0.0, 1.0, 0.0)), Dual(0.3, (0.0, 0.0, 1.0)))
             x = Point(2.0,1.0,3.0)
-            x2_gn = transform(trans_gn, x)
+            x2_gn = trans_gn(x)
             m_gn = @fsa [partials(x2_gn[1], 1) partials(x2_gn[1], 2) partials(x2_gn[1], 3);
                          partials(x2_gn[2], 1) partials(x2_gn[2], 2) partials(x2_gn[2], 3);
                          partials(x2_gn[3], 1) partials(x2_gn[3], 2) partials(x2_gn[3], 3)]

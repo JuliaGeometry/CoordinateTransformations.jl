@@ -7,7 +7,7 @@ networks of coordinate system transformations. Transformations can be easily
 applied, inverted, composed, and differentiated (both with respect to the
 input coordinates and with respect to transformation parameters such as rotation
 angle). Transformations are designed to be light-weight and efficient enough
-for, e.g., real-time  graphical applications, while support for both explicit
+for, e.g., real-time graphical applications, while support for both explicit
 and automatic differentiation makes it easy to perform optimization and
 therefore ideal for computer vision applications such as SLAM (simultaneous
 localization and mapping).
@@ -15,7 +15,7 @@ localization and mapping).
 The package provide two main pieces of functionality
 
 1. Primarily, an interface for defining `Transformation`s and applying
-   (`transform()`), inverting (`inv()`), composing (`∘` or `compose()`) and
+   (by calling), inverting (`inv()`), composing (`∘` or `compose()`) and
    differentiating (`transform_deriv()` and `transform_deriv_params()`) them.
 
 2. A small set of built-in, composable, primitive transformations for
@@ -29,27 +29,27 @@ Let's rotate a 2D point:
 x = Point(1.0, 2.0) # Point is provided by FixedSizeArrays
 rot = Rotation2D(0.3) # a rotation by 0.3 radians anticlockwise about the origin
 
-y = transform(rot, x)
+y = rot(x)
 ```
 
 We can either apply transformations in turn,
 ```julia
 trans = Translation(3.5, 1.5)
 
-z = transform(trans, transform(rot, x))
+z = trans(rot(x))
 ```
 or build a composed transformation:
 ```julia
 composed = trans ∘ rot # or compose(trans, rot)
 
-transform(composed, x) == z
+composed(x) == z
 ```
 
 We can invert it:
 ```julia
 composed_inv = inv(composed)
 
-transform(composed_inv, z) == x
+composed_inv(z) == x
 ```
 
 Finally, we can construct a matrix describing how the components of `z`
