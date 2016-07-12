@@ -21,7 +21,7 @@ immutable CartesianFromPolar <: Transformation; end
 Base.show(io::IO, trans::PolarFromCartesian) = print(io, "PolarFromCartesian()")
 Base.show(io::IO, trans::CartesianFromPolar) = print(io, "CartesianFromPolar()")
 
-function transform(::PolarFromCartesian, x)
+@compat function (::PolarFromCartesian)(x)
     length(x) == 2 || error("Polar transform takes a 2D coordinate")
 
     Polar(sqrt(x[1]*x[1] + x[2]*x[2]), atan2(x[2], x[1]))
@@ -38,7 +38,7 @@ function transform_deriv(::PolarFromCartesian, x)
 end
 transform_deriv_params(::PolarFromCartesian, x) = error("PolarFromCartesian has no parameters")
 
-function transform(::CartesianFromPolar, x::Polar)
+@compat function (::CartesianFromPolar)(x::Polar)
     Point(x.r * cos(x.θ), x.r * sin(x.θ))
 end
 function transform_deriv(::CartesianFromPolar, x::Polar)
@@ -105,7 +105,7 @@ Base.show(io::IO, trans::CylindricalFromSpherical) = print(io, "CylindricalFromS
 Base.show(io::IO, trans::SphericalFromCylindrical) = print(io, "SphericalFromCylindrical()")
 
 # Cartesian <-> Spherical
-function transform(::SphericalFromCartesian, x)
+@compat function (::SphericalFromCartesian)(x)
     length(x) == 3 || error("Spherical transform takes a 3D coordinate")
 
     Spherical(sqrt(x[1]*x[1] + x[2]*x[2] + x[3]*x[3]), atan2(x[2],x[1]), atan(x[3]/sqrt(x[1]*x[1] + x[2]*x[2])))
@@ -126,7 +126,7 @@ function transform_deriv(::SphericalFromCartesian, x)
 end
 transform_deriv_params(::SphericalFromCartesian, x) = error("SphericalFromCartesian has no parameters")
 
-function transform(::CartesianFromSpherical, x::Spherical)
+@compat function (::CartesianFromSpherical)(x::Spherical)
     Point(x.r * cos(x.θ) * cos(x.ϕ), x.r * sin(x.θ) * cos(x.ϕ), x.r * sin(x.ϕ))
 end
 function transform_deriv{T}(::CartesianFromSpherical, x::Spherical{T})
@@ -142,7 +142,7 @@ end
 transform_deriv_params(::CartesianFromSpherical, x::Spherical) = error("CartesianFromSpherical has no parameters")
 
 # Cartesian <-> Cylindrical
-function transform(::CylindricalFromCartesian, x)
+@compat function (::CylindricalFromCartesian)(x)
     length(x) == 3 || error("Cylindrical transform takes a 3D coordinate")
 
     Cylindrical(sqrt(x[1]*x[1] + x[2]*x[2]), atan2(x[2],x[1]), x[3])
@@ -161,7 +161,7 @@ function transform_deriv(::CylindricalFromCartesian, x)
 end
 transform_deriv_params(::CylindricalFromCartesian, x) = error("CylindricalFromCartesian has no parameters")
 
-function transform(::CartesianFromCylindrical, x::Cylindrical)
+@compat function (::CartesianFromCylindrical)(x::Cylindrical)
     Point(x.r * cos(x.θ), x.r * sin(x.θ), x.z)
 end
 function transform_deriv{T}(::CartesianFromCylindrical, x::Cylindrical{T})
@@ -174,21 +174,21 @@ end
 transform_deriv_params(::CartesianFromPolar, x::Cylindrical) = error("CartesianFromCylindrical has no parameters")
 
 # Spherical <-> Cylindrical (TODO direct would be faster)
-function transform(::CylindricalFromSpherical, x::Spherical)
-    transform(CylindricalFromCartesian() , transform(CartesianFromSpherical(), x))
+@compat function (::CylindricalFromSpherical)(x::Spherical)
+    CylindricalFromCartesian()(CartesianFromSpherical()(x))
 end
 function transform_deriv(::CylindricalFromSpherical, x::Spherical)
-    M1 = transform_deriv(CylindricalFromCartesian(), transform(CartesianFromSpherical(), x))
+    M1 = transform_deriv(CylindricalFromCartesian(), CartesianFromSpherical()(x))
     M2 = transform_deriv(CartesianFromSpherical(), x)
     return M1*M2
 end
 transform_deriv_params(::CylindricalFromSpherical, x::Spherical) = error("CylindricalFromSpherical has no parameters")
 
-function transform(::SphericalFromCylindrical, x::Cylindrical)
-    transform(SphericalFromCartesian() , transform(CartesianFromCylindrical(), x))
+@compat function (::SphericalFromCylindrical)(x::Cylindrical)
+    SphericalFromCartesian()(CartesianFromCylindrical()(x))
 end
 function transform_deriv(::SphericalFromCylindrical, x::Cylindrical)
-    M1 = transform_deriv(SphericalFromCartesian(), transform(CartesianFromCylindrical(), x))
+    M1 = transform_deriv(SphericalFromCartesian(), CartesianFromCylindrical()(x))
     M2 = transform_deriv(CartesianFromCylindrical(), x)
     return M1*M2
 end

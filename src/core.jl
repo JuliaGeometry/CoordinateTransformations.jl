@@ -8,11 +8,13 @@
 """
 The `Transformation` supertype defines a simple interface for performing
 transformations. Subtypes should be able to apply a coordinate system
-transformation on the correct data types by overloading `transform()`, and
+transformation on the correct data types by overloading the call method, and
 usually would have the corresponding inverse transformation defined by `Base.inv()`.
 Efficient compositions can optionally be defined by `compose()` (equivalently `∘`).
 """
 abstract Transformation
+
+Base.@deprecate transform(transformation::Transformation, x) transformation(x)
 
 """
 The `IdentityTransformation` is a singleton `Transformation` that returns the
@@ -20,18 +22,7 @@ input unchanged, similar to `identity`.
 """
 immutable IdentityTransformation <: Transformation; end
 
-"""
-    transform(trans::Transformation, x)
-
-A transformation `trans` is explicitly applied to data x, returning the
-coordinates in the new coordinate system.
-"""
-function transform(trans::Transformation, x)
-    error("The transform of datatype $(typeof(x)) is not defined for transformation $trans.")
-end
-
-@inline transform(::IdentityTransformation, x) = x
-
+@compat @inline (::IdentityTransformation)(x) = x
 
 """
 A `ComposedTransformation` simply executes two transformations successively, and
@@ -44,8 +35,8 @@ end
 
 Base.show(io::IO, trans::ComposedTransformation) = print(io, "($(trans.t1) ∘ $(trans.t2))")
 
-@inline function transform(trans::ComposedTransformation, x)
-    transform(trans.t1, transform(trans.t2, x))
+@compat @inline function (trans::ComposedTransformation)(x)
+    trans.t1(trans.t2(x))
 end
 
 """
@@ -66,7 +57,7 @@ compose(trans::IdentityTransformation, ::IdentityTransformation) = trans
 compose(::IdentityTransformation, trans::Transformation) = trans
 compose(trans::Transformation, ::IdentityTransformation) = trans
 
-const ∘ = compose
+const ∘ = compose # TODO watch JuliaLang/julia#17184 and #17155 for v0.5 compatibility
 
 
 """
@@ -93,7 +84,7 @@ transform_deriv(::Transformation, x) = error("Differential matrix of transform $
 transform_deriv(::IdentityTransformation, x) = I
 
 function transform_deriv(trans::ComposedTransformation, x)
-    x2 = transform(trans.t2, x)
+    x2 = trans.t2(x)
     m1 = transform_deriv(trans.t1, x2)
     m2 = transform_deriv(trans.t2, x)
     return m1 * m2
@@ -111,7 +102,7 @@ transform_deriv(::Transformation, x) = error("Differential matrix of parameters 
 transform_deriv_params(::IdentityTransformation, x) = error("IdentityTransformation has no parameters")
 
 function transform_deriv_params(trans::ComposedTransformation, x)
-    x2 = transform(trans.t2, x)
+    x2 = trans.t2(x)
     m1 = transform_deriv(trans.t1, x2)
     p2 = transform_deriv_params(trans.t2, x)
     p1 = transform_deriv_params(trans.t1, x2)
