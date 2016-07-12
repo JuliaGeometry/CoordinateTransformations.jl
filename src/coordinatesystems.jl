@@ -10,27 +10,33 @@ immutable Polar{T}
 end
 Base.show(io::IO, x::Polar) = print(io, "Polar(r=$(x.r), θ=$(x.θ) rad)")
 Base.isapprox(p1::Polar, p2::Polar; kwargs...) = isapprox(p1.r, p2.r; kwargs...) && isapprox(p1.θ, p2.θ; kwargs...)
+Base.eltype{T}(::Polar{T}) = T
+Base.eltype{T}(::Type{Polar{T}}) = T
 
 "`PolarFromCartesian()` - transformation from `Point{2}` type to `Polar` type"
-immutable PolarFromCartesian <: AbstractTransformation{Polar, Point{2}}; end
+immutable PolarFromCartesian <: Transformation; end
 "`CartesianFromPolar()` - transformation from `Polar` type to `Point{2}` type"
-immutable CartesianFromPolar <: AbstractTransformation{Point{2}, Polar}; end
+immutable CartesianFromPolar <: Transformation; end
 
 Base.show(io::IO, trans::PolarFromCartesian) = print(io, "PolarFromCartesian()")
 Base.show(io::IO, trans::CartesianFromPolar) = print(io, "CartesianFromPolar()")
 
-function transform(::PolarFromCartesian, x::Point{2})
+function transform(::PolarFromCartesian, x)
+    length(x) == 2 || error("Polar transform takes a 2D coordinate")
+
     Polar(sqrt(x[1]*x[1] + x[2]*x[2]), atan2(x[2], x[1]))
 end
 
-function transform_deriv{T}(::PolarFromCartesian, x::Point{2,T})
+function transform_deriv(::PolarFromCartesian, x)
+    length(x) == 2 || error("Polar transform takes a 2D coordinate")
+
     r = sqrt(x[1]*x[1] + x[2]*x[2])
     f = x[2] / x[1]
-    c = one(T)/(x[1]*(one(T) + f*f))
+    c = one(eltype(x))/(x[1]*(one(eltype(x)) + f*f))
     @fsa [ x[1]/r    x[2]/r
           -f*c       c     ]
 end
-transform_deriv_params(::PolarFromCartesian, x::Point{2}) = error("PolarFromCartesian has no parameters")
+transform_deriv_params(::PolarFromCartesian, x) = error("PolarFromCartesian has no parameters")
 
 function transform(::CartesianFromPolar, x::Polar)
     Point(x.r * cos(x.θ), x.r * sin(x.θ))
@@ -46,8 +52,8 @@ transform_deriv_params(::CartesianFromPolar, x::Polar) = error("CartesianFromPol
 Base.inv(::PolarFromCartesian) = CartesianFromPolar()
 Base.inv(::CartesianFromPolar) = PolarFromCartesian()
 
-compose(::PolarFromCartesian, ::CartesianFromPolar) = IdentityTransformation{Polar}()
-compose(::CartesianFromPolar, ::PolarFromCartesian) = IdentityTransformation{Point{2}}()
+compose(::PolarFromCartesian, ::CartesianFromPolar) = IdentityTransformation()
+compose(::CartesianFromPolar, ::PolarFromCartesian) = IdentityTransformation()
 
 #############################
 ### 3D Coordinate Systems ###
@@ -62,6 +68,8 @@ immutable Spherical{T}
 end
 Base.show(io::IO, x::Spherical) = print(io, "Spherical(r=$(x.r), θ=$(x.θ) rad, ϕ=$(x.ϕ) rad)")
 Base.isapprox(p1::Spherical, p2::Spherical; kwargs...) = isapprox(p1.r, p2.r; kwargs...) && isapprox(p1.θ, p2.θ; kwargs...) && isapprox(p1.ϕ, p2.ϕ; kwargs...)
+Base.eltype{T}(::Spherical{T}) = T
+Base.eltype{T}(::Type{Spherical{T}}) = T
 
 """
 Cylindrical(r, θ, z) - 3D cylindrical coordinates
@@ -73,19 +81,21 @@ immutable Cylindrical{T}
 end
 Base.show(io::IO, x::Cylindrical) = print(io, "Cylindrical(r=$(x.r), θ=$(x.θ) rad, z=$(x.z))")
 Base.isapprox(p1::Cylindrical, p2::Cylindrical; kwargs...) = isapprox(p1.r, p2.r; kwargs...) && isapprox(p1.θ, p2.θ; kwargs...) && isapprox(p1.z, p2.z; kwargs...)
+Base.eltype{T}(::Cylindrical{T}) = T
+Base.eltype{T}(::Type{Cylindrical{T}}) = T
 
-"`SphericalFromCartesian()` - transformation from `Point{3}` type to `Spherical` type"
-immutable SphericalFromCartesian <: AbstractTransformation{Spherical, Point{3}}; end
+"`SphericalFromCartesian()` - transformation from 3D point to `Spherical` type"
+immutable SphericalFromCartesian <: Transformation; end
 "`CartesianFromSpherical()` - transformation from `Spherical` type to `Point{3}` type"
-immutable CartesianFromSpherical <: AbstractTransformation{Point{3}, Spherical}; end
-"`CylindricalFromCartesian()` - transformation from `Point{3}` type to `Cylindrical` type"
-immutable CylindricalFromCartesian <: AbstractTransformation{Cylindrical, Point{3}}; end
+immutable CartesianFromSpherical <: Transformation; end
+"`CylindricalFromCartesian()` - transformation from 3D point to `Cylindrical` type"
+immutable CylindricalFromCartesian <: Transformation; end
 "`CartesianFromCylindrical()` - transformation from `Cylindrical` type to `Point{3}` type"
-immutable CartesianFromCylindrical <: AbstractTransformation{Point{3}, Cylindrical}; end
+immutable CartesianFromCylindrical <: Transformation; end
 "`CylindricalFromSpherical()` - transformation from `Spherical` type to `Cylindrical` type"
-immutable CylindricalFromSpherical <: AbstractTransformation{Cylindrical, Spherical}; end
+immutable CylindricalFromSpherical <: Transformation; end
 "`SphericalFromCylindrical()` - transformation from `Cylindrical` type to `Spherical` type"
-immutable SphericalFromCylindrical <: AbstractTransformation{Spherical, Cylindrical}; end
+immutable SphericalFromCylindrical <: Transformation; end
 
 Base.show(io::IO, trans::SphericalFromCartesian) = print(io, "SphericalFromCartesian()")
 Base.show(io::IO, trans::CartesianFromSpherical) = print(io, "CartesianFromSpherical()")
@@ -95,10 +105,15 @@ Base.show(io::IO, trans::CylindricalFromSpherical) = print(io, "CylindricalFromS
 Base.show(io::IO, trans::SphericalFromCylindrical) = print(io, "SphericalFromCylindrical()")
 
 # Cartesian <-> Spherical
-function transform(::SphericalFromCartesian, x::Point{3})
+function transform(::SphericalFromCartesian, x)
+    length(x) == 3 || error("Spherical transform takes a 3D coordinate")
+
     Spherical(sqrt(x[1]*x[1] + x[2]*x[2] + x[3]*x[3]), atan2(x[2],x[1]), atan(x[3]/sqrt(x[1]*x[1] + x[2]*x[2])))
 end
-function transform_deriv{T}(::SphericalFromCartesian, x::Point{3,T})
+function transform_deriv(::SphericalFromCartesian, x)
+    length(x) == 3 || error("Spherical transform takes a 3D coordinate")
+    T = eltype(x)
+
     r = sqrt(x[1]*x[1] + x[2]*x[2] + x[3]*x[3])
     rxy = sqrt(x[1]*x[1] + x[2]*x[2])
     fxy = x[2] / x[1]
@@ -109,7 +124,7 @@ function transform_deriv{T}(::SphericalFromCartesian, x::Point{3,T})
           -fxy*cxy  cxy     zero(T)
            f*x[1]   f*x[2]  rxy/(r*r) ]
 end
-transform_deriv_params(::SphericalFromCartesian, x::Point{3}) = error("SphericalFromCartesian has no parameters")
+transform_deriv_params(::SphericalFromCartesian, x) = error("SphericalFromCartesian has no parameters")
 
 function transform(::CartesianFromSpherical, x::Spherical)
     Point(x.r * cos(x.θ) * cos(x.ϕ), x.r * sin(x.θ) * cos(x.ϕ), x.r * sin(x.ϕ))
@@ -127,11 +142,16 @@ end
 transform_deriv_params(::CartesianFromSpherical, x::Spherical) = error("CartesianFromSpherical has no parameters")
 
 # Cartesian <-> Cylindrical
-function transform(::CylindricalFromCartesian, x::Point{3})
+function transform(::CylindricalFromCartesian, x)
+    length(x) == 3 || error("Cylindrical transform takes a 3D coordinate")
+
     Cylindrical(sqrt(x[1]*x[1] + x[2]*x[2]), atan2(x[2],x[1]), x[3])
 end
 
-function transform_deriv{T}(::CylindricalFromCartesian, x::Point{3,T})
+function transform_deriv(::CylindricalFromCartesian, x)
+    length(x) == 3 || error("Cylindrical transform takes a 3D coordinate")
+    T = eltype(x)
+
     r = sqrt(x[1]*x[1] + x[2]*x[2])
     f = x[2] / x[1]
     c = one(T)/(x[1]*(one(T) + f*f))
@@ -139,7 +159,7 @@ function transform_deriv{T}(::CylindricalFromCartesian, x::Point{3,T})
           -f*c     c     zero(T)
           zero(T)  zero(T)  one(T) ]
 end
-transform_deriv_params(::CylindricalFromCartesian, x::Point{3}) = error("CylindricalFromCartesian has no parameters")
+transform_deriv_params(::CylindricalFromCartesian, x) = error("CylindricalFromCartesian has no parameters")
 
 function transform(::CartesianFromCylindrical, x::Cylindrical)
     Point(x.r * cos(x.θ), x.r * sin(x.θ), x.z)
@@ -182,12 +202,12 @@ Base.inv(::CylindricalFromSpherical) = SphericalFromCylindrical()
 Base.inv(::SphericalFromCylindrical) = CylindricalFromSpherical()
 
 # Inverse composition
-compose(::SphericalFromCartesian,   ::CartesianFromSpherical)   = IdentityTransformation{Spherical}()
-compose(::CartesianFromSpherical,   ::SphericalFromCartesian)   = IdentityTransformation{Point{3}}()
-compose(::CylindricalFromCartesian, ::CartesianFromCylindrical) = IdentityTransformation{Cylindrical}()
-compose(::CartesianFromCylindrical, ::CylindricalFromCartesian) = IdentityTransformation{Point{3}}()
-compose(::CylindricalFromSpherical, ::SphericalFromCylindrical) = IdentityTransformation{Cylindrical}()
-compose(::SphericalFromCylindrical, ::CylindricalFromSpherical) = IdentityTransformation{Spherical}()
+compose(::SphericalFromCartesian,   ::CartesianFromSpherical)   = IdentityTransformation()
+compose(::CartesianFromSpherical,   ::SphericalFromCartesian)   = IdentityTransformation()
+compose(::CylindricalFromCartesian, ::CartesianFromCylindrical) = IdentityTransformation()
+compose(::CartesianFromCylindrical, ::CylindricalFromCartesian) = IdentityTransformation()
+compose(::CylindricalFromSpherical, ::SphericalFromCylindrical) = IdentityTransformation()
+compose(::SphericalFromCylindrical, ::CylindricalFromSpherical) = IdentityTransformation()
 
 # Cyclic compositions
 compose(::SphericalFromCartesian,   ::CartesianFromCylindrical) = SphericalFromCylindrical()

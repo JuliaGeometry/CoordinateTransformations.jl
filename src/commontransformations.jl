@@ -1,39 +1,38 @@
-# Some common transformations are defined here
-
 ###################
 ### Translation ###
 ###################
 """
-    Translation{N, T}(dx) <: AbstractTransformation{FixedVector{N}, FixedVector{N}}
-    Translation(x, y)        (2D)
-    Translation(x, y, z)     (3D)
+    Translation(dv) <: Transformation
+    Translation(dx, dy)       (2D)
+    Translation(dx, dy, dz)   (3D)
 
-Construct the `Translation` transformation for translating Cartesian points
-(`FixedVector`s).
+Construct the `Translation` transformation for translating Cartesian points.
 """
-immutable Translation{N, T} <: AbstractTransformation{FixedVector{N}, FixedVector{N}}
-    dx::Vec{N, T}
+immutable Translation{T} <: Transformation
+    dx::T
 end
+Translation(x::Tuple) = Translation(Vec(x))
 Translation(x,y) = Translation(Vec(x,y))
 Translation(x,y,z) = Translation(Vec(x,y,z))
-Base.show(io::IO, trans::Translation) = print(io, "Translation$(trans.dx._)")
+Base.show(io::IO, trans::Translation) = print(io, "Translation$((trans.dx...))")
 
-function transform{N}(trans::Translation{N}, x::FixedVector{N})
-    (x_promoted, dx_promoted) = promote(x, trans.dx) # Force same data type
-    x_promoted + (typeof(x_promoted))(dx_promoted) # Force same base type
+function transform(trans::Translation, x)
+    x + trans.dx
 end
+
+transform(trans::Translation, x::Tuple) = Tuple(Vec(x) + trans.dx)
 
 Base.inv(trans::Translation) = Translation(-trans.dx)
 
-function compose{N}(trans1::Translation{N}, trans2::Translation{N})
+function compose(trans1::Translation, trans2::Translation)
     Translation(trans1.dx + trans2.dx)
 end
 
-function transform_deriv{N}(trans::Translation{N}, x::Point{N})
+function transform_deriv(trans::Translation, x)
     I
 end
 
-function transform_deriv_params{N}(trans::Translation{N}, x::Point{N})
+function transform_deriv_params(trans::Translation, x)
     I
 end
 
@@ -42,47 +41,17 @@ end
 ####################
 
 """
-    RotationPolar(angle)
-
-Construct the `RotationPolar` transformation for rotating `Polar` points about
-the origin.
-"""
-immutable RotationPolar{T} <: AbstractTransformation{Polar, Polar}
-    angle::T
-end
-Base.show(io::IO, r::RotationPolar) = print(io, "RotationPolar($(r.angle))")
-
-
-function transform(trans::RotationPolar, x::Polar)
-    Polar(x.r, x.θ + trans.angle)
-end
-
-function transform_deriv{T}(trans::RotationPolar, x::Polar{T})
-    @fsa [ zero(T) zero(T);
-           zero(T) one(T)  ]
-end
-
-function transform_deriv_params{T}(trans::RotationPolar, x::Polar{T})
-    @fsa [ zero(T);
-           one(T)  ]
-end
-
-Base.inv(trans::RotationPolar) = RotationPolar(-trans.angle)
-
-compose(t1::RotationPolar, t2::RotationPolar) = RotationPolar(t1.angle + t2.angle)
-
-"""
     Rotation2D(angle)
 
 Construct the `Rotation2D` transformation for rotating 2D Cartesian points
 (i.e. `FixedVector{2}`s) about the origin.
 """
-immutable Rotation2D{T} <: AbstractTransformation{FixedVector, FixedVector{2}}
+immutable Rotation2D{T} <: Transformation
     angle::T
     sin::T
     cos::T
 end
-Base.show(io::IO, r::Rotation2D) = print(io, "Rotation2D($(r.angle))")
+Base.show(io::IO, r::Rotation2D) = print(io, "Rotation2D($(r.angle) rad)")
 
 function Rotation2D(a)
     s = sin(a)
@@ -90,25 +59,59 @@ function Rotation2D(a)
     return Rotation2D(a,s,c)
 end
 
+# A variety of specializations for all occassions!
 function transform(trans::Rotation2D, x::FixedVector{2})
     (sincos, x2) = promote(Vec(trans.sin, trans.cos), x)
     (typeof(x2))(x[1]*sincos[2] - x[2]*sincos[1], x[1]*sincos[1] + x[2]*sincos[2])
 end
 
-function transform_deriv(trans::Rotation2D, x::FixedVector{2})
+transform(trans::Rotation2D, x::NTuple{2})             = (x[1]*trans.cos - x[2]*trans.sin, x[1]*trans.sin + x[2]*trans.cos)
+transform{T1,T2}(trans::Rotation2D{T1}, x::Vector{T2}) = [x[1]*trans.cos - x[2]*trans.sin, x[1]*trans.sin + x[2]*trans.cos]
+
+# E.g. for ArrayFire, this might work better than the below?
+function transform{T1,T2}(trans::Rotation2D{T1}, x::AbstractVector{T2})
+    out = similar(x, promote_type(T1,T2))
+    out[1] = x[1]*trans.cos - x[2]*trans.sin
+    out[2] = x[1]*trans.sin + x[2]*trans.cos
+    return out
+end
+
+function transform(trans::Rotation2D, x)
+    [ trans.cos -trans.sin;
+      trans.sin  trans.cos ] * x
+end
+
+function transform(trans::Rotation2D, x::Polar)
+    Polar(x.r, x.θ + trans.angle)
+end
+
+function transform_deriv(trans::Rotation2D, x)
     @fsa [ trans.cos -trans.sin;
            trans.sin  trans.cos ]
 end
 
-function transform_deriv_params(trans::Rotation2D, x::FixedVector{2})
+function transform_deriv{T}(trans::Rotation2D, x::Polar{T})
+    @fsa [ zero(T) zero(T);
+           zero(T) one(T)  ]
+end
+
+function transform_deriv_params(trans::Rotation2D, x)
     # 2x1 transformation matrix
     Mat(-trans.sin*x[1] - trans.cos*x[2],
          trans.cos*x[1] - trans.sin*x[2] )
 end
 
+function transform_deriv_params{T}(trans::Rotation2D, x::Polar{T})
+    @fsa [ zero(T);
+           one(T)  ]
+end
+
 Base.inv(trans::Rotation2D) = Rotation2D(-trans.angle, -trans.sin, trans.cos)
 
 compose(t1::Rotation2D, t2::Rotation2D) = Rotation2D(t1.angle + t2.angle)
+
+
+
 
 #####################
 ### Rotation (3D) ###
@@ -119,9 +122,9 @@ compose(t1::Rotation2D, t2::Rotation2D) = Rotation2D(t1.angle + t2.angle)
 Construct the `Rotation` transformation for rotating 3D Cartesian points
 (i.e. `FixedVector{3}`s) about the origin. I
 """
-immutable Rotation{R, T} <: AbstractTransformation{FixedVector{3}, FixedVector{3}}
+immutable Rotation{R, T} <: Transformation
     rotation::R
-    matrix::Mat{3,3,T}
+    matrix::Mat{3,3,T} # Should we enforce this storage, or merely "suggest" it
 end
 Base.show(io::IO, r::Rotation) = print(io, "Rotation($(r.rotation))")
 Base.show(io::IO, r::Rotation{Void}) = print(io, "Rotation($(r.matrix))")
@@ -133,8 +136,8 @@ Construct the `Rotation` transformation for rotating 3D Cartesian points
 (i.e. `FixedVector{3}`s) about the origin. `matrix` is a 3×3 `Matrix` or `Mat`,
 and is assumed to be orthogonal.
 """
-Rotation{T}(r::RotMatrix{T}) = Rotation(nothing, r) # R=Void represents direct parameterization by the marix (assumed to be Hermitian)
-Rotation{T}(r::Matrix{T}) = Rotation(nothing, Mat{3,3,T}(r))
+Rotation{T}(r::RotMatrix{T}) = Rotation(nothing, r) # R=Void represents direct parameterization by the marix (assumed to be orthogonal/unitary)
+Rotation{T}(r::Matrix{T}) = Rotation(nothing, Mat{3,3,T}(r)) # Should we enforce this storage, or merely "suggest" it
 """
     Rotation(R)
 
@@ -160,27 +163,33 @@ Base.isapprox(a::Rotation, b::Rotation; kwargs...) = isapprox(a.matrix, b.matrix
 Base.isapprox{T}(a::Rotation{T}, b::Rotation{T}; kwargs...) = isapprox(a.matrix, b.matrix; kwargs...) && isapprox(a.rotation, b.rotation; kwargs...)
 Base.isapprox(a::Rotation{Void}, b::Rotation{Void}; kwargs...) = isapprox(a.matrix, b.matrix; kwargs...)
 
+function transform(trans::Rotation, x)
+    trans.matrix * x
+end
+
 function transform(trans::Rotation, x::FixedVector{3})
     (m, x2) = promote(trans.matrix, x)
     (typeof(x2))(m * Vec(x2))
 end
 
-transform_deriv(trans::Rotation, x::FixedVector{3}) = trans.matrix # It's a linear transformation, so this is easy!
+transform(trans::Rotation, x::Tuple) = Tuple(transform(trans, Vec(x)))
 
-function transform_deriv_params{T1,T2}(trans::Rotation{Void,T1}, x::FixedVector{3,T2})
+transform_deriv(trans::Rotation, x) = trans.matrix # It's a linear transformation, so this is easy!
+
+function transform_deriv_params{T}(trans::Rotation{Void,T}, x)
     # This derivative isn't projected into the orthogonal/Hermition tangent
     # plane. It would be acheived by:
     # Δ -> (Δ - R Δ' R) / 2
 
     # The matrix gives 9 parameters...
-    Z = zero(promote_type(T1,T2))
+    Z = zero(promote_type(T, eltype(x)))
     @fsa [ x[1] x[2] x[3] Z Z Z Z Z Z;
            Z Z Z x[1] x[2] x[3] Z Z Z;
            Z Z Z Z Z Z x[1] x[2] x[3] ]
 end
 
 
-function transform_deriv_params{T1,T2}(trans::Rotation{Quaternion{T1},T1}, x::FixedVector{3,T2})
+function transform_deriv_params{T1,T2}(trans::Rotation{Quaternion{T1},T2}, x)
     #=
     # From Rotations.jl package
     # get rotation matrix from quaternion
@@ -248,11 +257,12 @@ compose(t1::Rotation, t2::Rotation) = Rotation(nothing, t1.matrix*t2.matrix) # A
     RotationXY(angle)
 
 Construct the `RotationXY` transformation for rotating 3D Cartesian points
-(i.e. `FixedVector{3}`s) through the X-Y plane (around the Z axis).
+(e.g. `Vector`, `NTuple{3}`, or `FixedVector{3}`) through the X-Y plane (around
+the Z axis).
 
 (see also `Rotation`, `RotationYZ`, `RotationZX` and `euler_rotation`)
 """
-immutable RotationXY{T} <: AbstractTransformation{FixedVector{3}, FixedVector{3}}
+immutable RotationXY{T} <: Transformation
     angle::T
     sin::T
     cos::T
@@ -261,11 +271,12 @@ end
     RotationYZ(angle)
 
 Construct the `RotationYZ` transformation for rotating 3D Cartesian points
-(i.e. `FixedVector{3}`s) through the Y-Z plane (around the X axis).
+(e.g. `Vector`, `NTuple{3}`, or `FixedVector{3}`) through the Y-Z plane (around
+the X axis).
 
 (see also `Rotation`, `RotationXY`, `RotationZX` and `euler_rotation`)
 """
-immutable RotationYZ{T} <: AbstractTransformation{FixedVector{3}, FixedVector{3}}
+immutable RotationYZ{T} <: Transformation
     angle::T
     sin::T
     cos::T
@@ -274,11 +285,12 @@ end
     RotationZX(angle)
 
 Construct the `RotationZX` transformation for rotating 3D Cartesian points
-(i.e. `FixedVector{3}`s) through the Z-X plane (around the Y axis).
+(e.g. `Vector`, `NTuple{3}`, or `FixedVector{3}`) through the Z-X plane (around
+the Y axis).
 
 (see also `Rotation`, `RotationXY`, `RotationYZ` and `euler_rotation`)
 """
-immutable RotationZX{T} <: AbstractTransformation{FixedVector{3}, FixedVector{3}}
+immutable RotationZX{T} <: Transformation
     angle::T
     sin::T
     cos::T
@@ -310,34 +322,67 @@ Base.show(io::IO, r::RotationXY) = print(io, "RotationXY($(r.angle))")
 Base.show(io::IO, r::RotationYZ) = print(io, "RotationYZ($(r.angle))")
 Base.show(io::IO, r::RotationZX) = print(io, "RotationZX($(r.angle))")
 
+# It's a little fiddly to support all possible point container types, but this should do a good majority of them!
+transform(trans::RotationXY, x::Vector) =    [x[1]*trans.cos - x[2]*trans.sin, x[1]*trans.sin + x[2]*trans.cos, x[3]]
+transform(trans::RotationXY, x::NTuple{3}) = (x[1]*trans.cos - x[2]*trans.sin, x[1]*trans.sin + x[2]*trans.cos, x[3])
 function transform(trans::RotationXY, x::FixedVector{3})
     (sincos, x2) = promote(Vec(trans.sin, trans.cos), x)
     (typeof(x2))(x[1]*sincos[2] - x[2]*sincos[1], x[1]*sincos[1] + x[2]*sincos[2], x2[3])
 end
+function transform{T}(trans::RotationXY{T}, x)
+    Z = zero(T)
+    I = one(T)
+
+    [trans.cos -trans.sin Z;
+    trans.sin  trans.cos Z;
+    Z          Z         I ] * x
+end
+
+transform(trans::RotationYZ, x::Vector) =    [x[1], x[2]*trans.cos - x[3]*trans.sin, x[2]*trans.sin + x[3]*trans.cos]
+transform(trans::RotationYZ, x::NTuple{3}) = (x[1], x[2]*trans.cos - x[3]*trans.sin, x[2]*trans.sin + x[3]*trans.cos)
 function transform(trans::RotationYZ, x::FixedVector{3})
     (sincos, x2) = promote(Vec(trans.sin, trans.cos), x)
     (typeof(x2))(x2[1], x[2]*sincos[2] - x[3]*sincos[1], x[2]*sincos[1] + x[3]*sincos[2])
 end
+function transform{T}(trans::RotationYZ{T}, x)
+    Z = zero(T)
+    I = one(T)
+
+    [I Z          Z        ;
+     Z trans.cos -trans.sin;
+     Z trans.sin  trans.cos] * x
+end
+
+transform(trans::RotationZX, x::Vector) =    [x[3]*trans.sin + x[1]*trans.cos, x[2], x[3]*trans.cos - x[1]*trans.sin]
+transform(trans::RotationZX, x::NTuple{3}) = (x[3]*trans.sin + x[1]*trans.cos, x[2], x[3]*trans.cos - x[1]*trans.sin)
 function transform(trans::RotationZX, x::FixedVector{3})
     (sincos, x2) = promote(Vec(trans.sin, trans.cos), x)
     (typeof(x2))(x[3]*sincos[1] + x[1]*sincos[2], x2[2], x[3]*sincos[2] - x[1]*sincos[1])
 end
+function transform{T}(trans::RotationZX{T}, x)
+    Z = zero(T)
+    I = one(T)
 
-function transform_deriv(trans::RotationXY, x::FixedVector{3})
+    [ trans.cos Z trans.sin;
+      Z         I Z        ;
+     -trans.sin Z trans.cos] * x
+end
+
+function transform_deriv(trans::RotationXY, x)
     Z = zero(trans.cos)
     I = one(trans.cos)
     @fsa [ trans.cos -trans.sin Z;
            trans.sin  trans.cos Z;
            Z          Z         I]
 end
-function transform_deriv(trans::RotationYZ, x::FixedVector{3})
+function transform_deriv(trans::RotationYZ, x)
     Z = zero(trans.cos)
     I = one(trans.cos)
     @fsa [ I  Z         Z;
            Z  trans.cos -trans.sin;
            Z  trans.sin  trans.cos ]
 end
-function transform_deriv(trans::RotationZX, x::FixedVector{3})
+function transform_deriv(trans::RotationZX, x)
     Z = zero(trans.cos)
     I = one(trans.cos)
     @fsa [ trans.cos Z trans.sin;
@@ -345,21 +390,21 @@ function transform_deriv(trans::RotationZX, x::FixedVector{3})
           -trans.sin Z trans.cos ]
 end
 
-function transform_deriv_params(trans::RotationXY, x::FixedVector{3})
+function transform_deriv_params(trans::RotationXY, x)
     # 3x1 transformation matrix
     Z = zero(promote_type(typeof(trans.cos), eltype(x)))
     Mat(-trans.sin*x[1] - trans.cos*x[2],
          trans.cos*x[1] - trans.sin*x[2],
          Z)
 end
-function transform_deriv_params(trans::RotationYZ, x::FixedVector{3})
+function transform_deriv_params(trans::RotationYZ, x)
     # 3x1 transformation matrix
     Z = zero(promote_type(typeof(trans.cos), eltype(x)))
     Mat( Z,
         -trans.sin*x[2] - trans.cos*x[3],
          trans.cos*x[2] - trans.sin*x[3])
 end
-function transform_deriv_params(trans::RotationZX, x::FixedVector{3})
+function transform_deriv_params(trans::RotationZX, x)
     # 3x1 transformation matrix
     Z = zero(promote_type(typeof(trans.cos), eltype(x)))
     Mat( trans.cos*x[3] - trans.sin*x[1],

@@ -14,13 +14,13 @@ localization and mapping).
 
 The package provide two main pieces of functionality
 
-1. Primarily, an interface for defining `AbstractTransformation`s and applying
+1. Primarily, an interface for defining `Transformation`s and applying
    (`transform()`), inverting (`inv()`), composing (`∘` or `compose()`) and
    differentiating (`transform_deriv()` and `transform_deriv_params()`) them.
 
 2. A small set of built-in, composable, primitive transformations for
-   transforming 2D and 3D points (leveraging the *FixedSizeArrays* and
-   *Rotations* packages).
+   transforming 2D and 3D points (optionally leveraging the *FixedSizeArrays*
+   and *Rotations* packages).
 
 ### Quick start
 
@@ -66,16 +66,11 @@ rotation angle:
 
 ### The interface
 
-Transformations are derived from `AbstractTransformation{OutType, InType}`.
-`InType` is a (possibly abstract or union) type describing which inputs
-`transform()` will accept with the given transformation, and `OutType` describes
-the (possible range of) outputs given. These parameters allow for a level of
-safety, so that transformations are only applied to appropriate data types and
-to catch early-on any problems with composing or chaining transformations.
-
-As an example, we have `Translation{T} <: AbstractTransformation{FixedVector, FixedVector}`.
-A translation will expect data in the `FixedVector` format and will always return
-the same base type as given (of course, type promotion may occur for the element type itself).
+Transformations are derived from `Transformation`. As an example, we have
+`Translation{T} <: Transformation`. A translation will accept points in a
+variety of formats, such as `Vector`, `FixedVector`, `Tuple`, etc, and will try
+to return the same type as given (of course, type promotion may occur for the
+element type itself).
 
 Transformations can be reversed using `inv(trans)`. They can be chained
 together using the `∘` operator (`trans1 ∘ trans2`) or `compose` function (`compose(trans1, trans2)`).
@@ -97,22 +92,22 @@ techniques, and can be parameterized by *DualNumbers*' `DualNumber` or *ForwardD
 ### Built-in transformations
 
 A small number of 2D and 3D coordinate systems and transformations are included.
-We also have `IdentityTransform{InOutType}` and `ComposedTransformation{InType,OutType}`,
-which allows us to nest together arbitrary transformations to create a
-complex yet efficient transformation chain.
+We also have `IdentityTransform` and `ComposedTransformation`, which allows us
+to nest together arbitrary transformations to create a complex yet efficient
+transformation chain.
 
 #### Coordinate types
 
-The canonical Cartesian coordinate data types are any type which inherited from
-*FixedSizeArrays*' `FixedVector{2}` and `FixedVector{3}` in 2D and 3D,
-respectively. The concrete datatypes `Point` and `Vec` are provided by
-*FixedSizeArrays*, and here we tend to favor `Point` for output where it is not
-specified. (Of course, users may define their own transformations and types, as
-they wish).
+The package does not assume any specific coordinate types for Cartesian
+coordinates, and aims to accept any indexable container (such as `Vector`,
+`Tuple`, *FixedSizeArrays*' `FixedSizeVector{N}` or any other duck-typed vector).
+For speed, we recommend using a statically-sized container such as `Point{N}` or
+`Vec{N}` from *FixedSizeArrays*,  or even an `NTuple{N}`. However, it is
+attempted that the package will not change your data type.
 
-The `Polar(r, θ)` type is a 2D polar representation of a point, and similarly
-in 3D we have defined `Spherical(r, θ, ϕ)` and `Cylindrical(r, θ, z)`.
-
+We do provide a few specialist coordinate types. The `Polar(r, θ)` type is a 2D
+polar representation of a point, and similarly in 3D we have defined
+`Spherical(r, θ, ϕ)` and `Cylindrical(r, θ, z)`.
 
 #### Coordinate system transformations
 

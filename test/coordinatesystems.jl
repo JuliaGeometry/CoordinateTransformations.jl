@@ -2,8 +2,8 @@
     @testset "2D" begin
         c_from_p = CartesianFromPolar()
         p_from_c = PolarFromCartesian()
-        identity_c = IdentityTransformation{Point{2}}()
-        identity_p = IdentityTransformation{Polar}()
+        identity_c = IdentityTransformation()
+        identity_p = IdentityTransformation()
 
         @test inv(c_from_p) == p_from_c
         @test inv(p_from_c) == c_from_p
@@ -22,6 +22,8 @@
         xy = Point(1.0, 2.0)
         rθ = Polar(2.23606797749979, 1.1071487177940904)
         @test transform(p_from_c, xy) ≈ rθ
+        @test transform(p_from_c, Tuple(xy)) ≈ rθ
+        @test transform(p_from_c, collect(xy)) ≈ rθ
         @test transform(c_from_p, rθ) ≈ xy
 
         # TODO - define some convenience functions to create the gradient numbers and unpack the arrays.
@@ -107,9 +109,9 @@
         cart_from_cyl = CartesianFromCylindrical()
         cyl_from_s = CylindricalFromSpherical()
         s_from_cyl = SphericalFromCylindrical()
-        identity_cart = IdentityTransformation{Point{3}}()
-        identity_s = IdentityTransformation{Spherical}()
-        identity_cyl = IdentityTransformation{Cylindrical}()
+        identity_cart = IdentityTransformation()
+        identity_s = IdentityTransformation()
+        identity_cyl = IdentityTransformation()
 
         # inverses
         @test inv(s_from_cart) == cart_from_s
@@ -142,6 +144,8 @@
         xyz = Point(1.0, 2.0, 3.0)
         rθϕ = Spherical(3.7416573867739413, 1.1071487177940904, 0.9302740141154721)
         @test transform(s_from_cart, xyz) ≈ rθϕ
+        @test transform(s_from_cart, Tuple(xyz)) ≈ rθϕ
+        @test transform(s_from_cart, collect(xyz)) ≈ rθϕ
         @test transform(cart_from_s, rθϕ) ≈ xyz
 
         xyz_gn = Point(Dual(1.0, (1.0, 0.0, 0.0)), Dual(2.0, (0.0, 1.0, 0.0)), Dual(3.0, (0.0, 0.0, 1.0)))
@@ -321,6 +325,8 @@
         xyz = Point(1.0, 2.0, 3.0)
         rθz = Cylindrical(2.23606797749979, 1.1071487177940904, 3.0)
         @test transform(cyl_from_cart, xyz) ≈ rθz
+        @test transform(cyl_from_cart, Tuple(xyz)) ≈ rθz
+        @test transform(cyl_from_cart, collect(xyz)) ≈ rθz
         @test transform(cart_from_cyl, rθz) ≈ xyz
 
         xyz_gn = Point(Dual(1.0, (1.0, 0.0, 0.0)), Dual(2.0, (0.0, 1.0, 0.0)), Dual(3.0, (0.0, 0.0, 1.0)))
