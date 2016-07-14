@@ -14,9 +14,6 @@ Efficient compositions can optionally be defined by `compose()` (equivalently `â
 """
 abstract Transformation
 
-Base.@deprecate_binding AbstractTransformation Transformation
-Base.@deprecate transform(transformation::Transformation, x) transformation(x)
-
 """
 The `IdentityTransformation` is a singleton `Transformation` that returns the
 input unchanged, similar to `identity`.

@@ -26,7 +26,7 @@ using Rotations
 export RotMatrix, Quaternion, SpQuat, AngleAxis, EulerAngles, ProperEulerAngles
 
 # Core methods
-export transform, compose, ∘, transform_deriv, transform_deriv_params
+export compose, ∘, transform_deriv, transform_deriv_params
 export Transformation, IdentityTransformation
 
 # 2D coordinate systems and their transformations
@@ -50,5 +50,10 @@ export RotationYX, RotationZY, RotationXZ, euler_rotation
 include("core.jl")
 include("coordinatesystems.jl")
 include("commontransformations.jl")
+
+# Deprecations
+export transform
+Base.@deprecate_binding AbstractTransformation Transformation
+Base.@deprecate transform(transformation::Transformation, x) transformation(x)
 
 end # module
