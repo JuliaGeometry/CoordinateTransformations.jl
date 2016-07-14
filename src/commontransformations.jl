@@ -1,40 +1,35 @@
 abstract AbstractAffineTransformation <: Transformation
+abstract AbstractLinearTransformation <: AbstractAffineTransformation
 
-
-# Composite affine transformation.
-"""
-A composite of two affine transformations
-"""
-immutable ComposedAffineTransformation{T1 <: AbstractAffineTransformation, T2 <: AbstractAffineTransformation} <: AbstractAffineTransformation
-    comp::ComposedTransformation{T1,T2}
-end
-
-ComposedAffineTransformation(t1, t2) = ComposedAffineTransformation(ComposedTransformation(t1,t2))
-
-# The repetition below is required since we can't inherit both from
-# AbstractAffineTransformation and AbstractComposedTransformation.  (Needs
-# traits!)
-Base.show(io::IO, trans::ComposedAffineTransformation)   = show(io, trans.comp)
-@compat @inline (trans::ComposedAffineTransformation)(x) = trans.comp(x)
-Base.inv(trans::ComposedAffineTransformation)            = ComposedAffineTransformation(inv(trans.comp))
-transform_deriv(trans::ComposedAffineTransformation, x)  = transform_deriv(trans.comp, x)
-transform_deriv_params(trans::ComposedAffineTransformation, x) = transform_deriv_params(trans.comp, x)
-
-compose(t1::AbstractAffineTransformation, t2::AbstractAffineTransformation) = ComposedAffineTransformation(t1,t2)
-
+# Helper to compute a zeroed input point for an affine transformation
+# FIXME: deal with general input dimension and type.
+zeroed_input(trans::AbstractAffineTransformation) = Vec(0,0,0)
 
 # transform_deriv for AbstractAffineTransformation is independent of the point
 # about which we're linearizing.
 function transform_deriv(trans::AbstractAffineTransformation)
-    x = Vec(0,0,0) # FIXME: deal with general input dimension and type.
-    transform_deriv(trans, x)
+    transform_deriv(trans, zeroed_input(trans))
 end
+
 
 #-------------------------------------------------------------------------------
 # Linear Transformations
 
-immutable LinearTransformation{MatrixT} <: AbstractAffineTransformation
+"""
+    LinearTransformation <: AbstractLinearTransformation
+
+A general linear transformation, constructed using `LinearTransformation(M)`
+for any matrix `M`.  Other abstract linear transformations can be converted
+into a general linear transformation using `LinearTransformation(trans)`
+"""
+immutable LinearTransformation{MatrixT} <: AbstractLinearTransformation
     M::MatrixT
+end
+
+LinearTransformation(trans::LinearTransformation) = trans
+
+function LinearTransformation(trans::AbstractLinearTransformation)
+    LinearTransformation(transform_deriv(trans, zeroed_input(trans)))
 end
 
 Base.show(io::IO, trans::LinearTransformation)   = print(io, "LinearTransformation($(trans.M))")
@@ -47,7 +42,12 @@ Base.inv(trans::LinearTransformation) = LinearTransformation(inv(trans.M))
 
 compose(t1::LinearTransformation, t2::LinearTransformation) = LinearTransformation(t1.M*t2.M)
 
-transform_deriv(trans::LinearTransformation) = trans.M
+transform_deriv(trans::LinearTransformation, x) = trans.M
+
+
+function compose(t1::AbstractLinearTransformation, t2::AbstractLinearTransformation)
+    LinearTransformation(t1) ∘ LinearTransformation(t2)
+end
 
 
 #-------------------------------------------------------------------------------
@@ -72,9 +72,13 @@ immutable AffineTransformation{MatrixT, VectorT} <: AbstractAffineTransformation
 end
 
 function AffineTransformation(trans::AbstractAffineTransformation)
-    # FIXME: How do we deal with general input dimension and type?
-    x = Vec(0,0,0)
+    x = zeroed_input(trans)
     AffineTransformation(transform_deriv(trans, x), trans(x))
+end
+
+function AffineTransformation(trans::AbstractLinearTransformation)
+    x = zeroed_input(trans)
+    AffineTransformation(transform_deriv(trans, x), x)
 end
 
 function AffineTransformation(trans::Transformation, x)
@@ -98,6 +102,10 @@ end
 
 function compose(t1::AffineTransformation, t2::AffineTransformation)
     AffineTransformation(t1.M*t2.M, t1.v + t1.M*t2.v)
+end
+
+function compose(t1::AbstractAffineTransformation, t2::AbstractAffineTransformation)
+    AffineTransformation(t1) ∘ AffineTransformation(t2)
 end
 
 """
@@ -175,7 +183,7 @@ end
 Construct the `Rotation2D` transformation for rotating 2D Cartesian points
 (i.e. `FixedVector{2}`s) about the origin.
 """
-immutable Rotation2D{T} <: AbstractAffineTransformation
+immutable Rotation2D{T} <: AbstractLinearTransformation
     angle::T
     sin::T
     cos::T
@@ -251,7 +259,7 @@ compose(t1::Rotation2D, t2::Rotation2D) = Rotation2D(t1.angle + t2.angle)
 Construct the `Rotation` transformation for rotating 3D Cartesian points
 (i.e. `FixedVector{3}`s) about the origin. I
 """
-immutable Rotation{R, T} <: AbstractAffineTransformation
+immutable Rotation{R, T} <: AbstractLinearTransformation
     rotation::R
     matrix::Mat{3,3,T} # Should we enforce this storage, or merely "suggest" it
 end
@@ -391,7 +399,7 @@ the Z axis).
 
 (see also `Rotation`, `RotationYZ`, `RotationZX` and `euler_rotation`)
 """
-immutable RotationXY{T} <: AbstractAffineTransformation
+immutable RotationXY{T} <: AbstractLinearTransformation
     angle::T
     sin::T
     cos::T
@@ -405,7 +413,7 @@ the X axis).
 
 (see also `Rotation`, `RotationXY`, `RotationZX` and `euler_rotation`)
 """
-immutable RotationYZ{T} <: AbstractAffineTransformation
+immutable RotationYZ{T} <: AbstractLinearTransformation
     angle::T
     sin::T
     cos::T
@@ -419,7 +427,7 @@ the Y axis).
 
 (see also `Rotation`, `RotationXY`, `RotationYZ` and `euler_rotation`)
 """
-immutable RotationZX{T} <: AbstractAffineTransformation
+immutable RotationZX{T} <: AbstractLinearTransformation
     angle::T
     sin::T
     cos::T
