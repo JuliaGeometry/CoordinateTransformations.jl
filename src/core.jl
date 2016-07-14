@@ -95,7 +95,7 @@ end
 A matrix describing how differentials on the parameters of `trans` flow through
 to the output of transformation `trans` given input `x`.
 """
-transform_deriv(::Transformation, x) = error("Differential matrix of parameters of transform $trans with input $x not defined")
+transform_deriv(trans::Transformation, x) = error("Differential matrix of parameters of transform $trans with input $x not defined")
 
 transform_deriv_params(::IdentityTransformation, x) = error("IdentityTransformation has no parameters")
 
