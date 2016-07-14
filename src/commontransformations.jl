@@ -1,14 +1,143 @@
+abstract AbstractAffineTransformation <: Transformation
+
+
+# Composite affine transformation.
+"""
+A composite of two affine transformations
+"""
+immutable ComposedAffineTransformation{T1 <: AbstractAffineTransformation, T2 <: AbstractAffineTransformation} <: AbstractAffineTransformation
+    comp::ComposedTransformation{T1,T2}
+end
+
+ComposedAffineTransformation(t1, t2) = ComposedAffineTransformation(ComposedTransformation(t1,t2))
+
+# The repetition below is required since we can't inherit both from
+# AbstractAffineTransformation and AbstractComposedTransformation.  (Needs
+# traits!)
+Base.show(io::IO, trans::ComposedAffineTransformation)   = show(io, trans.comp)
+@compat @inline (trans::ComposedAffineTransformation)(x) = trans.comp(x)
+Base.inv(trans::ComposedAffineTransformation)            = ComposedAffineTransformation(inv(trans.comp))
+transform_deriv(trans::ComposedAffineTransformation, x)  = transform_deriv(trans.comp, x)
+transform_deriv_params(trans::ComposedAffineTransformation, x) = transform_deriv_params(trans.comp, x)
+
+compose(t1::AbstractAffineTransformation, t2::AbstractAffineTransformation) = ComposedAffineTransformation(t1,t2)
+
+
+# transform_deriv for AbstractAffineTransformation is independent of the point
+# about which we're linearizing.
+function transform_deriv(trans::AbstractAffineTransformation)
+    x = Vec(0,0,0) # FIXME: deal with general input dimension and type.
+    transform_deriv(trans, x)
+end
+
+#-------------------------------------------------------------------------------
+# Linear Transformations
+
+immutable LinearTransformation{MatrixT} <: AbstractAffineTransformation
+    M::MatrixT
+end
+
+Base.show(io::IO, trans::LinearTransformation)   = print(io, "LinearTransformation($(trans.M))")
+
+@compat function (trans::LinearTransformation)(x)
+    trans.M*x
+end
+
+Base.inv(trans::LinearTransformation) = LinearTransformation(inv(trans.M))
+
+compose(t1::LinearTransformation, t2::LinearTransformation) = LinearTransformation(t1.M*t2.M)
+
+transform_deriv(trans::LinearTransformation) = trans.M
+
+
+#-------------------------------------------------------------------------------
+# General Affine Transformations
+"""
+    AffineTransformation <: AbstractAffineTransformation
+
+A concrete affine transformation.  To construct the mapping `v + M*x`, use
+
+    AffineTransformation(M, v)
+
+where `M` is a matrix and `v` a vector.  An arbitrary `Transformation` may be
+converted into an affine approximation by linearizing about a point `x` using
+
+    AffineTransformation(trans, [x])
+
+For transformations which are already affine, `x` may be omitted.
+"""
+immutable AffineTransformation{MatrixT, VectorT} <: AbstractAffineTransformation
+    M::MatrixT
+    v::VectorT
+end
+
+function AffineTransformation(trans::AbstractAffineTransformation)
+    # FIXME: How do we deal with general input dimension and type?
+    x = Vec(0,0,0)
+    AffineTransformation(transform_deriv(trans, x), trans(x))
+end
+
+function AffineTransformation(trans::Transformation, x)
+    AffineTransformation(transform_deriv(trans, x), trans(x))
+end
+
+Base.show(io::IO, trans::AffineTransformation) = print(io, "AffineTransformation($(trans.M), $(trans.v))")
+
+@compat function (trans::AffineTransformation)(x)
+    trans.M*x + trans.v
+end
+
+function Base.inv(trans::AffineTransformation)
+    Minv = inv(trans.M)
+    AffineTransformation(Minv, -Minv*trans.v)
+end
+
+function transform_deriv(trans::AffineTransformation, x)
+    trans.M
+end
+
+function compose(t1::AffineTransformation, t2::AffineTransformation)
+    AffineTransformation(t1.M*t2.M, t1.v + t1.M*t2.v)
+end
+
+"""
+    affine_decomposition_T_of_L(trans)
+
+Decompose an affine transformation into a translation and linear part,
+returning `(v,M)` such that
+
+    trans(p) == (Translation(v) ∘ LinearTransformation(M))(p)
+"""
+function affine_decomposition_T_of_L(trans::AbstractAffineTransformation)
+    A = AffineTransformation(trans)
+    (A.v, A.M)
+end
+
+"""
+    affine_decomposition_L_of_T(trans)
+
+Decompose an affine transformation into a translation and linear part,
+returning `(M,v)` such that
+
+    trans(x) == LinearTransformation(M) ∘ Translation(v)
+"""
+function affine_decomposition_L_of_T(trans::AbstractAffineTransformation)
+    A = AffineTransformation(trans)
+    (A.M, A.M\A.v)
+end
+
+
 ###################
 ### Translation ###
 ###################
 """
-    Translation(dv) <: Transformation
+    Translation(dv) <: AbstractAffineTransformation
     Translation(dx, dy)       (2D)
     Translation(dx, dy, dz)   (3D)
 
 Construct the `Translation` transformation for translating Cartesian points.
 """
-immutable Translation{T} <: Transformation
+immutable Translation{T} <: AbstractAffineTransformation
     dx::T
 end
 Translation(x::Tuple) = Translation(Vec(x))
@@ -46,7 +175,7 @@ end
 Construct the `Rotation2D` transformation for rotating 2D Cartesian points
 (i.e. `FixedVector{2}`s) about the origin.
 """
-immutable Rotation2D{T} <: Transformation
+immutable Rotation2D{T} <: AbstractAffineTransformation
     angle::T
     sin::T
     cos::T
@@ -122,7 +251,7 @@ compose(t1::Rotation2D, t2::Rotation2D) = Rotation2D(t1.angle + t2.angle)
 Construct the `Rotation` transformation for rotating 3D Cartesian points
 (i.e. `FixedVector{3}`s) about the origin. I
 """
-immutable Rotation{R, T} <: Transformation
+immutable Rotation{R, T} <: AbstractAffineTransformation
     rotation::R
     matrix::Mat{3,3,T} # Should we enforce this storage, or merely "suggest" it
 end
@@ -262,7 +391,7 @@ the Z axis).
 
 (see also `Rotation`, `RotationYZ`, `RotationZX` and `euler_rotation`)
 """
-immutable RotationXY{T} <: Transformation
+immutable RotationXY{T} <: AbstractAffineTransformation
     angle::T
     sin::T
     cos::T
@@ -276,7 +405,7 @@ the X axis).
 
 (see also `Rotation`, `RotationXY`, `RotationZX` and `euler_rotation`)
 """
-immutable RotationYZ{T} <: Transformation
+immutable RotationYZ{T} <: AbstractAffineTransformation
     angle::T
     sin::T
     cos::T
@@ -290,7 +419,7 @@ the Y axis).
 
 (see also `Rotation`, `RotationXY`, `RotationYZ` and `euler_rotation`)
 """
-immutable RotationZX{T} <: Transformation
+immutable RotationZX{T} <: AbstractAffineTransformation
     angle::T
     sin::T
     cos::T
@@ -471,3 +600,5 @@ end
 function euler_rotation(θ₁, θ₂, θ₃, order::Union{Rotations.EulerXZX, Type{Rotations.EulerXZX}})
     RotationYZ(θ₁) ∘ RotationXY(θ₂) ∘ RotationYZ(θ₃)
 end
+
+

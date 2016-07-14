@@ -40,12 +40,13 @@ export SphericalFromCartesian, CartesianFromSpherical,
        CylindricalFromSpherical, SphericalFromCylindrical
 
 # Common transformations
-export Translation
+export AbstractAffineTransformation
+export AffineTransformation, LinearTransformation, Translation
+export affine_decomposition_T_of_L, affine_decomposition_L_of_T
 export RotationPolar, Rotation2D
 export Rotation, RotationXY, RotationYZ, RotationZX
 export RotationYX, RotationZY, RotationXZ, euler_rotation
 
-#export RigidBodyTransformation, AffineTransformation
 
 include("core.jl")
 include("coordinatesystems.jl")
