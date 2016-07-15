@@ -24,7 +24,6 @@ CoordinateTransformations.transform_deriv(::SquareMe, x0) = diagm(2*x0)
 
         # Transform
         @test trans(x) === Point(3.0, 1.0)
-        @test trans(Tuple(x)) === (3.0, 1.0)
         @test trans(collect(x)) === Vec(3.0, 1.0)
 
         # Transform derivative
