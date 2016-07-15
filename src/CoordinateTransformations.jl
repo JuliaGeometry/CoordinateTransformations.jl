@@ -41,7 +41,7 @@ export SphericalFromCartesian, CartesianFromSpherical,
 
 # Common transformations
 export AbstractAffineTransformation
-export AffineTransformation, LinearTransformation, Translation
+export AffineTransformation, LinearTransformation, Translation, matrix, translation, translation_reverse
 export affine_decomposition_T_of_L, affine_decomposition_L_of_T
 export RotationPolar, Rotation2D
 export Rotation, RotationXY, RotationYZ, RotationZX
