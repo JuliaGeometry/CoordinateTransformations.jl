@@ -1,61 +1,110 @@
+"""
+    abstract AbstractAffineTransformation <: Transformation
+
+Provides an interface for implementing Affine transformations of Cartesian
+coordinates. To implement an AbstractAffineTransformation, you must define
+
+    matrix(trans)
+    translation(trans)
+
+where the resulting transformation is (equivalent to)
+
+    trans(x) -> matrix(trans) * x + translation(trans)
+
+Specific implementations may provide equivalent specializations of `call`, etc,
+for optimization purposes. The function `translation_reverse()` is provided,
+such that
+
+    trans(x) -> matrix(trans) * (x + translation_reverse(trans))
+
+(See also AffineTransformation, AbstractLinearTransformation, Translation)
+"""
 abstract AbstractAffineTransformation <: Transformation
-abstract AbstractLinearTransformation <: AbstractAffineTransformation
 
-# Helper to compute a zeroed input point for an affine transformation
-# FIXME: deal with general input dimension and type.
-zeroed_input(trans::AbstractAffineTransformation) = Vec(0,0,0)
+matrix(::AbstractAffineTransform) = error("AbstractAffineTransformation's must implement matrix()")
+translation(::AbstractAffineTransform) = error("AbstractAffineTransformation's must implement translation()")
+translation_reverse(::AbstractAffineTransformation) = matrix(trans) \ translation(trans)
 
-# transform_deriv for AbstractAffineTransformation is independent of the point
-# about which we're linearizing.
-function transform_deriv(trans::AbstractAffineTransformation)
-    transform_deriv(trans, zeroed_input(trans))
+# Default implementations
+@compat function (trans::AbstractAffineTransformation)(x)
+    matrix(trans) * x + translation(trans)
+end
+
+transform_deriv(trans::AbstractAffineTransformation) = matrix(trans)
+
+# Could try do similar for transform_deriv_params()?
+
+@compat function (trans::AbstractAffineTransformation)(x)
+    matrix(trans) * x + translation(x)
+end
+
+function Base.inv(trans::AbstractAffineTransformation)
+    Minv = inv(matrix(trans))
+    AffineTransformation(Minv, -Minv * translation(trans))
+end
+
+function compose(t1::AbstractAffineTransformation, t2::AbstractAffineTransformation)
+    AffineTransformation(matrix(t1) * matrix(t2), translation(t1) + matrix(t1) * translation(t2))
 end
 
 
-#-------------------------------------------------------------------------------
-# Linear Transformations
+"""
+    abstract AbstractLinearTransformation <: AbstractAffineTransformation
+
+Provides an interface for implementing linear transformations of Cartesian
+coordinates. To implement an AbstractLinearTransformation, you must define
+
+    matrix(trans)
+
+where the resulting transformation is (equivalent to)
+
+    trans(x) -> matrix(trans) * x
+
+Specific implementations may provide equivalent specializations of `call`, etc,
+for optimization purposes.
+
+(See also LinearTransformation, AbstractAffineTransformation)
+"""
+abstract AbstractLinearTransformation <: AbstractAffineTransformation
+
+matrix(::AbstractLinearTransformation) = error("AbstractLinearTransformation's must implement matrix()")
+@inline translation(::AbstractLinearTransformation) = 0 # Does this make sense?
+@inline translation_reverse(::AbstractLinearTransformation) = 0
+
+# Default implementations
+@compat function (trans::AbstractLinearTransformation)(x)
+    matrix(trans) * x
+end
+
+# transform_deriv() provided by AbstractAffineTransformation
+
+Base.inv(trans::AbstractLinearTransformation) = LinearTransformation(inv(matrix(trans))
+
+compose(t1::AbstractLinearTransformation, t2::AbstractLinearTransformation) = LinearTransformation(matrix(t1) * matrix(t2))
+
 
 """
     LinearTransformation <: AbstractLinearTransformation
 
 A general linear transformation, constructed using `LinearTransformation(M)`
-for any matrix `M`.  Other abstract linear transformations can be converted
-into a general linear transformation using `LinearTransformation(trans)`
+for any matrix-like object `M`.  Other abstract linear transformations can be
+converted into a general linear transformation using `LinearTransformation(trans)`
 """
 immutable LinearTransformation{MatrixT} <: AbstractLinearTransformation
     M::MatrixT
 end
 
-LinearTransformation(trans::LinearTransformation) = trans
+LinearTransformation(trans::AbstractLinearTransformation) = LinearTransformation(matrix(trans))
 
-function LinearTransformation(trans::AbstractLinearTransformation)
-    LinearTransformation(transform_deriv(trans, zeroed_input(trans)))
-end
+Base.show(io::IO, trans::LinearTransformation)   = print(io, "LinearTransformation($(trans.M))") # TODO make this output more petite
 
-Base.show(io::IO, trans::LinearTransformation)   = print(io, "LinearTransformation($(trans.M))")
-
-@compat function (trans::LinearTransformation)(x)
-    trans.M*x
-end
-
-Base.inv(trans::LinearTransformation) = LinearTransformation(inv(trans.M))
-
-compose(t1::LinearTransformation, t2::LinearTransformation) = LinearTransformation(t1.M*t2.M)
-
-transform_deriv(trans::LinearTransformation, x) = trans.M
+@inline matrix(trans::LinearTransformation) = trans.M
 
 
-function compose(t1::AbstractLinearTransformation, t2::AbstractLinearTransformation)
-    LinearTransformation(t1) ∘ LinearTransformation(t2)
-end
-
-
-#-------------------------------------------------------------------------------
-# General Affine Transformations
 """
     AffineTransformation <: AbstractAffineTransformation
 
-A concrete affine transformation.  To construct the mapping `v + M*x`, use
+A concrete affine transformation.  To construct the mapping `x -> M*x + v`, use
 
     AffineTransformation(M, v)
 
@@ -72,67 +121,17 @@ immutable AffineTransformation{MatrixT, VectorT} <: AbstractAffineTransformation
 end
 
 function AffineTransformation(trans::AbstractAffineTransformation)
-    x = zeroed_input(trans)
+    AffineTransformation(matrix(trans), translation(trans))
+end
+
+# We can create an Affine transformation corresponding to the differential
+# transformation of x + dx
+function AffineTransformation(trans::AbstractTransformation, x)
     AffineTransformation(transform_deriv(trans, x), trans(x))
 end
 
-function AffineTransformation(trans::AbstractLinearTransformation)
-    x = zeroed_input(trans)
-    AffineTransformation(transform_deriv(trans, x), x)
-end
+Base.show(io::IO, trans::AffineTransformation) = print(io, "AffineTransformation($(trans.M), $(trans.v))") # TODO make this output more petite
 
-function AffineTransformation(trans::Transformation, x)
-    AffineTransformation(transform_deriv(trans, x), trans(x))
-end
-
-Base.show(io::IO, trans::AffineTransformation) = print(io, "AffineTransformation($(trans.M), $(trans.v))")
-
-@compat function (trans::AffineTransformation)(x)
-    trans.M*x + trans.v
-end
-
-function Base.inv(trans::AffineTransformation)
-    Minv = inv(trans.M)
-    AffineTransformation(Minv, -Minv*trans.v)
-end
-
-function transform_deriv(trans::AffineTransformation, x)
-    trans.M
-end
-
-function compose(t1::AffineTransformation, t2::AffineTransformation)
-    AffineTransformation(t1.M*t2.M, t1.v + t1.M*t2.v)
-end
-
-function compose(t1::AbstractAffineTransformation, t2::AbstractAffineTransformation)
-    AffineTransformation(t1) ∘ AffineTransformation(t2)
-end
-
-"""
-    affine_decomposition_T_of_L(trans)
-
-Decompose an affine transformation into a translation and linear part,
-returning `(v,M)` such that
-
-    trans(p) == (Translation(v) ∘ LinearTransformation(M))(p)
-"""
-function affine_decomposition_T_of_L(trans::AbstractAffineTransformation)
-    A = AffineTransformation(trans)
-    (A.v, A.M)
-end
-
-"""
-    affine_decomposition_L_of_T(trans)
-
-Decompose an affine transformation into a translation and linear part,
-returning `(M,v)` such that
-
-    trans(x) == LinearTransformation(M) ∘ Translation(v)
-"""
-function affine_decomposition_L_of_T(trans::AbstractAffineTransformation)
-    A = AffineTransformation(trans)
-    (A.M, A.M\A.v)
-end
 
 
 ###################
@@ -153,6 +152,10 @@ Translation(x,y) = Translation(Vec(x,y))
 Translation(x,y,z) = Translation(Vec(x,y,z))
 Base.show(io::IO, trans::Translation) = print(io, "Translation$((trans.dx...))")
 
+@inline matrix(::Translation) = I
+@inline translation(trans::Translation) = trans.dx
+@inline translation(trans::Translation) = trans.dx
+
 @compat function (trans::Translation)(x)
     x + trans.dx
 end
@@ -163,10 +166,6 @@ Base.inv(trans::Translation) = Translation(-trans.dx)
 
 function compose(trans1::Translation, trans2::Translation)
     Translation(trans1.dx + trans2.dx)
-end
-
-function transform_deriv(trans::Translation, x)
-    I
 end
 
 function transform_deriv_params(trans::Translation, x)
@@ -608,5 +607,3 @@ end
 function euler_rotation(θ₁, θ₂, θ₃, order::Union{Rotations.EulerXZX, Type{Rotations.EulerXZX}})
     RotationYZ(θ₁) ∘ RotationXY(θ₂) ∘ RotationYZ(θ₃)
 end
-
-
