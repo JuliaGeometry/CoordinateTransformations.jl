@@ -21,8 +21,8 @@ such that
 """
 abstract AbstractAffineTransformation <: Transformation
 
-matrix(::AbstractAffineTransform) = error("AbstractAffineTransformation's must implement matrix()")
-translation(::AbstractAffineTransform) = error("AbstractAffineTransformation's must implement translation()")
+matrix(::AbstractAffineTransformation) = error("AbstractAffineTransformation's must implement matrix()")
+translation(::AbstractAffineTransformation) = error("AbstractAffineTransformation's must implement translation()")
 translation_reverse(::AbstractAffineTransformation) = matrix(trans) \ translation(trans)
 
 # Default implementations
@@ -30,13 +30,9 @@ translation_reverse(::AbstractAffineTransformation) = matrix(trans) \ translatio
     matrix(trans) * x + translation(trans)
 end
 
-transform_deriv(trans::AbstractAffineTransformation) = matrix(trans)
-
 # Could try do similar for transform_deriv_params()?
 
-@compat function (trans::AbstractAffineTransformation)(x)
-    matrix(trans) * x + translation(x)
-end
+transform_deriv(trans::AbstractAffineTransformation, x) = matrix(trans)
 
 function Base.inv(trans::AbstractAffineTransformation)
     Minv = inv(matrix(trans))
@@ -47,6 +43,10 @@ function compose(t1::AbstractAffineTransformation, t2::AbstractAffineTransformat
     AffineTransformation(matrix(t1) * matrix(t2), translation(t1) + matrix(t1) * translation(t2))
 end
 
+function Base.isapprox(t1::AbstractAffineTransformation, t2::AbstractAffineTransformation, kwargs...)
+    isapprox(matrix(t1), matrix(t2); kwargs...) &&
+        isapprox(translation(t1), translation(t2); kwargs...)
+end
 
 """
     abstract AbstractLinearTransformation <: AbstractAffineTransformation
@@ -68,20 +68,57 @@ for optimization purposes.
 abstract AbstractLinearTransformation <: AbstractAffineTransformation
 
 matrix(::AbstractLinearTransformation) = error("AbstractLinearTransformation's must implement matrix()")
-@inline translation(::AbstractLinearTransformation) = 0 # Does this make sense?
-@inline translation_reverse(::AbstractLinearTransformation) = 0
+function translation(trans::AbstractLinearTransformation)
+    m = matrix(trans)
+    s = size(m, 1)
+    T = eltype(m)
+    return zeros(T, s)
+end
+function translation_reverse(trans::AbstractLinearTransformation)
+    m = matrix(trans)
+    s = size(m, 2)
+    T = eltype(m)
+    return zeros(T, s)
+end
 
 # Default implementations
 @compat function (trans::AbstractLinearTransformation)(x)
     matrix(trans) * x
 end
 
-# transform_deriv() provided by AbstractAffineTransformation
+# transform_deriv() identical to that provided by AbstractAffineTransformation
 
-Base.inv(trans::AbstractLinearTransformation) = LinearTransformation(inv(matrix(trans))
+Base.inv(trans::AbstractLinearTransformation) = LinearTransformation(inv(matrix(trans)))
 
 compose(t1::AbstractLinearTransformation, t2::AbstractLinearTransformation) = LinearTransformation(matrix(t1) * matrix(t2))
 
+function Base.isapprox(t1::AbstractLinearTransformation, t2::AbstractLinearTransformation, kwargs...)
+    isapprox(matrix(t1), matrix(t2); kwargs...)
+end
+
+
+
+# These functions are remove any reference to unnecessary calls to
+# translation(::LinearTransformation) from the AbstractAffineTransformations
+# interface:
+
+function compose(t1::AbstractAffineTransformation, t2::AbstractLinearTransformation)
+    AffineTransformation(matrix(t1) * matrix(t2), translation(t1))
+end
+
+function compose(t1::AbstractLinearTransformation, t2::AbstractAffineTransformation)
+    AffineTransformation(matrix(t1) * matrix(t2), matrix(t1) * translation(t2))
+end
+
+function Base.isapprox(t1::AbstractAffineTransformation, t2::AbstractLinearTransformation, kwargs...)
+    isapprox(matrix(t1), matrix(t2); kwargs...) &&
+        isapprox(norm(translation(t1)), 0; kwargs...)
+end
+
+function Base.isapprox(t1::AbstractLinearTransformation, t2::AbstractAffineTransformation, kwargs...)
+    isapprox(matrix(t1), matrix(t2); kwargs...) &&
+        isapprox(norm(translation(t2)), 0; kwargs...)
+end
 
 """
     LinearTransformation <: AbstractLinearTransformation
@@ -120,14 +157,24 @@ immutable AffineTransformation{MatrixT, VectorT} <: AbstractAffineTransformation
     v::VectorT
 end
 
+matrix(trans::AffineTransformation)      = trans.M
+translation(trans::AffineTransformation) = trans.v
+
 function AffineTransformation(trans::AbstractAffineTransformation)
     AffineTransformation(matrix(trans), translation(trans))
 end
 
 # We can create an Affine transformation corresponding to the differential
 # transformation of x + dx
-function AffineTransformation(trans::AbstractTransformation, x)
-    AffineTransformation(transform_deriv(trans, x), trans(x))
+#
+# Note: the expression `Tx - dT*Tx` will have large cancellation error for
+# large Tx!  However, changing the order of applying the matrix and
+# translation won't fix things, because then we'd have `Tx*(x-x0)` which
+# also can incur large cancellation error in `x-x0`.
+function AffineTransformation(trans::Transformation, x0)
+    dT = transform_deriv(trans, x0)
+    Tx = trans(x0)
+    AffineTransformation(dT, Tx - dT*x0)
 end
 
 Base.show(io::IO, trans::AffineTransformation) = print(io, "AffineTransformation($(trans.M), $(trans.v))") # TODO make this output more petite
@@ -221,6 +268,11 @@ end
     Polar(x.r, x.θ + trans.angle)
 end
 
+function matrix(trans::Rotation2D)
+    @fsa [ trans.cos -trans.sin;
+           trans.sin  trans.cos ]
+end
+
 function transform_deriv(trans::Rotation2D, x)
     @fsa [ trans.cos -trans.sin;
            trans.sin  trans.cos ]
@@ -311,6 +363,8 @@ end
 @compat (trans::Rotation)(x::Tuple) = Tuple(trans(Vec(x)))
 
 transform_deriv(trans::Rotation, x) = trans.matrix # It's a linear transformation, so this is easy!
+@inline matrix(trans::Rotation2D) = trans.matrix
+
 
 function transform_deriv_params{T}(trans::Rotation{Void,T}, x)
     # This derivative isn't projected into the orthogonal/Hermition tangent
@@ -511,6 +565,14 @@ function transform_deriv(trans::RotationXY, x)
            trans.sin  trans.cos Z;
            Z          Z         I]
 end
+function matrix(trans::RotationXY)
+    Z = zero(trans.cos)
+    I = one(trans.cos)
+    @fsa [ trans.cos -trans.sin Z;
+           trans.sin  trans.cos Z;
+           Z          Z         I]
+end
+
 function transform_deriv(trans::RotationYZ, x)
     Z = zero(trans.cos)
     I = one(trans.cos)
@@ -518,7 +580,22 @@ function transform_deriv(trans::RotationYZ, x)
            Z  trans.cos -trans.sin;
            Z  trans.sin  trans.cos ]
 end
+function matrix(trans::RotationYZ)
+    Z = zero(trans.cos)
+    I = one(trans.cos)
+    @fsa [ I  Z         Z;
+           Z  trans.cos -trans.sin;
+           Z  trans.sin  trans.cos ]
+end
+
 function transform_deriv(trans::RotationZX, x)
+    Z = zero(trans.cos)
+    I = one(trans.cos)
+    @fsa [ trans.cos Z trans.sin;
+           Z         I Z        ;
+          -trans.sin Z trans.cos ]
+end
+function matrix(trans::RotationZX)
     Z = zero(trans.cos)
     I = one(trans.cos)
     @fsa [ trans.cos Z trans.sin;

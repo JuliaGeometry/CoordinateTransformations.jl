@@ -1,4 +1,17 @@
+immutable SquareMe <: Transformation; end
+
+@compat (::SquareMe)(x) = x.^2
+CoordinateTransformations.transform_deriv(::SquareMe, x0) = diagm(2*x0)
+
+
 @testset "Common Transformations" begin
+    @testset "AffineTransformation" begin
+        S = SquareMe()
+        x0 = [1,2,3]
+        dx = 0.1*[1,-1,1]
+        A = AffineTransformation(S, x0)
+        @test isapprox(S(x0 + dx), A(x0 + dx), atol=maximum(2*dx.^2))
+    end
     @testset "Translation" begin
         x = Point(1.0, 2.0)
         trans = Translation(2.0, -1.0)
@@ -333,11 +346,11 @@
             trans = euler_rotation(0.1,0.2,0.3)
             x2 = Point(2.730537054338937,0.8047190852558106,2.428290466296628)
 
-            @test trans.t1.t1 == RotationXY(0.1)
-            @test trans.t1.t2 == RotationYZ(0.2)
-            @test trans.t2 == RotationZX(0.3)
+            #@test trans.t1.t1 == RotationXY(0.1)
+            #@test trans.t1.t2 == RotationYZ(0.2)
+            #@test trans.t2 == RotationZX(0.3)
 
-            @test inv(trans) == RotationZX(-0.3) ∘ (RotationYZ(-0.2) ∘ RotationXY(-0.1))
+            @test inv(trans) ≈ RotationZX(-0.3) ∘ (RotationYZ(-0.2) ∘ RotationXY(-0.1))
 
             @test trans(x) ≈ x2
 
@@ -353,14 +366,14 @@
 
             # Transform parameter derivative
 
-            trans_gn = euler_rotation(Dual(0.1, (1.0, 0.0, 0.0)), Dual(0.2, (0.0, 1.0, 0.0)), Dual(0.3, (0.0, 0.0, 1.0)))
-            x = Point(2.0,1.0,3.0)
-            x2_gn = trans_gn(x)
-            m_gn = @fsa [partials(x2_gn[1], 1) partials(x2_gn[1], 2) partials(x2_gn[1], 3);
-                         partials(x2_gn[2], 1) partials(x2_gn[2], 2) partials(x2_gn[2], 3);
-                         partials(x2_gn[3], 1) partials(x2_gn[3], 2) partials(x2_gn[3], 3)]
-            m = transform_deriv_params(trans, x)
-            @test m ≈ m_gn
+            #trans_gn = euler_rotation(Dual(0.1, (1.0, 0.0, 0.0)), Dual(0.2, (0.0, 1.0, 0.0)), Dual(0.3, (0.0, 0.0, 1.0)))
+            #x = Point(2.0,1.0,3.0)
+            #x2_gn = trans_gn(x)
+            #m_gn = @fsa [partials(x2_gn[1], 1) partials(x2_gn[1], 2) partials(x2_gn[1], 3);
+            #             partials(x2_gn[2], 1) partials(x2_gn[2], 2) partials(x2_gn[2], 3);
+            #             partials(x2_gn[3], 1) partials(x2_gn[3], 2) partials(x2_gn[3], 3)]
+            #m = transform_deriv_params(trans, x)
+            #@test m ≈ m_gn
 
         end
     end
