@@ -21,8 +21,8 @@ such that
 """
 abstract AbstractAffineTransformation <: Transformation
 
-matrix(::AbstractAffineTransformation) = error("AbstractAffineTransformation's must implement matrix()")
-translation(::AbstractAffineTransformation) = error("AbstractAffineTransformation's must implement translation()")
+matrix(trans::AbstractAffineTransformation) = error("AbstractAffineTransformation $(typeof(trans)) must implement matrix()")
+translation(trans::AbstractAffineTransformation) = error("AbstractAffineTransformation $(typeof(trans)) must implement translation()")
 translation_reverse(::AbstractAffineTransformation) = matrix(trans) \ translation(trans)
 
 # Default implementations
@@ -67,7 +67,7 @@ for optimization purposes.
 """
 abstract AbstractLinearTransformation <: AbstractAffineTransformation
 
-matrix(::AbstractLinearTransformation) = error("AbstractLinearTransformation's must implement matrix()")
+matrix(trans::AbstractLinearTransformation) = error("AbstractLinearTransformation $(typeof(trans)) must implement matrix()")
 function translation(trans::AbstractLinearTransformation)
     m = matrix(trans)
     s = size(m, 1)
@@ -273,7 +273,7 @@ function matrix(trans::Rotation2D)
            trans.sin  trans.cos ]
 end
 
-function transform_deriv(trans::Rotation2D, x)
+function matrix(trans::Rotation2D)
     @fsa [ trans.cos -trans.sin;
            trans.sin  trans.cos ]
 end
@@ -362,7 +362,7 @@ end
 
 @compat (trans::Rotation)(x::Tuple) = Tuple(trans(Vec(x)))
 
-transform_deriv(trans::Rotation, x) = trans.matrix # It's a linear transformation, so this is easy!
+matrix(trans::Rotation) = trans.matrix
 @inline matrix(trans::Rotation2D) = trans.matrix
 
 
