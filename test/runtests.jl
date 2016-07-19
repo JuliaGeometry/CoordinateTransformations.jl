@@ -2,6 +2,7 @@ using CoordinateTransformations
 using BaseTestNext
 using FixedSizeArrays
 using ForwardDiff: Dual, partials
+using Compat
 
 @testset "CoordinateTransformations" begin
 
