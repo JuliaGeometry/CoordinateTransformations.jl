@@ -39,7 +39,7 @@ function Base.inv(trans::AbstractAffineTransformation)
     AffineTransformation(Minv, -Minv * translation_vector(trans))
 end
 
-function Base.isapprox(t1::AbstractAffineTransformation, t2::AbstractAffineTransformation, kwargs...)
+function Base.isapprox(t1::AbstractAffineTransformation, t2::AbstractAffineTransformation; kwargs...)
     isapprox(transformation_matrix(t1), transformation_matrix(t2); kwargs...) &&
         isapprox(translation_vector(t1), translation_vector(t2); kwargs...)
 end
@@ -84,7 +84,7 @@ end
 
 # transform_deriv() identical to that provided by AbstractAffineTransformation
 
-function Base.isapprox(t1::AbstractLinearTransformation, t2::AbstractLinearTransformation, kwargs...)
+function Base.isapprox(t1::AbstractLinearTransformation, t2::AbstractLinearTransformation; kwargs...)
     isapprox(transformation_matrix(t1), transformation_matrix(t2); kwargs...)
 end
 
@@ -92,40 +92,15 @@ end
 # translation_vector(::LinearTransformation) from the AbstractAffineTransformations
 # interface:
 
-function Base.isapprox(t1::AbstractAffineTransformation, t2::AbstractLinearTransformation, kwargs...)
+function Base.isapprox(t1::AbstractAffineTransformation, t2::AbstractLinearTransformation; kwargs...)
     isapprox(transformation_matrix(t1), transformation_matrix(t2); kwargs...) &&
         isapprox(norm(translation_vector(t1)), 0; kwargs...)
 end
 
-function Base.isapprox(t1::AbstractLinearTransformation, t2::AbstractAffineTransformation, kwargs...)
+function Base.isapprox(t1::AbstractLinearTransformation, t2::AbstractAffineTransformation; kwargs...)
     isapprox(transformation_matrix(t1), transformation_matrix(t2); kwargs...) &&
         isapprox(norm(translation_vector(t2)), 0; kwargs...)
 end
-
-#=
-"""
-    abstract AbstractRotation <: AbstractLinearTransformation
-
-Provides an interface for implementing rotations of Cartesian coordinates. To
-implement an AbstractRotation, you must define
-
-    transformation_matrix(trans)
-
-where the resulting transformation is (equivalent to)
-
-    trans(x) -> transformation_matrix(trans) * x
-
-Specific implementations may provide equivalent specializations of `call`, etc,
-for optimization purposes. The major difference with AbstractLinearTransformation
-is that the matrix is assumed to be orthogonal/unitary for the purpose of
-inverting the transformation.
-
-(See also Rotation, AxisRotation, AbstractLinearTransformation)
-"""
-abstract AbstractRotation <: AbstractLinearTransformation
-
-transformation_matrix(trans::AbstractRotation) = error("AbstractRotation $(typeof(trans)) must implement transformation_matrix()")
-=#
 
 
 """
@@ -332,11 +307,6 @@ function transformation_matrix(trans::Rotation2D)
            trans.sin  trans.cos ]
 end
 
-function transformation_matrix(trans::Rotation2D)
-    @fsa [ trans.cos -trans.sin;
-           trans.sin  trans.cos ]
-end
-
 function transform_deriv{T}(trans::Rotation2D, x::Polar{T})
     @fsa [ zero(T) zero(T);
            zero(T) one(T)  ]
@@ -348,6 +318,7 @@ function transform_deriv_params(trans::Rotation2D, x)
          trans.cos*x[1] - trans.sin*x[2] )
 end
 
+# I don't think this will work in my new vision for rotations...
 function transform_deriv_params{T}(trans::Rotation2D, x::Polar{T})
     @fsa [ zero(T);
            one(T)  ]
@@ -617,13 +588,6 @@ end
      -trans.sin Z trans.cos] * x
 end
 
-function transform_deriv(trans::RotationXY, x)
-    Z = zero(trans.cos)
-    I = one(trans.cos)
-    @fsa [ trans.cos -trans.sin Z;
-           trans.sin  trans.cos Z;
-           Z          Z         I]
-end
 function transformation_matrix(trans::RotationXY)
     Z = zero(trans.cos)
     I = one(trans.cos)
@@ -632,13 +596,6 @@ function transformation_matrix(trans::RotationXY)
            Z          Z         I]
 end
 
-function transform_deriv(trans::RotationYZ, x)
-    Z = zero(trans.cos)
-    I = one(trans.cos)
-    @fsa [ I  Z         Z;
-           Z  trans.cos -trans.sin;
-           Z  trans.sin  trans.cos ]
-end
 function transformation_matrix(trans::RotationYZ)
     Z = zero(trans.cos)
     I = one(trans.cos)
@@ -647,13 +604,6 @@ function transformation_matrix(trans::RotationYZ)
            Z  trans.sin  trans.cos ]
 end
 
-function transform_deriv(trans::RotationZX, x)
-    Z = zero(trans.cos)
-    I = one(trans.cos)
-    @fsa [ trans.cos Z trans.sin;
-           Z         I Z        ;
-          -trans.sin Z trans.cos ]
-end
 function transformation_matrix(trans::RotationZX)
     Z = zero(trans.cos)
     I = one(trans.cos)
