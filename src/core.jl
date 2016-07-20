@@ -31,6 +31,26 @@ immutable ComposedTransformation{T1 <: Transformation, T2 <: Transformation} <: 
     t2::T2
 end
 
+immutable ComposedTransformation2{TransTuple} <: Transformation
+    tforms::TransTuple
+end
+
+@generated function call{TransTuple}(trans::ComposedTransformation2{TransTuple}, x)
+    # Want trans.tforms[1]((trans.tforms[2:end]...)(x)), but need @generated to
+    # avoid splatting penalty
+    numtrans = length(TransTuple.parameters)
+    ex = :x
+    for i = numtrans:-1:1
+        ex = Expr(:call, :(trans.tforms[$i]), ex)
+    end
+    quote
+        Expr(:meta, :inline)
+        $ex
+    end
+end
+
+Base.show(io::IO, trans::ComposedTransformation2) = print(io, "($(join(map(string, trans.tforms), " ∘ ")))")
+
 Base.show(io::IO, trans::ComposedTransformation) = print(io, "($(trans.t1) ∘ $(trans.t2))")
 
 @compat @inline function (trans::ComposedTransformation)(x)
@@ -47,8 +67,16 @@ will create a `ComposedTransformation`, however this method can be overloaded
 for efficiency (e.g. two affine transformations naturally compose to a single
 affine transformation).
 """
-function compose(trans1::Transformation, trans2::Transformation)
-    ComposedTransformation(trans1, trans2)
+function compose(t1::Transformation, t2::Transformation)
+    ComposedTransformation2((t1, t2))
+end
+
+function compose(t1::ComposedTransformation2, t2::Transformation)
+    ComposedTransformation2((t1.tforms..., t2))
+end
+
+function compose(t1::Transformation, t2::ComposedTransformation2)
+    ComposedTransformation2((t1, t2.tforms...))
 end
 
 compose(trans::IdentityTransformation, ::IdentityTransformation) = trans
