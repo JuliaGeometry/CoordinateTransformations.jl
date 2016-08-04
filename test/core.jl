@@ -8,6 +8,6 @@
 
     @test identity_trans ∘ identity_trans == identity_trans
 
-    x = Point(1.0, 2.0, 3.0)
+    x = SVector(1.0, 2.0, 3.0)
     @test identity_trans(x) == x
 end

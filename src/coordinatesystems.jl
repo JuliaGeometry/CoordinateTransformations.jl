@@ -13,39 +13,39 @@ Base.isapprox(p1::Polar, p2::Polar; kwargs...) = isapprox(p1.r, p2.r; kwargs...)
 Base.eltype{T}(::Polar{T}) = T
 Base.eltype{T}(::Type{Polar{T}}) = T
 
-"`PolarFromCartesian()` - transformation from `Point{2}` type to `Polar` type"
+"`PolarFromCartesian()` - transformation from `AbstractVector` of length 2 to `Polar` type"
 immutable PolarFromCartesian <: Transformation; end
-"`CartesianFromPolar()` - transformation from `Polar` type to `Point{2}` type"
+"`CartesianFromPolar()` - transformation from `Polar` type to `SVector{2}` type"
 immutable CartesianFromPolar <: Transformation; end
 
 Base.show(io::IO, trans::PolarFromCartesian) = print(io, "PolarFromCartesian()")
 Base.show(io::IO, trans::CartesianFromPolar) = print(io, "CartesianFromPolar()")
 
-@compat function (::PolarFromCartesian)(x)
+function (::PolarFromCartesian)(x::AbstractVector)
     length(x) == 2 || error("Polar transform takes a 2D coordinate")
 
     Polar(sqrt(x[1]*x[1] + x[2]*x[2]), atan2(x[2], x[1]))
 end
 
-function transform_deriv(::PolarFromCartesian, x)
+function transform_deriv(::PolarFromCartesian, x::AbstractVector)
     length(x) == 2 || error("Polar transform takes a 2D coordinate")
 
     r = sqrt(x[1]*x[1] + x[2]*x[2])
     f = x[2] / x[1]
     c = one(eltype(x))/(x[1]*(one(eltype(x)) + f*f))
-    @fsa [ x[1]/r    x[2]/r
-          -f*c       c     ]
+    @SMatrix [ x[1]/r    x[2]/r ;
+              -f*c       c      ]
 end
-transform_deriv_params(::PolarFromCartesian, x) = error("PolarFromCartesian has no parameters")
+transform_deriv_params(::PolarFromCartesian, x::AbstractVector) = error("PolarFromCartesian has no parameters")
 
-@compat function (::CartesianFromPolar)(x::Polar)
-    Point(x.r * cos(x.θ), x.r * sin(x.θ))
+function (::CartesianFromPolar)(x::Polar)
+    SVector(x.r * cos(x.θ), x.r * sin(x.θ))
 end
 function transform_deriv(::CartesianFromPolar, x::Polar)
     sθ = sin(x.θ)
     cθ = cos(x.θ)
-    @fsa [cθ  -x.r*sθ
-          sθ   x.r*cθ ]
+    @SMatrix [cθ  -x.r*sθ ;
+              sθ   x.r*cθ ]
 end
 transform_deriv_params(::CartesianFromPolar, x::Polar) = error("CartesianFromPolar has no parameters")
 
@@ -86,11 +86,11 @@ Base.eltype{T}(::Type{Cylindrical{T}}) = T
 
 "`SphericalFromCartesian()` - transformation from 3D point to `Spherical` type"
 immutable SphericalFromCartesian <: Transformation; end
-"`CartesianFromSpherical()` - transformation from `Spherical` type to `Point{3}` type"
+"`CartesianFromSpherical()` - transformation from `Spherical` type to `SVector{3}` type"
 immutable CartesianFromSpherical <: Transformation; end
 "`CylindricalFromCartesian()` - transformation from 3D point to `Cylindrical` type"
 immutable CylindricalFromCartesian <: Transformation; end
-"`CartesianFromCylindrical()` - transformation from `Cylindrical` type to `Point{3}` type"
+"`CartesianFromCylindrical()` - transformation from `Cylindrical` type to `SVector{3}` type"
 immutable CartesianFromCylindrical <: Transformation; end
 "`CylindricalFromSpherical()` - transformation from `Spherical` type to `Cylindrical` type"
 immutable CylindricalFromSpherical <: Transformation; end
@@ -105,12 +105,12 @@ Base.show(io::IO, trans::CylindricalFromSpherical) = print(io, "CylindricalFromS
 Base.show(io::IO, trans::SphericalFromCylindrical) = print(io, "SphericalFromCylindrical()")
 
 # Cartesian <-> Spherical
-@compat function (::SphericalFromCartesian)(x)
+function (::SphericalFromCartesian)(x::AbstractVector)
     length(x) == 3 || error("Spherical transform takes a 3D coordinate")
 
     Spherical(sqrt(x[1]*x[1] + x[2]*x[2] + x[3]*x[3]), atan2(x[2],x[1]), atan(x[3]/sqrt(x[1]*x[1] + x[2]*x[2])))
 end
-function transform_deriv(::SphericalFromCartesian, x)
+function transform_deriv(::SphericalFromCartesian, x::AbstractVector)
     length(x) == 3 || error("Spherical transform takes a 3D coordinate")
     T = eltype(x)
 
@@ -120,14 +120,14 @@ function transform_deriv(::SphericalFromCartesian, x)
     cxy = one(T)/(x[1]*(one(T) + fxy*fxy))
     f = -x[3]/(rxy*r*r)
 
-    @fsa [ x[1]/r   x[2]/r  x[3]/r
-          -fxy*cxy  cxy     zero(T)
+    @SMatrix [ x[1]/r   x[2]/r  x[3]/r;
+          -fxy*cxy  cxy     zero(T);
            f*x[1]   f*x[2]  rxy/(r*r) ]
 end
-transform_deriv_params(::SphericalFromCartesian, x) = error("SphericalFromCartesian has no parameters")
+transform_deriv_params(::SphericalFromCartesian, x::AbstractVector) = error("SphericalFromCartesian has no parameters")
 
-@compat function (::CartesianFromSpherical)(x::Spherical)
-    Point(x.r * cos(x.θ) * cos(x.ϕ), x.r * sin(x.θ) * cos(x.ϕ), x.r * sin(x.ϕ))
+function (::CartesianFromSpherical)(x::Spherical)
+    SVector(x.r * cos(x.θ) * cos(x.ϕ), x.r * sin(x.θ) * cos(x.ϕ), x.r * sin(x.ϕ))
 end
 function transform_deriv{T}(::CartesianFromSpherical, x::Spherical{T})
     sθ = sin(x.θ)
@@ -135,46 +135,46 @@ function transform_deriv{T}(::CartesianFromSpherical, x::Spherical{T})
     sϕ = sin(x.ϕ)
     cϕ = cos(x.ϕ)
 
-    @fsa [cθ*cϕ -x.r*sθ*cϕ -x.r*cθ*sϕ
-          sθ*cϕ  x.r*cθ*cϕ -x.r*sθ*sϕ
-          sϕ     zero(T)    x.r * cϕ ]
+    @SMatrix [cθ*cϕ -x.r*sθ*cϕ -x.r*cθ*sϕ ;
+              sθ*cϕ  x.r*cθ*cϕ -x.r*sθ*sϕ ;
+              sϕ     zero(T)    x.r * cϕ  ]
 end
 transform_deriv_params(::CartesianFromSpherical, x::Spherical) = error("CartesianFromSpherical has no parameters")
 
 # Cartesian <-> Cylindrical
-@compat function (::CylindricalFromCartesian)(x)
+function (::CylindricalFromCartesian)(x::AbstractVector)
     length(x) == 3 || error("Cylindrical transform takes a 3D coordinate")
 
     Cylindrical(sqrt(x[1]*x[1] + x[2]*x[2]), atan2(x[2],x[1]), x[3])
 end
 
-function transform_deriv(::CylindricalFromCartesian, x)
+function transform_deriv(::CylindricalFromCartesian, x::AbstractVector)
     length(x) == 3 || error("Cylindrical transform takes a 3D coordinate")
     T = eltype(x)
 
     r = sqrt(x[1]*x[1] + x[2]*x[2])
     f = x[2] / x[1]
     c = one(T)/(x[1]*(one(T) + f*f))
-    @fsa [x[1]/r   x[2]/r   zero(T)
-          -f*c     c     zero(T)
-          zero(T)  zero(T)  one(T) ]
+    @SMatrix [ x[1]/r   x[2]/r   zero(T) ;
+              -f*c      c        zero(T) ;
+               zero(T)  zero(T)  one(T)  ]
 end
-transform_deriv_params(::CylindricalFromCartesian, x) = error("CylindricalFromCartesian has no parameters")
+transform_deriv_params(::CylindricalFromCartesian, x::AbstractVector) = error("CylindricalFromCartesian has no parameters")
 
-@compat function (::CartesianFromCylindrical)(x::Cylindrical)
-    Point(x.r * cos(x.θ), x.r * sin(x.θ), x.z)
+function (::CartesianFromCylindrical)(x::Cylindrical)
+    SVector(x.r * cos(x.θ), x.r * sin(x.θ), x.z)
 end
 function transform_deriv{T}(::CartesianFromCylindrical, x::Cylindrical{T})
     sθ = sin(x.θ)
     cθ = cos(x.θ)
-    @fsa [cθ      -x.r*sθ zero(T)
-          sθ       x.r*cθ zero(T)
-          zero(T) zero(T) one(T) ]
+    @SMatrix [cθ      -x.r*sθ  zero(T) ;
+              sθ       x.r*cθ  zero(T) ;
+              zero(T)  zero(T) one(T)  ]
 end
 transform_deriv_params(::CartesianFromPolar, x::Cylindrical) = error("CartesianFromCylindrical has no parameters")
 
 # Spherical <-> Cylindrical (TODO direct would be faster)
-@compat function (::CylindricalFromSpherical)(x::Spherical)
+function (::CylindricalFromSpherical)(x::Spherical)
     CylindricalFromCartesian()(CartesianFromSpherical()(x))
 end
 function transform_deriv(::CylindricalFromSpherical, x::Spherical)
@@ -184,7 +184,7 @@ function transform_deriv(::CylindricalFromSpherical, x::Spherical)
 end
 transform_deriv_params(::CylindricalFromSpherical, x::Spherical) = error("CylindricalFromSpherical has no parameters")
 
-@compat function (::SphericalFromCylindrical)(x::Cylindrical)
+function (::SphericalFromCylindrical)(x::Cylindrical)
     SphericalFromCartesian()(CartesianFromCylindrical()(x))
 end
 function transform_deriv(::SphericalFromCylindrical, x::Cylindrical)

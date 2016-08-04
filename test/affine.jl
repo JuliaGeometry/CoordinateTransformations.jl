@@ -1,19 +1,25 @@
-immutable SquareMe <: Transformation; end
 
-@compat (::SquareMe)(x) = x.^2
+# A transformation for testing the local affine mapping
+immutable SquareMe <: Transformation; end
+(::SquareMe)(x) = x.^2
 CoordinateTransformations.transform_deriv(::SquareMe, x0) = diagm(2*x0)
 
 
 @testset "Common Transformations" begin
-    @testset "AffineTransformation" begin
+
+    @testset "Local Affine transformation" begin
         S = SquareMe()
         x0 = [1,2,3]
         dx = 0.1*[1,-1,1]
         A = AffineTransformation(S, x0)
-        @test isapprox(S(x0 + dx), A(x0 + dx), atol=maximum(2*dx.^2))
+        @test isapprox(S(x0 + dx), A(x0 + dx), atol=1.01*vecnorm(dx))
     end
+
+    # TODO LinearTransformation and AffineTransformation
+
+
     @testset "Translation" begin
-        x = Point(1.0, 2.0)
+        x = SVector(1.0, 2.0)
         trans = Translation(2.0, -1.0)
 
         # Inverse
@@ -23,8 +29,8 @@ CoordinateTransformations.transform_deriv(::SquareMe, x0) = diagm(2*x0)
         @test trans ∘ trans == Translation(4.0, -2.0)
 
         # Transform
-        @test trans(x) === Point(3.0, 1.0)
-        @test trans(collect(x)) === Vec(3.0, 1.0)
+        @test trans(x) === SVector(3.0, 1.0)
+        @test trans(collect(x)) === SVector(3.0, 1.0)
 
         # Transform derivative
         m1 = transform_deriv(trans, x)
@@ -37,6 +43,7 @@ CoordinateTransformations.transform_deriv(::SquareMe, x0) = diagm(2*x0)
         @test m2 == eye(2)
     end
 
+#=
     @testset "Rotation2D on Polar" begin
         p = Polar(2.0, 1.0)
         trans = Rotation2D(1.0)
@@ -57,9 +64,8 @@ CoordinateTransformations.transform_deriv(::SquareMe, x0) = diagm(2*x0)
         @test transform_deriv_params(trans, p) == [0; 1]
     end
 
-
     @testset "Rotation2D" begin
-        x = Point(2.0, 0.0)
+        x = SVector(2.0, 0.0)
         x2 = CartesianFromPolar()(Polar(2.0, 1.0))
         trans = Rotation2D(1.0)
 
@@ -75,21 +81,21 @@ CoordinateTransformations.transform_deriv(::SquareMe, x0) = diagm(2*x0)
 
         # Transform
         @test trans(x) ≈ x2
-        @test Vec(trans(Tuple(x))) ≈ x2
+        @test SVector(trans(Tuple(x))) ≈ x2
         @test trans(collect(x)) ≈ collect(x2)
 
         # Transform derivative
-        x = Point(2.0,1.0)
-        x_gn = Point(Dual(2.0, (1.0,0.0)), Dual(1.0, (0.0,1.0)))
+        x = SVector(2.0,1.0)
+        x_gn = SVector(Dual(2.0, (1.0,0.0)), Dual(1.0, (0.0,1.0)))
         x2_gn = trans(x_gn)
-        m_gn = @fsa [partials(x2_gn[1], 1) partials(x2_gn[1], 2);
+        m_gn = @SMatrix [partials(x2_gn[1], 1) partials(x2_gn[1], 2);
                      partials(x2_gn[2], 1) partials(x2_gn[2], 2) ]
         m = transform_deriv(trans, x)
         @test m ≈ m_gn
 
         # Transform parameter derivative
         trans_gn = Rotation2D(Dual(1.0, (1.0)))
-        x = Point(2.0,1.0)
+        x = SVector(2.0,1.0)
         x2_gn = trans_gn(x)
         m_gn = Mat(partials(x2_gn[1], 1), partials(x2_gn[2], 1))
         m = transform_deriv_params(trans, x)
@@ -124,19 +130,19 @@ CoordinateTransformations.transform_deriv(::SquareMe, x0) = diagm(2*x0)
 
             R = Mat{3,3,Float64}(Rx*Ry*Rz)
 
-            x = Point(1.0, 2.0, 3.0)
+            x = SVector(1.0, 2.0, 3.0)
             trans = Rotation(R)
 
             @test inv(trans).matrix ≈ R'
             @test (trans ∘ trans).matrix ≈ R*R
 
             y = trans(x)
-            @test y == R * Vec(1.0, 2.0, 3.0)
-            @test trans(Tuple(x)) == Tuple(R * Vec(1.0, 2.0, 3.0))
-            @test trans(collect(x)) == R * Vec(1.0, 2.0, 3.0)
+            @test y == R * SVector(1.0, 2.0, 3.0)
+            @test trans(Tuple(x)) == Tuple(R * SVector(1.0, 2.0, 3.0))
+            @test trans(collect(x)) == R * SVector(1.0, 2.0, 3.0)
 
 
-            x_gn = Point(Dual(1.0,(1.,0.,0.)), Dual(2.0,(0.,1.,0.)), Dual(3.0,(0.,0.,1.)))
+            x_gn = SVector(Dual(1.0,(1.,0.,0.)), Dual(2.0,(0.,1.,0.)), Dual(3.0,(0.,0.,1.)))
             y_gn = trans(x_gn)
             M_gn = Mat{3,3,Float64}(vcat(ntuple(i->[partials(y_gn[i], j) for j = 1:3].', 3)...))
             M = transform_deriv(trans, x)
@@ -152,7 +158,7 @@ CoordinateTransformations.transform_deriv(::SquareMe, x0) = diagm(2*x0)
             g32 = Dual(R[3,2],(0.,0.,0.,0.,0.,0.,0.,1.,0.))
             g33 = Dual(R[3,3],(0.,0.,0.,0.,0.,0.,0.,0.,1.))
 
-            G = @fsa [g11 g12 g13;
+            G = @SMatrix [g11 g12 g13;
                       g21 g22 g23;
                       g31 g32 g33 ]
 
@@ -170,15 +176,15 @@ CoordinateTransformations.transform_deriv(::SquareMe, x0) = diagm(2*x0)
             q = Quaternion(v[1],v[2],v[3],v[4],true)
 
             trans = Rotation(q)
-            x = Point(1.0, 2.0, 3.0)
+            x = SVector(1.0, 2.0, 3.0)
 
             @test inv(trans) ≈ Rotation(inv(Quaternion(v[1],v[2],v[3],v[4])))
             @test trans ∘ trans ≈ Rotation(trans.matrix * trans.matrix)
 
             y = trans(x)
-            @test y ≈ Point(3.439024390243902,-1.1463414634146332,0.9268292682926829)
+            @test y ≈ SVector(3.439024390243902,-1.1463414634146332,0.9268292682926829)
 
-            x_gn = Point(Dual(1.0,(1.,0.,0.)), Dual(2.0,(0.,1.,0.)), Dual(3.0,(0.,0.,1.)))
+            x_gn = SVector(Dual(1.0,(1.,0.,0.)), Dual(2.0,(0.,1.,0.)), Dual(3.0,(0.,0.,1.)))
             y_gn = trans(x_gn)
             M_gn = Mat{3,3,Float64}(vcat(ntuple(i->[partials(y_gn[i], j) for j = 1:3].', 3)...))
             M = transform_deriv(trans, x)
@@ -201,15 +207,15 @@ CoordinateTransformations.transform_deriv(::SquareMe, x0) = diagm(2*x0)
             θz = 0.3
 
             trans = Rotation(EulerAngles(θx, θy, θz))
-            x = Point(1.0, 2.0, 3.0)
+            x = SVector(1.0, 2.0, 3.0)
 
             @test inv(trans) == Rotation(trans.matrix')
             @test trans ∘ trans == Rotation(trans.matrix * trans.matrix)
 
             y = trans(x)
-            @test y == Point(0.9984766744283545,2.1054173473736495,2.92750100324502)
+            @test y == SVector(0.9984766744283545,2.1054173473736495,2.92750100324502)
 
-            x_gn = Point(Dual(1.0,(1.,0.,0.)), Dual(2.0,(0.,1.,0.)), Dual(3.0,(0.,0.,1.)))
+            x_gn = SVector(Dual(1.0,(1.,0.,0.)), Dual(2.0,(0.,1.,0.)), Dual(3.0,(0.,0.,1.)))
             y_gn = trans(x_gn)
             M_gn = Mat{3,3,Float64}(vcat(ntuple(i->[partials(y_gn[i], j) for j = 1:3].', 3)...))
             M = transform_deriv(trans, x)
@@ -221,7 +227,7 @@ CoordinateTransformations.transform_deriv(::SquareMe, x0) = diagm(2*x0)
 
         @testset "RotationXY, RotationYZ and RotationZX" begin
             # RotationXY
-            x = Point(2.0, 0.0, 0.0)
+            x = SVector(2.0, 0.0, 0.0)
             x2 = CartesianFromSpherical()(Spherical(2.0, 1.0, 0.0))
             trans = RotationXY(1.0)
 
@@ -238,14 +244,14 @@ CoordinateTransformations.transform_deriv(::SquareMe, x0) = diagm(2*x0)
 
             # Transform
             @test trans(x) ≈ x2
-            @test Vec(trans(Tuple(x))) ≈ x2
-            @test Vec(trans(collect(x))) ≈ x2
+            @test SVector(trans(Tuple(x))) ≈ x2
+            @test SVector(trans(collect(x))) ≈ x2
 
             # Transform derivative
-            x = Point(2.0,1.0,3.0)
-            x_gn = Point(Dual(2.0, (1.0,0.0,0.0)), Dual(1.0, (0.0,1.0,0.0)), Dual(3.0, (0.0,0.0,1.0)))
+            x = SVector(2.0,1.0,3.0)
+            x_gn = SVector(Dual(2.0, (1.0,0.0,0.0)), Dual(1.0, (0.0,1.0,0.0)), Dual(3.0, (0.0,0.0,1.0)))
             x2_gn = trans(x_gn)
-            m_gn = @fsa [partials(x2_gn[1], 1) partials(x2_gn[1], 2) partials(x2_gn[1], 3);
+            m_gn = @SMatrix [partials(x2_gn[1], 1) partials(x2_gn[1], 2) partials(x2_gn[1], 3);
                          partials(x2_gn[2], 1) partials(x2_gn[2], 2) partials(x2_gn[2], 3);
                          partials(x2_gn[3], 1) partials(x2_gn[3], 2) partials(x2_gn[3], 3) ]
             m = transform_deriv(trans, x)
@@ -253,7 +259,7 @@ CoordinateTransformations.transform_deriv(::SquareMe, x0) = diagm(2*x0)
 
             # Transform parameter derivative
             trans_gn = RotationXY(Dual(1.0, (1.0)))
-            x = Point(2.0,1.0,3.0)
+            x = SVector(2.0,1.0,3.0)
             x2_gn = trans_gn(x)
             m_gn = Mat(partials(x2_gn[1], 1), partials(x2_gn[2], 1), partials(x2_gn[3], 1))
             m = transform_deriv_params(trans, x)
@@ -261,7 +267,7 @@ CoordinateTransformations.transform_deriv(::SquareMe, x0) = diagm(2*x0)
 
 
             # RotationYZ
-            x = Point(0.0, 2.0, 0.0)
+            x = SVector(0.0, 2.0, 0.0)
             x2 = CartesianFromSpherical()(Spherical(2.0, pi/2, 1.0))
             trans = RotationYZ(1.0)
 
@@ -278,14 +284,14 @@ CoordinateTransformations.transform_deriv(::SquareMe, x0) = diagm(2*x0)
 
             # Transform
             @test trans(x) ≈ x2
-            @test Vec(trans(Tuple(x))) ≈ x2
-            @test Vec(trans(collect(x))) ≈ x2
+            @test SVector(trans(Tuple(x))) ≈ x2
+            @test SVector(trans(collect(x))) ≈ x2
 
             # Transform derivative
-            x = Point(2.0,1.0,3.0)
-            x_gn = Point(Dual(2.0, (1.0,0.0,0.0)), Dual(1.0, (0.0,1.0,0.0)), Dual(3.0, (0.0,0.0,1.0)))
+            x = SVector(2.0,1.0,3.0)
+            x_gn = SVector(Dual(2.0, (1.0,0.0,0.0)), Dual(1.0, (0.0,1.0,0.0)), Dual(3.0, (0.0,0.0,1.0)))
             x2_gn = trans(x_gn)
-            m_gn = @fsa [partials(x2_gn[1], 1) partials(x2_gn[1], 2) partials(x2_gn[1], 3);
+            m_gn = @SMatrix [partials(x2_gn[1], 1) partials(x2_gn[1], 2) partials(x2_gn[1], 3);
                          partials(x2_gn[2], 1) partials(x2_gn[2], 2) partials(x2_gn[2], 3);
                          partials(x2_gn[3], 1) partials(x2_gn[3], 2) partials(x2_gn[3], 3) ]
             m = transform_deriv(trans, x)
@@ -293,7 +299,7 @@ CoordinateTransformations.transform_deriv(::SquareMe, x0) = diagm(2*x0)
 
             # Transform parameter derivative
             trans_gn = RotationYZ(Dual(1.0, (1.0)))
-            x = Point(2.0,1.0,3.0)
+            x = SVector(2.0,1.0,3.0)
             x2_gn = trans_gn(x)
             m_gn = Mat(partials(x2_gn[1], 1), partials(x2_gn[2], 1), partials(x2_gn[3], 1))
             m = transform_deriv_params(trans, x)
@@ -301,7 +307,7 @@ CoordinateTransformations.transform_deriv(::SquareMe, x0) = diagm(2*x0)
 
 
             # RotationZX
-            x = Point(2.0, 0.0, 0.0)
+            x = SVector(2.0, 0.0, 0.0)
             x2 = CartesianFromSpherical()(Spherical(2.0, 0.0, -1.0))
             trans = RotationZX(1.0)
 
@@ -318,14 +324,14 @@ CoordinateTransformations.transform_deriv(::SquareMe, x0) = diagm(2*x0)
 
             # Transform
             @test trans(x) ≈ x2
-            @test Vec(trans(Tuple(x))) ≈ x2
-            @test Vec(trans(collect(x))) ≈ x2
+            @test SVector(trans(Tuple(x))) ≈ x2
+            @test SVector(trans(collect(x))) ≈ x2
 
             # Transform derivative
-            x = Point(2.0,1.0,3.0)
-            x_gn = Point(Dual(2.0, (1.0,0.0,0.0)), Dual(1.0, (0.0,1.0,0.0)), Dual(3.0, (0.0,0.0,1.0)))
+            x = SVector(2.0,1.0,3.0)
+            x_gn = SVector(Dual(2.0, (1.0,0.0,0.0)), Dual(1.0, (0.0,1.0,0.0)), Dual(3.0, (0.0,0.0,1.0)))
             x2_gn = trans(x_gn)
-            m_gn = @fsa [partials(x2_gn[1], 1) partials(x2_gn[1], 2) partials(x2_gn[1], 3);
+            m_gn = @SMatrix [partials(x2_gn[1], 1) partials(x2_gn[1], 2) partials(x2_gn[1], 3);
                          partials(x2_gn[2], 1) partials(x2_gn[2], 2) partials(x2_gn[2], 3);
                          partials(x2_gn[3], 1) partials(x2_gn[3], 2) partials(x2_gn[3], 3) ]
             m = transform_deriv(trans, x)
@@ -333,7 +339,7 @@ CoordinateTransformations.transform_deriv(::SquareMe, x0) = diagm(2*x0)
 
             # Transform parameter derivative
             trans_gn = RotationZX(Dual(1.0, (1.0)))
-            x = Point(2.0,1.0,3.0)
+            x = SVector(2.0,1.0,3.0)
             x2_gn = trans_gn(x)
             m_gn = Mat(partials(x2_gn[1], 1), partials(x2_gn[2], 1), partials(x2_gn[3], 1))
             m = transform_deriv_params(trans, x)
@@ -341,9 +347,9 @@ CoordinateTransformations.transform_deriv(::SquareMe, x0) = diagm(2*x0)
         end
 
         @testset "euler_rotation() and composed derivatives" begin
-            x = Point(2.0,1.0,3.0)
+            x = SVector(2.0,1.0,3.0)
             trans = euler_rotation(0.1,0.2,0.3)
-            x2 = Point(2.730537054338937,0.8047190852558106,2.428290466296628)
+            x2 = SVector(2.730537054338937,0.8047190852558106,2.428290466296628)
 
             #@test trans.t1.t1 == RotationXY(0.1)
             #@test trans.t1.t2 == RotationYZ(0.2)
@@ -354,10 +360,10 @@ CoordinateTransformations.transform_deriv(::SquareMe, x0) = diagm(2*x0)
             @test trans(x) ≈ x2
 
             # Transform derivative
-            x = Point(2.0,1.0,3.0)
-            x_gn = Point(Dual(2.0, (1.0,0.0,0.0)), Dual(1.0, (0.0,1.0,0.0)), Dual(3.0, (0.0,0.0,1.0)))
+            x = SVector(2.0,1.0,3.0)
+            x_gn = SVector(Dual(2.0, (1.0,0.0,0.0)), Dual(1.0, (0.0,1.0,0.0)), Dual(3.0, (0.0,0.0,1.0)))
             x2_gn = trans(x_gn)
-            m_gn = @fsa [partials(x2_gn[1], 1) partials(x2_gn[1], 2) partials(x2_gn[1], 3);
+            m_gn = @SMatrix [partials(x2_gn[1], 1) partials(x2_gn[1], 2) partials(x2_gn[1], 3);
                          partials(x2_gn[2], 1) partials(x2_gn[2], 2) partials(x2_gn[2], 3);
                          partials(x2_gn[3], 1) partials(x2_gn[3], 2) partials(x2_gn[3], 3) ]
             m = transform_deriv(trans, x)
@@ -366,9 +372,9 @@ CoordinateTransformations.transform_deriv(::SquareMe, x0) = diagm(2*x0)
             # Transform parameter derivative
 
             #trans_gn = euler_rotation(Dual(0.1, (1.0, 0.0, 0.0)), Dual(0.2, (0.0, 1.0, 0.0)), Dual(0.3, (0.0, 0.0, 1.0)))
-            #x = Point(2.0,1.0,3.0)
+            #x = SVector(2.0,1.0,3.0)
             #x2_gn = trans_gn(x)
-            #m_gn = @fsa [partials(x2_gn[1], 1) partials(x2_gn[1], 2) partials(x2_gn[1], 3);
+            #m_gn = @SMatrix [partials(x2_gn[1], 1) partials(x2_gn[1], 2) partials(x2_gn[1], 3);
             #             partials(x2_gn[2], 1) partials(x2_gn[2], 2) partials(x2_gn[2], 3);
             #             partials(x2_gn[3], 1) partials(x2_gn[3], 2) partials(x2_gn[3], 3)]
             #m = transform_deriv_params(trans, x)
@@ -376,5 +382,5 @@ CoordinateTransformations.transform_deriv(::SquareMe, x0) = diagm(2*x0)
 
         end
     end
-
+=#
 end

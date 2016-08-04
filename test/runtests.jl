@@ -1,13 +1,12 @@
 using CoordinateTransformations
-using BaseTestNext
-using FixedSizeArrays
+using Base.Test
 using ForwardDiff: Dual, partials
-using Compat
+using StaticArrays
 
 @testset "CoordinateTransformations" begin
 
     include("core.jl")
     include("coordinatesystems.jl")
-    include("commontransformations.jl")
+    include("affine.jl")
 
 end

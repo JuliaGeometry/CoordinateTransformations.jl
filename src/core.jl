@@ -20,7 +20,7 @@ input unchanged, similar to `identity`.
 """
 immutable IdentityTransformation <: Transformation; end
 
-@compat @inline (::IdentityTransformation)(x) = x
+@inline (::IdentityTransformation)(x) = x
 
 """
 A `ComposedTransformation` simply executes two transformations successively, and
@@ -33,7 +33,7 @@ end
 
 Base.show(io::IO, trans::ComposedTransformation) = print(io, "($(trans.t1) ∘ $(trans.t2))")
 
-@compat @inline function (trans::ComposedTransformation)(x)
+@inline function (trans::ComposedTransformation)(x)
     trans.t1(trans.t2(x))
 end
 
@@ -77,7 +77,7 @@ Base.inv(trans::IdentityTransformation) = trans
 A matrix describing how differentials on the parameters of `x` flow through to
 the output of transformation `trans`.
 """
-transform_deriv(::Transformation, x) = error("Differential matrix of transform $trans with input $x not defined")
+transform_deriv(trans::Transformation, x) = error("Differential matrix of transform $trans with input $x not defined")
 
 transform_deriv(::IdentityTransformation, x) = I
 
