@@ -25,11 +25,6 @@ transformation_matrix(trans::AbstractAffineTransformation) = error("AbstractAffi
 translation_vector(trans::AbstractAffineTransformation) = error("AbstractAffineTransformation $(typeof(trans)) must implement translation_vector()")
 translation_vector_reverse(::AbstractAffineTransformation) = transformation_matrix(trans) \ translation_vector(trans)
 
-# Default implementations
-@compat function (trans::AbstractAffineTransformation)(x)
-    transformation_matrix(trans) * x + translation_vector(trans)
-end
-
 # Could try do similar for transform_deriv_params()?
 
 transform_deriv(trans::AbstractAffineTransformation, x) = transformation_matrix(trans)
@@ -77,11 +72,6 @@ function translation_vector_reverse(trans::AbstractLinearTransformation)
     return zeros(T, s)
 end
 
-# Default implementations
-@compat function (trans::AbstractLinearTransformation)(x)
-    transformation_matrix(trans) * x
-end
-
 # transform_deriv() identical to that provided by AbstractAffineTransformation
 
 function Base.isapprox(t1::AbstractLinearTransformation, t2::AbstractLinearTransformation; kwargs...)
@@ -121,10 +111,6 @@ abstract AbstractTranslation <: AbstractAffineTransformation
 
 @inline transformation_matrix(::AbstractTranslation) = I
 
-@compat function (trans::AbstractTranslation)(x)
-    x + translation_vector(trans)
-end
-
 
 ###################
 ### Translation ###
@@ -136,13 +122,17 @@ end
 
 Construct the `Translation` transformation for translating Cartesian points.
 """
-immutable Translation{T} <: AbstractTranslation
-    dx::T
+immutable Translation{VectorT} <: AbstractTranslation
+    dx::VectorT
 end
 Translation(x::Tuple) = Translation(Vec(x))
 Translation(x,y) = Translation(Vec(x,y))
 Translation(x,y,z) = Translation(Vec(x,y,z))
 Base.show(io::IO, trans::Translation) = print(io, "Translation$((trans.dx...))")
+
+@compat function (trans::Translation{V}){V}(x)
+    x + translation_vector(trans)
+end
 
 translation_vector(trans::Translation) = trans.dx
 
@@ -173,6 +163,11 @@ end
 LinearTransformation(trans::AbstractLinearTransformation) = LinearTransformation(transformation_matrix(trans))
 
 Base.show(io::IO, trans::LinearTransformation)   = print(io, "LinearTransformation($(trans.M))") # TODO make this output more petite
+
+@compat function (trans::LinearTransformation{M}){M}(x)
+    transformation_matrix(trans) * x
+end
+
 
 @inline transformation_matrix(trans::LinearTransformation) = trans.M
 
@@ -207,6 +202,10 @@ translation_vector(trans::AffineTransformation) = trans.v
 
 function AffineTransformation(trans::AbstractAffineTransformation)
     AffineTransformation(transformation_matrix(trans), translation_vector(trans))
+end
+
+@compat function (trans::AffineTransformation{M,V}){M,V}(x)
+    transformation_matrix(trans) * x + translation_vector(trans)
 end
 
 # We can create an Affine transformation corresponding to the differential
