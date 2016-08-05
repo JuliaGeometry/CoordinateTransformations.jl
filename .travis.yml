@@ -3,9 +3,12 @@ language: julia
 os:
   - linux
   - osx
+branches:
+  only:
+    - master
+    - julia-0.4
 julia:
-  - release
-  - nightly
+  - 0.4
 notifications:
   email: false
 # uncomment the following lines to override the default test script
