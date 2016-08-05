@@ -49,6 +49,19 @@ CoordinateTransformations.transform_deriv(::SquareMe, x0) = diagm(2*x0)
         end
     end
 
+    @testset "LinearTransformation" begin
+        M = [1 2; 3 4]
+        x = [1,0]
+        y = [0,1]
+        L = LinearTransformation(M)
+        @test L(x) == M*x
+        @test inv(L)(x) == inv(M)*x
+        @test inv(L)(y) == inv(M)*y
+        @test inv(L)(L(x)) ≈ x
+        @test inv(L)(L(y)) ≈ y
+        @test (L∘L)(x) == (M*M)*x
+    end
+
     @testset "Translation" begin
         x = Point(1.0, 2.0)
         trans = Translation(2.0, -1.0)
