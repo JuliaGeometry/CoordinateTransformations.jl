@@ -6,12 +6,49 @@ CoordinateTransformations.transform_deriv(::SquareMe, x0) = diagm(2*x0)
 
 @testset "Common Transformations" begin
     @testset "AffineTransformation" begin
-        S = SquareMe()
-        x0 = [1,2,3]
-        dx = 0.1*[1,-1,1]
-        A = AffineTransformation(S, x0)
-        @test isapprox(S(x0 + dx), A(x0 + dx), atol=maximum(2*dx.^2))
+        @testset "Simple" begin
+            M = [1 2; 3 4]
+            v = [-1, 1]
+            x = [1,0]
+            y = [0.0,1.0]
+            A = AffineTransformation(M,v)
+            @test A(x) == M*x + v
+        end
+
+        @testset "composition " begin
+            M1 = [1 2; 3 4]
+            v1 = [-1, 1]
+            A1 = AffineTransformation(M1,v1)
+            M2 = [0 1; 1 0]
+            v2 = [-2, 0]
+            A2 = AffineTransformation(M2,v2)
+            x = [1,0]
+            y = [0,1]
+            @test A1(x) == M1*x + v1
+            @test A1(y) == M1*y + v1
+            @test (A2∘A1)(x) == M2*(M1*x + v1) + v2
+            @test (A2∘A1)(y) == M2*(M1*y + v1) + v2
+        end
+
+        @testset "inverse" begin
+            M = [1.0 2.0; 3.0 4.0]
+            v = [-1.0, 1.0]
+            x = [1,0]
+            y = [0.0,1.0]
+            A = AffineTransformation(M,v)
+            @test inv(A)(A(x)) ≈ x
+            @test inv(A)(A(y)) ≈ y
+        end
+
+        @testset "Affine approximation" begin
+            S = SquareMe()
+            x0 = [1,2,3]
+            dx = 0.1*[1,-1,1]
+            A = AffineTransformation(S, x0)
+            @test isapprox(S(x0 + dx), A(x0 + dx), atol=maximum(2*dx.^2))
+        end
     end
+
     @testset "Translation" begin
         x = Point(1.0, 2.0)
         trans = Translation(2.0, -1.0)
