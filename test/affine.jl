@@ -6,23 +6,23 @@ CoordinateTransformations.transform_deriv(::SquareMe, x0) = diagm(2*x0)
 
 
 @testset "Common Transformations" begin
-    @testset "AffineTransformation" begin
+    @testset "AffineMap" begin
         @testset "Simple" begin
             M = [1 2; 3 4]
             v = [-1, 1]
             x = [1,0]
             y = [0.0,1.0]
-            A = AffineTransformation(M,v)
+            A = AffineMap(M,v)
             @test A(x) == M*x + v
         end
 
         @testset "composition " begin
             M1 = [1 2; 3 4]
             v1 = [-1, 1]
-            A1 = AffineTransformation(M1,v1)
+            A1 = AffineMap(M1,v1)
             M2 = [0 1; 1 0]
             v2 = [-2, 0]
-            A2 = AffineTransformation(M2,v2)
+            A2 = AffineMap(M2,v2)
             x = [1,0]
             y = [0,1]
             @test A1(x) == M1*x + v1
@@ -36,7 +36,7 @@ CoordinateTransformations.transform_deriv(::SquareMe, x0) = diagm(2*x0)
             v = [-1.0, 1.0]
             x = [1,0]
             y = [0.0,1.0]
-            A = AffineTransformation(M,v)
+            A = AffineMap(M,v)
             @test inv(A)(A(x)) ≈ x
             @test inv(A)(A(y)) ≈ y
         end
@@ -45,16 +45,16 @@ CoordinateTransformations.transform_deriv(::SquareMe, x0) = diagm(2*x0)
             S = SquareMe()
             x0 = [1,2,3]
             dx = 0.1*[1,-1,1]
-            A = AffineTransformation(S, x0)
+            A = AffineMap(S, x0)
             @test isapprox(S(x0 + dx), A(x0 + dx), atol=maximum(2*dx.^2))
         end
     end
 
-    @testset "LinearTransformation" begin
+    @testset "LinearMap" begin
         M = [1 2; 3 4]
         x = [1,0]
         y = [0,1]
-        L = LinearTransformation(M)
+        L = LinearMap(M)
         @test L(x) == M*x
         @test inv(L)(x) == inv(M)*x
         @test inv(L)(y) == inv(M)*y
