@@ -1,8 +1,10 @@
 """
-    abstract AbstractAffineTransformation <: Transformation
+    abstract AbstractAffineMap <: Transformation
 
 Provides an interface for implementing Affine transformations of Cartesian
-coordinates. To implement an AbstractAffineTransformation, you must define
+coordinates. NOTE: the details of this will change in the next release!
+
+To implement an AbstractAffineMap, you must define
 
     transformation_matrix(trans)
     translation_vector(trans)
@@ -17,33 +19,35 @@ such that
 
     trans(x) -> transformation_matrix(trans) * (x + translation_vector_reverse(trans))
 
-(See also AffineTransformation, AbstractLinearTransformation, Translation)
+(See also AffineMap, AbstractLinearMap, Translation)
 """
-abstract AbstractAffineTransformation <: Transformation
+abstract AbstractAffineMap <: Transformation
 
-transformation_matrix(trans::AbstractAffineTransformation) = error("AbstractAffineTransformation $(typeof(trans)) must implement transformation_matrix()")
-translation_vector(trans::AbstractAffineTransformation) = error("AbstractAffineTransformation $(typeof(trans)) must implement translation_vector()")
-translation_vector_reverse(::AbstractAffineTransformation) = transformation_matrix(trans) \ translation_vector(trans)
+transformation_matrix(trans::AbstractAffineMap) = error("AbstractAffineMap $(typeof(trans)) must implement transformation_matrix()")
+translation_vector(trans::AbstractAffineMap) = error("AbstractAffineMap $(typeof(trans)) must implement translation_vector()")
+translation_vector_reverse(::AbstractAffineMap) = transformation_matrix(trans) \ translation_vector(trans)
 
 # Could try do similar for transform_deriv_params()?
 
-transform_deriv(trans::AbstractAffineTransformation, x) = transformation_matrix(trans)
+transform_deriv(trans::AbstractAffineMap, x) = transformation_matrix(trans)
 
-function Base.inv(trans::AbstractAffineTransformation)
+function Base.inv(trans::AbstractAffineMap)
     Minv = inv(transformation_matrix(trans))
-    AffineTransformation(Minv, -Minv * translation_vector(trans))
+    AffineMap(Minv, -Minv * translation_vector(trans))
 end
 
-function Base.isapprox(t1::AbstractAffineTransformation, t2::AbstractAffineTransformation; kwargs...)
+function Base.isapprox(t1::AbstractAffineMap, t2::AbstractAffineMap; kwargs...)
     isapprox(transformation_matrix(t1), transformation_matrix(t2); kwargs...) &&
         isapprox(translation_vector(t1), translation_vector(t2); kwargs...)
 end
 
 """
-    abstract AbstractLinearTransformation <: AbstractAffineTransformation
+    abstract AbstractLinearMap <: AbstractAffineMap
 
 Provides an interface for implementing linear transformations of Cartesian
-coordinates. To implement an AbstractLinearTransformation, you must define
+coordinates.  NOTE: the details of this will change in the next release!
+
+To implement an AbstractLinearMap, you must define
 
     transformation_matrix(trans)
 
@@ -54,49 +58,51 @@ where the resulting transformation is (equivalent to)
 Specific implementations may provide equivalent specializations of `call`, etc,
 for optimization purposes.
 
-(See also LinearTransformation, AbstractAffineTransformation)
+(See also LinearMap, AbstractAffineMap)
 """
-abstract AbstractLinearTransformation <: AbstractAffineTransformation
+abstract AbstractLinearMap <: AbstractAffineMap
 
-transformation_matrix(trans::AbstractLinearTransformation) = error("AbstractLinearTransformation $(typeof(trans)) must implement transformation_matrix()")
-function translation_vector(trans::AbstractLinearTransformation)
+transformation_matrix(trans::AbstractLinearMap) = error("AbstractLinearMap $(typeof(trans)) must implement transformation_matrix()")
+function translation_vector(trans::AbstractLinearMap)
     m = transformation_matrix(trans)
     s = size(m, 1)
     T = eltype(m)
     return zeros(T, s)
 end
-function translation_vector_reverse(trans::AbstractLinearTransformation)
+function translation_vector_reverse(trans::AbstractLinearMap)
     m = transformation_matrix(trans)
     s = size(m, 2)
     T = eltype(m)
     return zeros(T, s)
 end
 
-# transform_deriv() identical to that provided by AbstractAffineTransformation
+# transform_deriv() identical to that provided by AbstractAffineMap
 
-function Base.isapprox(t1::AbstractLinearTransformation, t2::AbstractLinearTransformation; kwargs...)
+function Base.isapprox(t1::AbstractLinearMap, t2::AbstractLinearMap; kwargs...)
     isapprox(transformation_matrix(t1), transformation_matrix(t2); kwargs...)
 end
 
 # These functions are remove any reference to unnecessary calls to
-# translation_vector(::LinearTransformation) from the AbstractAffineTransformations
+# translation_vector(::LinearMap) from the AbstractAffineMaps
 # interface:
 
-function Base.isapprox(t1::AbstractAffineTransformation, t2::AbstractLinearTransformation; kwargs...)
+function Base.isapprox(t1::AbstractAffineMap, t2::AbstractLinearMap; kwargs...)
     isapprox(transformation_matrix(t1), transformation_matrix(t2); kwargs...) &&
         isapprox(norm(translation_vector(t1)), 0; kwargs...)
 end
 
-function Base.isapprox(t1::AbstractLinearTransformation, t2::AbstractAffineTransformation; kwargs...)
+function Base.isapprox(t1::AbstractLinearMap, t2::AbstractAffineMap; kwargs...)
     isapprox(transformation_matrix(t1), transformation_matrix(t2); kwargs...) &&
         isapprox(norm(translation_vector(t2)), 0; kwargs...)
 end
 
 
 """
-    abstract AbstractTranslation <: AbstractAffineTransformation
+    abstract AbstractTranslation <: AbstractAffineMap
 
-A transformation that encapsulates the translation of Cartesian points.
+A transformation that encapsulates the translation of Cartesian points.  NOTE:
+the details of this will change in the next release!
+
 Implementations must define:
 
     translation_vector(trans)
@@ -105,9 +111,9 @@ where the translation goes as
 
     trans(x) -> x + translation_vector(trans)
 
-(See also Translation, AbstractAffineTransformation, AffineTransformation)
+(See also Translation, AbstractAffineMap, AffineMap)
 """
-abstract AbstractTranslation <: AbstractAffineTransformation
+abstract AbstractTranslation <: AbstractAffineMap
 
 @inline transformation_matrix(::AbstractTranslation) = I
 
@@ -116,7 +122,7 @@ abstract AbstractTranslation <: AbstractAffineTransformation
 ### Translation ###
 ###################
 """
-    Translation(dv) <: AbstractAffineTransformation
+    Translation(dv) <: AbstractAffineMap
     Translation(dx, dy)       (2D)
     Translation(dx, dy, dz)   (3D)
 
@@ -150,61 +156,61 @@ end
 
 
 """
-    LinearTransformation <: AbstractLinearTransformation
+    LinearMap <: AbstractLinearMap
 
-A general linear transformation, constructed using `LinearTransformation(M)`
+A general linear transformation, constructed using `LinearMap(M)`
 for any matrix-like object `M`.  Other abstract linear transformations can be
-converted into a general linear transformation using `LinearTransformation(trans)`
+converted into a general linear transformation using `LinearMap(trans)`
 """
-immutable LinearTransformation{MatrixT} <: AbstractLinearTransformation
+immutable LinearMap{MatrixT} <: AbstractLinearMap
     M::MatrixT
 end
 
-LinearTransformation(trans::AbstractLinearTransformation) = LinearTransformation(transformation_matrix(trans))
+LinearMap(trans::AbstractLinearMap) = LinearMap(transformation_matrix(trans))
 
-Base.show(io::IO, trans::LinearTransformation)   = print(io, "LinearTransformation($(trans.M))") # TODO make this output more petite
+Base.show(io::IO, trans::LinearMap)   = print(io, "LinearMap($(trans.M))") # TODO make this output more petite
 
-@compat function (trans::LinearTransformation{M}){M}(x)
+@compat function (trans::LinearMap{M}){M}(x)
     transformation_matrix(trans) * x
 end
 
 
-@inline transformation_matrix(trans::LinearTransformation) = trans.M
+@inline transformation_matrix(trans::LinearMap) = trans.M
 
 # Generic definitions
 
-Base.inv(trans::AbstractLinearTransformation) = LinearTransformation(inv(transformation_matrix(trans)))
+Base.inv(trans::AbstractLinearMap) = LinearMap(inv(transformation_matrix(trans)))
 
-compose(t1::AbstractLinearTransformation, t2::AbstractLinearTransformation) = LinearTransformation(transformation_matrix(t1) * transformation_matrix(t2))
+compose(t1::AbstractLinearMap, t2::AbstractLinearMap) = LinearMap(transformation_matrix(t1) * transformation_matrix(t2))
 
 
 """
-    AffineTransformation <: AbstractAffineTransformation
+    AffineMap <: AbstractAffineMap
 
 A concrete affine transformation.  To construct the mapping `x -> M*x + v`, use
 
-    AffineTransformation(M, v)
+    AffineMap(M, v)
 
 where `M` is a matrix and `v` a vector.  An arbitrary `Transformation` may be
 converted into an affine approximation by linearizing about a point `x` using
 
-    AffineTransformation(trans, [x])
+    AffineMap(trans, [x])
 
 For transformations which are already affine, `x` may be omitted.
 """
-immutable AffineTransformation{MatrixT, VectorT} <: AbstractAffineTransformation
+immutable AffineMap{MatrixT, VectorT} <: AbstractAffineMap
     M::MatrixT
     v::VectorT
 end
 
-transformation_matrix(trans::AffineTransformation) = trans.M
-translation_vector(trans::AffineTransformation) = trans.v
+transformation_matrix(trans::AffineMap) = trans.M
+translation_vector(trans::AffineMap) = trans.v
 
-function AffineTransformation(trans::AbstractAffineTransformation)
-    AffineTransformation(transformation_matrix(trans), translation_vector(trans))
+function AffineMap(trans::AbstractAffineMap)
+    AffineMap(transformation_matrix(trans), translation_vector(trans))
 end
 
-@compat function (trans::AffineTransformation{M,V}){M,V}(x)
+@compat function (trans::AffineMap{M,V}){M,V}(x)
     transformation_matrix(trans) * x + translation_vector(trans)
 end
 
@@ -215,40 +221,40 @@ end
 # large Tx!  However, changing the order of applying the matrix and
 # translation won't fix things, because then we'd have `Tx*(x-x0)` which
 # also can incur large cancellation error in `x-x0`.
-function AffineTransformation(trans::Transformation, x0)
+function AffineMap(trans::Transformation, x0)
     dT = transform_deriv(trans, x0)
     Tx = trans(x0)
-    AffineTransformation(dT, Tx - dT*x0)
+    AffineMap(dT, Tx - dT*x0)
 end
 
-Base.show(io::IO, trans::AffineTransformation) = print(io, "AffineTransformation($(trans.M), $(trans.v))") # TODO make this output more petite
+Base.show(io::IO, trans::AffineMap) = print(io, "AffineMap($(trans.M), $(trans.v))") # TODO make this output more petite
 
-function compose(t1::AbstractTranslation, t2::AbstractLinearTransformation)
-    AffineTransformation(transformation_matrix(t2), translation_vector(t1))
+function compose(t1::AbstractTranslation, t2::AbstractLinearMap)
+    AffineMap(transformation_matrix(t2), translation_vector(t1))
 end
 
-function compose(t1::AbstractLinearTransformation, t2::AbstractTranslation)
-    AffineTransformation(transformation_matrix(t1), transformation_matrix(t1) * translation_vector(t2))
+function compose(t1::AbstractLinearMap, t2::AbstractTranslation)
+    AffineMap(transformation_matrix(t1), transformation_matrix(t1) * translation_vector(t2))
 end
 
-function compose(t1::AbstractAffineTransformation, t2::AbstractAffineTransformation)
-    AffineTransformation(transformation_matrix(t1) * transformation_matrix(t2), translation_vector(t1) + transformation_matrix(t1) * translation_vector(t2))
+function compose(t1::AbstractAffineMap, t2::AbstractAffineMap)
+    AffineMap(transformation_matrix(t1) * transformation_matrix(t2), translation_vector(t1) + transformation_matrix(t1) * translation_vector(t2))
 end
 
-function compose(t1::AbstractAffineTransformation, t2::AbstractLinearTransformation)
-    AffineTransformation(transformation_matrix(t1) * transformation_matrix(t2), translation_vector(t1))
+function compose(t1::AbstractAffineMap, t2::AbstractLinearMap)
+    AffineMap(transformation_matrix(t1) * transformation_matrix(t2), translation_vector(t1))
 end
 
-function compose(t1::AbstractLinearTransformation, t2::AbstractAffineTransformation)
-    AffineTransformation(transformation_matrix(t1) * transformation_matrix(t2), transformation_matrix(t1) * translation_vector(t2))
+function compose(t1::AbstractLinearMap, t2::AbstractAffineMap)
+    AffineMap(transformation_matrix(t1) * transformation_matrix(t2), transformation_matrix(t1) * translation_vector(t2))
 end
 
-function compose(t1::AbstractAffineTransformation, t2::AbstractTranslation)
-    AffineTransformation(transformation_matrix(t1), translation_vector(t1) + transformation_matrix(t1) * translation_vector(t2))
+function compose(t1::AbstractAffineMap, t2::AbstractTranslation)
+    AffineMap(transformation_matrix(t1), translation_vector(t1) + transformation_matrix(t1) * translation_vector(t2))
 end
 
-function compose(t1::AbstractTranslation, t2::AbstractAffineTransformation)
-    AffineTransformation(transformation_matrix(t2), translation_vector(t1) + translation_vector(t2))
+function compose(t1::AbstractTranslation, t2::AbstractAffineMap)
+    AffineMap(transformation_matrix(t2), translation_vector(t1) + translation_vector(t2))
 end
 
 
@@ -262,7 +268,7 @@ end
 Construct the `Rotation2D` transformation for rotating 2D Cartesian points
 (i.e. `FixedVector{2}`s) about the origin.
 """
-immutable Rotation2D{T} <: AbstractLinearTransformation
+immutable Rotation2D{T} <: AbstractLinearMap
     angle::T
     sin::T
     cos::T
@@ -339,7 +345,7 @@ compose(t1::Rotation2D, t2::Rotation2D) = Rotation2D(t1.angle + t2.angle)
 Construct the `Rotation` transformation for rotating 3D Cartesian points
 (i.e. `FixedVector{3}`s) about the origin. I
 """
-immutable Rotation{R, T} <: AbstractLinearTransformation
+immutable Rotation{R, T} <: AbstractLinearMap
     rotation::R
     matrix::Mat{3,3,T} # Should we enforce this storage, or merely "suggest" it
 end
@@ -481,7 +487,7 @@ the Z axis).
 
 (see also `Rotation`, `RotationYZ`, `RotationZX` and `euler_rotation`)
 """
-immutable RotationXY{T} <: AbstractLinearTransformation
+immutable RotationXY{T} <: AbstractLinearMap
     angle::T
     sin::T
     cos::T
@@ -495,7 +501,7 @@ the X axis).
 
 (see also `Rotation`, `RotationXY`, `RotationZX` and `euler_rotation`)
 """
-immutable RotationYZ{T} <: AbstractLinearTransformation
+immutable RotationYZ{T} <: AbstractLinearMap
     angle::T
     sin::T
     cos::T
@@ -509,7 +515,7 @@ the Y axis).
 
 (see also `Rotation`, `RotationXY`, `RotationYZ` and `euler_rotation`)
 """
-immutable RotationZX{T} <: AbstractLinearTransformation
+immutable RotationZX{T} <: AbstractLinearMap
     angle::T
     sin::T
     cos::T
