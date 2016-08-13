@@ -24,8 +24,8 @@ export SphericalFromCartesian, CartesianFromSpherical,
        CylindricalFromSpherical, SphericalFromCylindrical
 
 # Common transformations
-export AbstractAffineMap, AbstractLinearMap, AbstractTranslation
-export AffineMap, LinearMap, Translation, transformation_matrix, translation_vector, translation_vector_reverse
+export AbstractAffineMap
+export AffineMap, LinearMap, Translation
 
 include("core.jl")
 include("coordinatesystems.jl")
