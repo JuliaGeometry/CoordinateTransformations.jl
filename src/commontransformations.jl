@@ -2,7 +2,9 @@
     abstract AbstractAffineMap <: Transformation
 
 Provides an interface for implementing Affine transformations of Cartesian
-coordinates. To implement an AbstractAffineMap, you must define
+coordinates. NOTE: the details of this will change in the next release!
+
+To implement an AbstractAffineMap, you must define
 
     transformation_matrix(trans)
     translation_vector(trans)
@@ -43,7 +45,9 @@ end
     abstract AbstractLinearMap <: AbstractAffineMap
 
 Provides an interface for implementing linear transformations of Cartesian
-coordinates. To implement an AbstractLinearMap, you must define
+coordinates.  NOTE: the details of this will change in the next release!
+
+To implement an AbstractLinearMap, you must define
 
     transformation_matrix(trans)
 
@@ -96,7 +100,9 @@ end
 """
     abstract AbstractTranslation <: AbstractAffineMap
 
-A transformation that encapsulates the translation of Cartesian points.
+A transformation that encapsulates the translation of Cartesian points.  NOTE:
+the details of this will change in the next release!
+
 Implementations must define:
 
     translation_vector(trans)
