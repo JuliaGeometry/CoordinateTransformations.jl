@@ -14,7 +14,7 @@ end
 Translation(x::Tuple) = Translation(SVector(x))
 Translation(x,y) = Translation(SVector(x,y))
 Translation(x,y,z) = Translation(SVector(x,y,z))
-Base.show(io::IO, trans::Translation) = print(io, "Translation$((trans.dx...))")
+Base.show(io::IO, trans::Translation) = print(io, "Translation$((trans.v...))")
 
 function (trans::Translation{V}){V}(x)
     x + trans.v
@@ -44,7 +44,7 @@ for any `AbstractMatrix` `M`.
 immutable LinearMap{M <: AbstractMatrix} <: AbstractAffineMap
     m::M
 end
-Base.show(io::IO, trans::LinearMap)   = print(io, "LinearMap($(trans.M))") # TODO make this output more petite
+Base.show(io::IO, trans::LinearMap)   = print(io, "LinearMap($(trans.m))") # TODO make this output more petite
 
 function (trans::LinearMap{M}){M}(x)
     trans.m * x
@@ -121,7 +121,7 @@ function AffineMap(trans::Transformation, x0)
     AffineMap(dT, Tx - dT*x0)
 end
 
-Base.show(io::IO, trans::AffineMap) = print(io, "AffineMap($(trans.M), $(trans.v))") # TODO make this output more petite
+Base.show(io::IO, trans::AffineMap) = print(io, "AffineMap($(trans.m), $(trans.v))") # TODO make this output more petite
 
 function compose(t1::Translation, t2::LinearMap)
     AffineMap(t2.m, t1.v)
