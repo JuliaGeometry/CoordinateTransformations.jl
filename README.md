@@ -19,33 +19,37 @@ The package provide two main pieces of functionality
    differentiating (`transform_deriv()` and `transform_deriv_params()`) them.
 
 2. A small set of built-in, composable, primitive transformations for
-   transforming 2D and 3D points (optionally leveraging the *FixedSizeArrays*
+   transforming 2D and 3D points (optionally leveraging the *StaticArrays*
    and *Rotations* packages).
 
 ### Quick start
 
-Let's rotate a 2D point:
+Let's translate a 3D point:
 ```julia
-x = Point(1.0, 2.0) # Point is provided by FixedSizeArrays
-rot = Rotation2D(0.3) # a rotation by 0.3 radians anticlockwise about the origin
+using CoordinateTransformations, Rotations, StaticArrays
 
-y = rot(x)
+x = SVector(1.0, 2.0, 3.0)  # SVector is provided by StaticArrays.jl
+trans = Translation(3.5, 1.5, 0.0)
+
+y = trans(x)
 ```
 
-We can either apply transformations in turn,
+We can either apply different transformations in turn,
 ```julia
-trans = Translation(3.5, 1.5)
+rot = LinearMap(RotX(0.3))  # Rotate 0.3 radians about X-axis, from Rotations.jl
 
 z = trans(rot(x))
 ```
-or build a composed transformation:
+or build a composed transformation using the `∘` operator (accessible at the
+REPL by typing `\circ` then tab):
 ```julia
-composed = trans ∘ rot # or compose(trans, rot)
+composed = trans ∘ rot  # alternatively, use compose(trans, rot)
 
 composed(x) == z
 ```
+A composition of a `Translation` and a `LinearMap` results in an `AffineMap`.
 
-We can invert it:
+We can invert the transformation:
 ```julia
 composed_inv = inv(composed)
 
@@ -67,10 +71,9 @@ rotation angle:
 ### The interface
 
 Transformations are derived from `Transformation`. As an example, we have
-`Translation{T} <: Transformation`. A translation will accept points in a
-variety of formats, such as `Vector`, `FixedVector`, `Tuple`, etc, and will try
-to return the same type as given (of course, type promotion may occur for the
-element type itself).
+`Translation{T} <: Transformation`. A `Translation` will accept and translate
+points in a variety of formats, such as `Vector` or `SVector`, but in general
+your custom-defined `Transformation`s could transform any Julia object.
 
 Transformations can be reversed using `inv(trans)`. They can be chained
 together using the `∘` operator (`trans1 ∘ trans2`) or `compose` function (`compose(trans1, trans2)`).
@@ -130,30 +133,33 @@ transformations:
 #### Translations
 
 Translations can be be applied to Cartesian coordinates in arbitrary dimensions,
-by e.g. `Translation(Δx, Δy)` or `Translation(Δx, Δy, Δz)` in 2D/3D.
+by e.g. `Translation(Δx, Δy)` or `Translation(Δx, Δy, Δz)` in 2D/3D, or by
+`Translation(Δv)` in general (with `Δv` an `AbstractVector`). Compositions of
+two `Translation`s will intelligently create a new `Translation` by adding the
+translation vectors.
 
-#### Rotations
+#### Linear transformations
 
-Rotations in 2D and 3D are treated slightly differently. The `Rotation2D(Δθ)` rotates a
-Cartesian point about the origin, while `RotationPolar(Δθ)` rotates a `Polar`
-coordinate about the origin.
+Linear transformations (a.k.a. linear maps), including rotations, can be
+encapsulated in the `LinearMap` type, which is a simple wrapper of an
+`AbstractMatrix`.
 
-`Rotation` performs rotations of 3D Cartesian coordinates. Rotations may be
-defined simply by their transformation matrix (assumed to be orthogonal),
-or via any of the types exported from the *Rotations* package, including
-`Quaternion` (originating from the *Quaternions* package), `AngleAxis`,
-`EulerAngles`, `ProperEulerAngles` and `SpQuat`. In these latter cases, the
-"parameters" differentiated by `transform_deriv_params()` come directly from the
-parameterization of the quaternion, Euler angles, etc. **Note:** the derivative
-is only guaranteed to be correct in the tangent plane of the constrained variable,
-such as normalized quaternions, and optimization techniques should take this
-into account as necessary.
+You are able to provide any matrix of your choosing, but your choice of type
+will have a large effect on speed. For instance, if you know the dimensionality
+of your points (e.g. 2D or 3D) you might consider a statically sized matrix
+like `SMatrix` from *StaticArrays.jl*. We recommend performing 3D rotations
+using those from *Rotations.jl* for their speed and flexibility. Scaling will
+be efficient with Julia's built-in `UniformScaling`. Also note that compositions
+of two `LinearMap`s will intelligently create a new `LinearMap` by multiplying
+the transformation matrices.
 
-Also included are built-in `RotationXY`, `RotationYZ` and `RotationZX` for
-rotating about the *z*, *x* and *y* axes, respectively. A helper function for
-constructing a composed transformation of Euler angles is
-`euler_rotation(θ₁, θ₂, θ₃, [order = EulerZXY])`, where `order` can be any of
-*Rotations*' orderings (`EulerXYZ`, etc). The default `EulerZXY` first rotates
-around the *y* axis (*z-x* plane) by `θ₃`, then the *x* axis (*y-z* plane) by
-`θ₂`, and finally about the *z* axis (*x-y* plane) by `θ₁`, and is therefore
-equivalent to `RotationXY(θ₁) ∘ RotationYZ(θ₂) ∘ RotationZX(θ₃)`.
+#### Affine maps
+
+An Affine map encapsulates a more general set of transformation which are
+defined by a composition of a translation and a linear transformation. An
+`AffineMap` is constructed from an `AbstractVector` translation `v` and an
+`AbstractMatrix` linear transformation `M`. It will perform the mapping
+`x -> M*x + v`, but the order of addition and multiplication will be more obvious
+(and controllable) if you construct it from a composition of a linear map
+and a translation, e.g. `Translation(v) ∘ LinearMap(v)` (or any combination of
+`LinearMap`, `Translation` and `AffineMap`).
