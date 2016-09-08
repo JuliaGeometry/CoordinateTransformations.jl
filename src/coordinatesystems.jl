@@ -55,6 +55,12 @@ Base.inv(::CartesianFromPolar) = PolarFromCartesian()
 compose(::PolarFromCartesian, ::CartesianFromPolar) = IdentityTransformation()
 compose(::CartesianFromPolar, ::PolarFromCartesian) = IdentityTransformation()
 
+# For convenience
+Base.convert(::Type{Polar}, v::AbstractVector) = PolarFromCartesian()(v)
+@inline Base.convert{V <: AbstractVector}(::Type{V}, p::Polar) = convert(V, CartesianFromPolar()(p))
+@inline Base.convert{V <: StaticVector}(::Type{V}, p::Polar) = convert(V, CartesianFromPolar()(p))
+
+
 #############################
 ### 3D Coordinate Systems ###
 #############################
@@ -216,3 +222,15 @@ compose(::CylindricalFromCartesian, ::CartesianFromSpherical)   = CylindricalFro
 compose(::CartesianFromCylindrical, ::CylindricalFromSpherical) = CartesianFromSpherical()
 compose(::CylindricalFromSpherical, ::SphericalFromCartesian)   = CylindricalFromCartesian()
 compose(::SphericalFromCylindrical, ::CylindricalFromCartesian) = SphericalFromCartesian()
+
+# For convenience
+Base.convert(::Type{Spherical}, v::AbstractVector) = SphericalFromCartesian()(v)
+Base.convert(::Type{Cylindrical}, v::AbstractVector) = CylindricalFromCartesian()(v)
+
+Base.convert{V <: AbstractVector}(::Type{V}, s::Spherical) = convert(V, CartesianFromSpherical()(s))
+Base.convert{V <: AbstractVector}(::Type{V}, c::Cylindrical) = convert(V, CartesianFromCylindrical()(c))
+Base.convert{V <: StaticVector}(::Type{V}, s::Spherical) = convert(V, CartesianFromSpherical()(s))
+Base.convert{V <: StaticVector}(::Type{V}, c::Cylindrical) = convert(V, CartesianFromCylindrical()(c))
+
+Base.convert(::Type{Spherical}, c::Cylindrical) = SphericalFromCylindrical()(c)
+Base.convert(::Type{Cylindrical}, s::Spherical) = CylindricalFromSpherical()(s)

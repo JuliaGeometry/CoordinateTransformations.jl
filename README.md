@@ -63,9 +63,9 @@ differentiates with respect to components of `x`:
 ```
 
 Or perhaps we want to know how `y` will change with respect to changes of
-rotation angle:
+to the translation parameters:
 ```julia
-∂y_∂θ = transform_deriv_params(rot, x)
+∂y_∂θ = transform_deriv_params(trans, x)
 ```
 
 ### The interface
@@ -101,12 +101,9 @@ transformation chain.
 
 #### Coordinate types
 
-The package does not assume any specific coordinate types for Cartesian
-coordinates, and aims to accept any indexable container (such as `Vector`,
-`Tuple`, *FixedSizeArrays*' `FixedSizeVector{N}` or any other duck-typed vector).
-For speed, we recommend using a statically-sized container such as `Point{N}` or
-`Vec{N}` from *FixedSizeArrays*,  or even an `NTuple{N}`. However, it is
-attempted that the package will not change your data type.
+The package accepts any `AbstractVector` type for Cartesian coordinates (as
+well as *FixedSizeArrays* types in Julia v0.4 only). For speed, we recommend
+using a statically-sized container such as `SVector{N}` from *StaticArrays*.
 
 We do provide a few specialist coordinate types. The `Polar(r, θ)` type is a 2D
 polar representation of a point, and similarly in 3D we have defined
@@ -129,6 +126,9 @@ transformations:
 4. `CylindricalFromSpherical()`
 5. `CartesianFromCylindrical()`
 6. `CylindricalFromCartesian()`
+
+However, you may find it simpler to use the convenience constructors like
+`Polar(SVector(1.0, 2.0))`.
 
 #### Translations
 
