@@ -187,6 +187,6 @@ space to 2D `screen_points` giving their projected locations on a virtual camera
 image, you might use the following code:
 
 ```julia
-cam_transform = PerspectiveMap() ∘ AffineMap(cam_rotation, -cam_position)
+cam_transform = PerspectiveMap() ∘ inv(AffineMap(cam_rotation, cam_position))
 screen_points = map(cam_transform, points)
 ```

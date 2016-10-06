@@ -10,7 +10,7 @@ This transformation is designed to be used in composition with other coordinate
 transformations, defining e.g. the position and orientation of the camera. For
 example:
 
-    cam_transform = PerspectiveMap() ∘ AffineMap(cam_rotation, -cam_position)
+    cam_transform = PerspectiveMap() ∘ inv(AffineMap(cam_rotation, cam_position))
     screen_points = map(cam_transform, points)
 """
 immutable PerspectiveMap <: Transformation
