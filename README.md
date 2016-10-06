@@ -170,3 +170,23 @@ defined by a composition of a translation and a linear transformation. An
 (and controllable) if you construct it from a composition of a linear map
 and a translation, e.g. `Translation(v) ∘ LinearMap(v)` (or any combination of
 `LinearMap`, `Translation` and `AffineMap`).
+
+#### Perspective transformations
+
+The perspective transformation maps real-space coordinates to those on a virtual
+"screen" of one lesser dimension. For instance, this process is used to render
+3D scenes to 2D images in computer generated graphics and games. It is an ideal
+model of how a pinhole camera operates and is a good approximation of the modern
+photography process.
+
+The `PerspectiveMap()` command creates a singleton `Transformation` to perform
+the projective mapping. It can be applied individually, but is particularly
+powerful when composed with an `AffineMap` containing the position and
+orientation of the camera in your scene. For example, to transfer `points` in 3D
+space to 2D `screen_points` giving their projected locations on a virtual camera
+image, you might use the following code:
+
+```julia
+cam_transform = PerspectiveMap() ∘ AffineMap(cam_rotation, -cam_position)
+screen_points = map(cam_transform, points)
+```
