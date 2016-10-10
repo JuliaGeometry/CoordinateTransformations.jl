@@ -70,6 +70,17 @@ end
 Base.inv(trans::ComposedTransformation) = inv(trans.t2) ∘ inv(trans.t1)
 Base.inv(trans::IdentityTransformation) = trans
 
+"""
+    recenter(trans::Union{AbstractMatrix,Transformation}, origin::AbstractVector) -> ctrans
+
+Return a new transformation `ctrans` such that point `origin` serves
+as the origin-of-coordinates for `trans`. For example, if `trans` is a
+rotation matrix, then `ctrans` is a rotation around `origin`.
+"""
+function recenter(trans::Transformation, origin::AbstractVector)
+    Translation(origin) ∘ trans ∘ Translation(-origin)
+end
+
 
 """
     transform_deriv(trans::Transformation, x)

@@ -12,7 +12,7 @@ export RotMatrix, Quat, SpQuat, AngleAxis, RodriguesVec,
        RotXYZ, RotYXZ, RotZXY, RotXZY, RotYZX, RotZYX
 
 # Core methods
-export compose, ∘, transform_deriv, transform_deriv_params
+export compose, ∘, transform_deriv, transform_deriv_params, recenter
 export Transformation, IdentityTransformation
 
 # 2D coordinate systems and their transformations
