@@ -56,6 +56,13 @@ composed_inv = inv(composed)
 composed_inv(z) == x
 ```
 
+For any transformation, we can shift the origin to a new point using `recenter`:
+```julia
+rot_around_x = recenter(rot, x)
+```
+Now `rot_around_x` is a rotation around the point `x = SVector(1.0, 2.0, 3.0)`.
+
+
 Finally, we can construct a matrix describing how the components of `z`
 differentiates with respect to components of `x`:
 ```julia

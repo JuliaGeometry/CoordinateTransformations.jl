@@ -88,6 +88,15 @@ CoordinateTransformations.transform_deriv(::SquareMe, x0) = diagm(2*x0)
         @test m2 == eye(2)
     end
 
+    @testset "Recenter" begin
+        M = [1 2; 3 4]
+        for origin in ([5,-3], @SVector([5,-3]))
+            c = recenter(M, origin)
+            @test c(origin) == origin
+            @test c(zero(origin)) == [6,-6]
+        end
+    end
+
 #=
     @testset "Rotation2D on Polar" begin
         p = Polar(2.0, 1.0)

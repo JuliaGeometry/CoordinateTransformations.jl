@@ -202,5 +202,7 @@ function Base.:(==)(t1::LinearMap, t2::AffineMap)
         0 == vecnorm(t2.v)
 end
 
+recenter(trans::AbstractMatrix, origin::AbstractVector) = recenter(LinearMap(trans), origin)
+
 transform_deriv(trans::AffineMap, x) = trans.m
 # TODO transform_deriv_params
