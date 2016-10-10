@@ -8,7 +8,7 @@ abstract AbstractAffineMap <: Transformation
 Construct the `Translation` transformation for translating Cartesian points by
 an offset `v = (dx, dy, ...)`
 """
-immutable Translation{V <: AbstractVector} <: AbstractAffineMap
+immutable Translation{V} <: AbstractAffineMap
     v::V
 end
 Translation(x::Tuple) = Translation(SVector(x))
@@ -39,9 +39,9 @@ end
     LinearMap(M)
 
 A general linear transformation, constructed using `LinearMap(M)`
-for any `AbstractMatrix` `M`.
+for any matrix-like object `M`.
 """
-immutable LinearMap{M <: AbstractMatrix} <: AbstractAffineMap
+immutable LinearMap{M} <: AbstractAffineMap
     m::M
 end
 Base.show(io::IO, trans::LinearMap)   = print(io, "LinearMap($(trans.m))") # TODO make this output more petite
@@ -95,7 +95,7 @@ converted into an affine approximation by linearizing about a point `x` using
 
 For transformations which are already affine, `x` may be omitted.
 """
-immutable AffineMap{M <: AbstractMatrix, V <: AbstractVector} <: AbstractAffineMap
+immutable AffineMap{M, V} <: AbstractAffineMap
     m::M
     v::V
 end

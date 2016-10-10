@@ -37,6 +37,15 @@ Base.show(io::IO, trans::ComposedTransformation) = print(io, "($(trans.t1) ∘ $
     trans.t1(trans.t2(x))
 end
 
+function Base.:(==)(trans1::ComposedTransformation, trans2::ComposedTransformation)
+    (trans1.t1 == trans2.t1) && (trans1.t2 == trans2.t2)
+end
+
+function Base.isapprox(trans1::ComposedTransformation, trans2::ComposedTransformation; kwargs...)
+    isapprox(trans1.t1, trans2.t1; kwargs...) && isapprox(trans1.t2, trans2.t2; kwargs...)
+end
+
+
 """
     compose(trans1, trans2)
     trans1 ∘ trans2
