@@ -30,66 +30,39 @@ end
     return pop(v) * inv(v[end])
 end
 
-Base.@pure Base.isapprox(::PerspectiveMap, ::PerspectiveMap; kwargs...) = true
+Base.isapprox(::PerspectiveMap, ::PerspectiveMap; kwargs...) = true
 
 """
-    cameramap(property = value, ...)
+    cameramap()
+    cameramap(scale)
+    cameramap(scale, offset)
 
 Create a transformation that takes points in real space (e.g. 3D) and projects
 them through a perspective transformation onto the focal plane of an ideal
 (pinhole) camera with the given properties.
 
-All properties are optional. Valid properties include:
+The `scale` sets the scale of the screen. For a standard digital camera, this
+would be `scale = focal_length / pixel_size`. Non-square pixels are supported
+by providing a pair of scales in a tuple, `scale = (scale_x, scale_y)`. Positive
+scales represent a camera looking in the +z axis with a virtual screen in front
+of the camera (the x,y coordinates are not inverted compared to 3D space). Note
+that points behind the camera (with negative z component) will be projected
+(and inverted) onto the image coordinates and it is up to the user to cull
+such points as necessary.
 
- * `focal_length` (in physical units)
- * `pixel_size` (in physical units) or `pixel_size_x` and `pixel_size_y`
- * `offset_x` and `offset_y` (in pixels)
- * `origin` (a vector) and `orientation` (a rotation matrix)
-
-By default, the camera looks towards the postive-`z` axis from `(0,0,0)` and
-the sign of the `x` and `y` components is preserved for objects in front of the
-camera (objects behind the camera are also projected and therefor inverted - it
-is up to the user to cull these as necessary).
-
-If `origin` and `orientation` are specified, the camera is translated to `origin`
-and rotated by `orientation` before the perspective map is applied.
+The `offset = (offset_x, offset_y)` is used to define the origin in the imaging
+plane. For instance, you may wish to have the point (0,0) represent the top-left
+corner of your imaging sensor. This measurement is in the units after applying
+`scale` (e.g. pixels).
 
 (see also `PerspectiveMap`)
 """
-function cameramap(;focal_length = nothing,
-                    pixel_size = nothing,
-                    pixel_size_x = nothing,
-                    pixel_size_y = nothing,
-                    offset_x = nothing,
-                    offset_y = nothing,
-                    origin = nothing,
-                    orientation = nothing)
-
-    trans = PerspectiveMap()
-
-    if pixel_size === nothing # (this form of if-else-end is handled well by the compiler... the author is looking forward to v0.6 where !(::Bool) is pure...)
-    else
-        pixel_size_x = pixel_size
-        pixel_size_y = pixel_size
-    end
-
-    # Apply camera rotations, if necessary
-    if origin === nothing && orientation === nothing
-    else
-        trans = trans ∘ inv(AffineMap(orientation, origin))
-    end
-
-    # Apply camera scaling, if necessary
-    if isa(focal_length, Void) && isa(pixel_size_x, Void) && isa(pixel_size_y, Void)
-    else
-        trans = LinearMap(UniformScaling(focal_length/pixel_size)) ∘ trans
-    end
-
-    # Apply pixel offset, if necessary
-    if isa(offset_x, Void) && isa(offset_y, Void)
-    else
-        trans = Translation(SVector(-offset_x, -offset_y)) ∘ trans
-    end
-
-    return trans
-end
+cameramap() = PerspectiveMap()
+cameramap(scale::Number) =
+    LinearMap(UniformScaling(focal_length/pixel_size)) ∘ PerspectiveMap()
+cameramap(scale::Tuple{Number, Number}) =
+    LinearMap(SMatrix{2,2}(scale[1],0,0,scale[2])) ∘ PerspectiveMap()
+cameramap(scale::Number, offset::Tuple{Number,Number}) =
+    AffineMap(UniformScaling(focal_length/pixel_size), SVector(-offset[1], -offset[2])) ∘ PerspectiveMap()
+cameramap(scale::Tuple{Number, Number}, offset::Tuple{Number,Number})) =
+    AffineMap(SMatrix{2,2}(scale[1],0,0,scale[2]), SVector(-offset[1], -offset[2]))) ∘ PerspectiveMap()

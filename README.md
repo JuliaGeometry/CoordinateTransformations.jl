@@ -190,3 +190,7 @@ image, you might use the following code:
 cam_transform = PerspectiveMap() ∘ inv(AffineMap(cam_rotation, cam_position))
 screen_points = map(cam_transform, points)
 ```
+
+There is also a `cameramap()` convenience function that can create a composed
+transformation that includes the intrinsic scaling (e.g. focal length and pixel
+size) and offset (defining which pixel is labeled `(0,0)`) of an imaging system.
