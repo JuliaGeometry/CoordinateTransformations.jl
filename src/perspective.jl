@@ -64,5 +64,5 @@ cameramap(scale::Tuple{Number, Number}) =
     LinearMap(SMatrix{2,2}(scale[1],0,0,scale[2])) ∘ PerspectiveMap()
 cameramap(scale::Number, offset::Tuple{Number,Number}) =
     AffineMap(UniformScaling(focal_length/pixel_size), SVector(-offset[1], -offset[2])) ∘ PerspectiveMap()
-cameramap(scale::Tuple{Number, Number}, offset::Tuple{Number,Number})) =
-    AffineMap(SMatrix{2,2}(scale[1],0,0,scale[2]), SVector(-offset[1], -offset[2]))) ∘ PerspectiveMap()
+cameramap(scale::Tuple{Number, Number}, offset::Tuple{Number,Number}) =
+    AffineMap(SMatrix{2,2}(scale[1],0,0,scale[2]), SVector(-offset[1], -offset[2])) ∘ PerspectiveMap()
