@@ -59,10 +59,11 @@ corner of your imaging sensor. This measurement is in the units after applying
 """
 cameramap() = PerspectiveMap()
 cameramap(scale::Number) =
-    LinearMap(UniformScaling(focal_length/pixel_size)) ∘ PerspectiveMap()
+    LinearMap(UniformScaling(scale)) ∘ PerspectiveMap()
 cameramap(scale::Tuple{Number, Number}) =
-    LinearMap(SMatrix{2,2}(scale[1],0,0,scale[2])) ∘ PerspectiveMap()
+    LinearMap(@SMatrix([scale[1] 0; 0 scale[2]])) ∘ PerspectiveMap()
 cameramap(scale::Number, offset::Tuple{Number,Number}) =
-    AffineMap(UniformScaling(focal_length/pixel_size), SVector(-offset[1], -offset[2])) ∘ PerspectiveMap()
+    AffineMap(UniformScaling(scale), SVector(-offset[1], -offset[2])) ∘ PerspectiveMap()
 cameramap(scale::Tuple{Number, Number}, offset::Tuple{Number,Number}) =
-    AffineMap(SMatrix{2,2}(scale[1],0,0,scale[2]), SVector(-offset[1], -offset[2])) ∘ PerspectiveMap()
+    AffineMap(@SMatrix([scale[1] 0; 0 scale[2]]), SVector(-offset[1], -offset[2])) ∘ PerspectiveMap()
+
