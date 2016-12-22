@@ -179,8 +179,8 @@ The perspective transformation maps real-space coordinates to those on a virtual
 model of how a pinhole camera operates and is a good approximation of the modern
 photography process.
 
-The `PerspectiveMap()` command creates a singleton `Transformation` to perform
-the projective mapping. It can be applied individually, but is particularly
+The `PerspectiveMap()` command creates a `Transformation` to perform the
+projective mapping. It can be applied individually, but is particularly
 powerful when composed with an `AffineMap` containing the position and
 orientation of the camera in your scene. For example, to transfer `points` in 3D
 space to 2D `screen_points` giving their projected locations on a virtual camera
