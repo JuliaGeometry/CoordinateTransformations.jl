@@ -28,10 +28,12 @@ export SphericalFromCartesian, CartesianFromSpherical,
 # Common transformations
 export AbstractAffineMap
 export AffineMap, LinearMap, Translation
+export PerspectiveMap, cameramap
 
 include("core.jl")
 include("coordinatesystems.jl")
 include("affine.jl")
+include("perspective.jl")
 
 # Deprecations
 export transform
