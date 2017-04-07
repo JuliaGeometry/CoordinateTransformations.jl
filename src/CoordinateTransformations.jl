@@ -2,7 +2,10 @@ __precompile__()
 
 module CoordinateTransformations
 
+using Compat
 using StaticArrays
+
+import Compat.∘
 
 using Rotations
 export RotMatrix, Quat, SpQuat, AngleAxis, RodriguesVec,

@@ -45,6 +45,7 @@ function Base.isapprox(trans1::ComposedTransformation, trans2::ComposedTransform
     isapprox(trans1.t1, trans2.t1; kwargs...) && isapprox(trans1.t2, trans2.t2; kwargs...)
 end
 
+const compose = ∘
 
 """
     compose(trans1, trans2)
@@ -63,8 +64,6 @@ end
 compose(trans::IdentityTransformation, ::IdentityTransformation) = trans
 compose(::IdentityTransformation, trans::Transformation) = trans
 compose(trans::Transformation, ::IdentityTransformation) = trans
-
-const ∘ = compose # TODO watch JuliaLang/julia#17184 and #17155 for v0.5 compatibility
 
 
 """
