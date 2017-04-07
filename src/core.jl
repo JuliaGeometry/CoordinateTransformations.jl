@@ -12,7 +12,7 @@ transformation on the correct data types by overloading the call method, and
 usually would have the corresponding inverse transformation defined by `Base.inv()`.
 Efficient compositions can optionally be defined by `compose()` (equivalently `∘`).
 """
-abstract Transformation
+@compat abstract type Transformation end
 
 """
 The `IdentityTransformation` is a singleton `Transformation` that returns the

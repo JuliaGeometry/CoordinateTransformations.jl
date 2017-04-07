@@ -1,4 +1,4 @@
-abstract AbstractAffineMap <: Transformation
+@compat abstract type AbstractAffineMap <: Transformation end
 
 """
     Translation(v) <: AbstractAffineMap
