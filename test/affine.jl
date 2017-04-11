@@ -75,7 +75,7 @@ CoordinateTransformations.transform_deriv(::SquareMe, x0) = diagm(2*x0)
 
         # Transform
         @test trans(x) === SVector(3.0, 1.0)
-        @test trans(collect(x)) === SVector(3.0, 1.0)
+        @test trans(collect(x)) == [3.0, 1.0]
 
         # Transform derivative
         m1 = transform_deriv(trans, x)
