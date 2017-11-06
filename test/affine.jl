@@ -1,6 +1,6 @@
 
 # A transformation for testing the local affine mapping
-immutable SquareMe <: Transformation; end
+struct SquareMe <: Transformation; end
 (::SquareMe)(x) = x.^2
 CoordinateTransformations.transform_deriv(::SquareMe, x0) = diagm(2*x0)
 
