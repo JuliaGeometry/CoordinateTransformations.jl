@@ -18,7 +18,7 @@ example:
 
 (see also `cameramap`)
 """
-immutable PerspectiveMap <: Transformation
+struct PerspectiveMap <: Transformation
 end
 
 function (::PerspectiveMap)(v::AbstractVector)

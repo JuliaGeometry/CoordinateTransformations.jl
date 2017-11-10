@@ -4,7 +4,7 @@
 """
 `Polar{T}(r::T, θ::T)` - 2D polar coordinates
 """
-immutable Polar{T}
+struct Polar{T}
     r::T
     θ::T
 end
@@ -14,9 +14,9 @@ Base.eltype{T}(::Polar{T}) = T
 Base.eltype{T}(::Type{Polar{T}}) = T
 
 "`PolarFromCartesian()` - transformation from `AbstractVector` of length 2 to `Polar` type"
-immutable PolarFromCartesian <: Transformation; end
+struct PolarFromCartesian <: Transformation; end
 "`CartesianFromPolar()` - transformation from `Polar` type to `SVector{2}` type"
-immutable CartesianFromPolar <: Transformation; end
+struct CartesianFromPolar <: Transformation; end
 
 Base.show(io::IO, trans::PolarFromCartesian) = print(io, "PolarFromCartesian()")
 Base.show(io::IO, trans::CartesianFromPolar) = print(io, "CartesianFromPolar()")
@@ -57,8 +57,8 @@ compose(::CartesianFromPolar, ::PolarFromCartesian) = IdentityTransformation()
 
 # For convenience
 Base.convert(::Type{Polar}, v::AbstractVector) = PolarFromCartesian()(v)
-@inline Base.convert{V <: AbstractVector}(::Type{V}, p::Polar) = convert(V, CartesianFromPolar()(p))
-@inline Base.convert{V <: StaticVector}(::Type{V}, p::Polar) = convert(V, CartesianFromPolar()(p))
+@inline Base.convert(::Type{V}, p::Polar) where {V <: AbstractVector} = convert(V, CartesianFromPolar()(p))
+@inline Base.convert(::Type{V}, p::Polar) where {V <: StaticVector} = convert(V, CartesianFromPolar()(p))
 
 
 #############################
@@ -67,7 +67,7 @@ Base.convert(::Type{Polar}, v::AbstractVector) = PolarFromCartesian()(v)
 """
 Spherical(r, θ, ϕ) - 3D spherical coordinates
 """
-immutable Spherical{T}
+struct Spherical{T}
     r::T
     θ::T
     ϕ::T
@@ -80,7 +80,7 @@ Base.eltype{T}(::Type{Spherical{T}}) = T
 """
 Cylindrical(r, θ, z) - 3D cylindrical coordinates
 """
-immutable Cylindrical{T}
+struct Cylindrical{T}
     r::T
     θ::T
     z::T
@@ -91,17 +91,17 @@ Base.eltype{T}(::Cylindrical{T}) = T
 Base.eltype{T}(::Type{Cylindrical{T}}) = T
 
 "`SphericalFromCartesian()` - transformation from 3D point to `Spherical` type"
-immutable SphericalFromCartesian <: Transformation; end
+struct SphericalFromCartesian <: Transformation; end
 "`CartesianFromSpherical()` - transformation from `Spherical` type to `SVector{3}` type"
-immutable CartesianFromSpherical <: Transformation; end
+struct CartesianFromSpherical <: Transformation; end
 "`CylindricalFromCartesian()` - transformation from 3D point to `Cylindrical` type"
-immutable CylindricalFromCartesian <: Transformation; end
+struct CylindricalFromCartesian <: Transformation; end
 "`CartesianFromCylindrical()` - transformation from `Cylindrical` type to `SVector{3}` type"
-immutable CartesianFromCylindrical <: Transformation; end
+struct CartesianFromCylindrical <: Transformation; end
 "`CylindricalFromSpherical()` - transformation from `Spherical` type to `Cylindrical` type"
-immutable CylindricalFromSpherical <: Transformation; end
+struct CylindricalFromSpherical <: Transformation; end
 "`SphericalFromCylindrical()` - transformation from `Cylindrical` type to `Spherical` type"
-immutable SphericalFromCylindrical <: Transformation; end
+struct SphericalFromCylindrical <: Transformation; end
 
 Base.show(io::IO, trans::SphericalFromCartesian) = print(io, "SphericalFromCartesian()")
 Base.show(io::IO, trans::CartesianFromSpherical) = print(io, "CartesianFromSpherical()")
@@ -170,7 +170,7 @@ transform_deriv_params(::CylindricalFromCartesian, x::AbstractVector) = error("C
 function (::CartesianFromCylindrical)(x::Cylindrical)
     SVector(x.r * cos(x.θ), x.r * sin(x.θ), x.z)
 end
-function transform_deriv{T}(::CartesianFromCylindrical, x::Cylindrical{T})
+function transform_deriv(::CartesianFromCylindrical, x::Cylindrical{T}) where {T}
     sθ = sin(x.θ)
     cθ = cos(x.θ)
     @SMatrix [cθ      -x.r*sθ  zero(T) ;
@@ -227,10 +227,10 @@ compose(::SphericalFromCylindrical, ::CylindricalFromCartesian) = SphericalFromC
 Base.convert(::Type{Spherical}, v::AbstractVector) = SphericalFromCartesian()(v)
 Base.convert(::Type{Cylindrical}, v::AbstractVector) = CylindricalFromCartesian()(v)
 
-Base.convert{V <: AbstractVector}(::Type{V}, s::Spherical) = convert(V, CartesianFromSpherical()(s))
-Base.convert{V <: AbstractVector}(::Type{V}, c::Cylindrical) = convert(V, CartesianFromCylindrical()(c))
-Base.convert{V <: StaticVector}(::Type{V}, s::Spherical) = convert(V, CartesianFromSpherical()(s))
-Base.convert{V <: StaticVector}(::Type{V}, c::Cylindrical) = convert(V, CartesianFromCylindrical()(c))
+Base.convert(::Type{V}, s::Spherical) where {V <: AbstractVector} = convert(V, CartesianFromSpherical()(s))
+Base.convert(::Type{V}, c::Cylindrical) where {V <: AbstractVector} = convert(V, CartesianFromCylindrical()(c))
+Base.convert(::Type{V}, s::Spherical) where {V <: StaticVector} = convert(V, CartesianFromSpherical()(s))
+Base.convert(::Type{V}, c::Cylindrical) where {V <: StaticVector} = convert(V, CartesianFromCylindrical()(c))
 
 Base.convert(::Type{Spherical}, c::Cylindrical) = SphericalFromCylindrical()(c)
 Base.convert(::Type{Cylindrical}, s::Spherical) = CylindricalFromSpherical()(s)

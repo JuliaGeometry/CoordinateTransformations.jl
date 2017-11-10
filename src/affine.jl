@@ -1,4 +1,4 @@
-@compat abstract type AbstractAffineMap <: Transformation end
+abstract type AbstractAffineMap <: Transformation end
 
 """
     Translation(v) <: AbstractAffineMap
@@ -8,7 +8,7 @@
 Construct the `Translation` transformation for translating Cartesian points by
 an offset `v = (dx, dy, ...)`
 """
-immutable Translation{V} <: AbstractAffineMap
+struct Translation{V} <: AbstractAffineMap
     v::V
 end
 Translation(x::Tuple) = Translation(SVector(x))
@@ -16,7 +16,7 @@ Translation(x,y) = Translation(SVector(x,y))
 Translation(x,y,z) = Translation(SVector(x,y,z))
 Base.show(io::IO, trans::Translation) = print(io, "Translation$((trans.v...))")
 
-function (trans::Translation{V}){V}(x)
+function (trans::Translation{V})(x) where {V}
     x + trans.v
 end
 
@@ -41,12 +41,12 @@ end
 A general linear transformation, constructed using `LinearMap(M)`
 for any matrix-like object `M`.
 """
-immutable LinearMap{M} <: AbstractAffineMap
+struct LinearMap{M} <: AbstractAffineMap
     m::M
 end
-Base.show(io::IO, trans::LinearMap)   = print(io, "LinearMap($(trans.m))") # TODO make this output more petite
+Base.show(io::IO, trans::LinearMap) = print(io, "LinearMap($(trans.m))") # TODO make this output more petite
 
-function (trans::LinearMap{M}){M}(x)
+function (trans::LinearMap{M})(x) where {M}
     trans.m * x
 end
 
@@ -95,12 +95,12 @@ converted into an affine approximation by linearizing about a point `x` using
 
 For transformations which are already affine, `x` may be omitted.
 """
-immutable AffineMap{M, V} <: AbstractAffineMap
+struct AffineMap{M, V} <: AbstractAffineMap
     m::M
     v::V
 end
 
-function (trans::AffineMap{M,V}){M,V}(x)
+function (trans::AffineMap{M, V})(x) where {M, V}
     trans.m * x + trans.v
 end
 

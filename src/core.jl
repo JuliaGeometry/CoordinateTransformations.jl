@@ -12,13 +12,13 @@ transformation on the correct data types by overloading the call method, and
 usually would have the corresponding inverse transformation defined by `Base.inv()`.
 Efficient compositions can optionally be defined by `compose()` (equivalently `∘`).
 """
-@compat abstract type Transformation end
+abstract type Transformation end
 
 """
 The `IdentityTransformation` is a singleton `Transformation` that returns the
 input unchanged, similar to `identity`.
 """
-immutable IdentityTransformation <: Transformation; end
+struct IdentityTransformation <: Transformation; end
 
 @inline (::IdentityTransformation)(x) = x
 
@@ -26,7 +26,7 @@ immutable IdentityTransformation <: Transformation; end
 A `ComposedTransformation` simply executes two transformations successively, and
 is the fallback output type of `compose()`.
 """
-immutable ComposedTransformation{T1 <: Transformation, T2 <: Transformation} <: Transformation
+struct ComposedTransformation{T1 <: Transformation, T2 <: Transformation} <: Transformation
     t1::T1
     t2::T2
 end
