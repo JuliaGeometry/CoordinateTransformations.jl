@@ -10,8 +10,8 @@ struct Polar{T}
 end
 Base.show(io::IO, x::Polar) = print(io, "Polar(r=$(x.r), θ=$(x.θ) rad)")
 Base.isapprox(p1::Polar, p2::Polar; kwargs...) = isapprox(p1.r, p2.r; kwargs...) && isapprox(p1.θ, p2.θ; kwargs...)
-Base.eltype{T}(::Polar{T}) = T
-Base.eltype{T}(::Type{Polar{T}}) = T
+Base.eltype(::Polar{T}) where {T} = T
+Base.eltype(::Type{Polar{T}}) where {T} = T
 
 "`PolarFromCartesian()` - transformation from `AbstractVector` of length 2 to `Polar` type"
 struct PolarFromCartesian <: Transformation; end
@@ -74,8 +74,8 @@ struct Spherical{T}
 end
 Base.show(io::IO, x::Spherical) = print(io, "Spherical(r=$(x.r), θ=$(x.θ) rad, ϕ=$(x.ϕ) rad)")
 Base.isapprox(p1::Spherical, p2::Spherical; kwargs...) = isapprox(p1.r, p2.r; kwargs...) && isapprox(p1.θ, p2.θ; kwargs...) && isapprox(p1.ϕ, p2.ϕ; kwargs...)
-Base.eltype{T}(::Spherical{T}) = T
-Base.eltype{T}(::Type{Spherical{T}}) = T
+Base.eltype(::Spherical{T}) where {T} = T
+Base.eltype(::Type{Spherical{T}}) where {T} = T
 
 """
 Cylindrical(r, θ, z) - 3D cylindrical coordinates
@@ -87,8 +87,8 @@ struct Cylindrical{T}
 end
 Base.show(io::IO, x::Cylindrical) = print(io, "Cylindrical(r=$(x.r), θ=$(x.θ) rad, z=$(x.z))")
 Base.isapprox(p1::Cylindrical, p2::Cylindrical; kwargs...) = isapprox(p1.r, p2.r; kwargs...) && isapprox(p1.θ, p2.θ; kwargs...) && isapprox(p1.z, p2.z; kwargs...)
-Base.eltype{T}(::Cylindrical{T}) = T
-Base.eltype{T}(::Type{Cylindrical{T}}) = T
+Base.eltype(::Cylindrical{T}) where {T} = T
+Base.eltype(::Type{Cylindrical{T}}) where {T} = T
 
 "`SphericalFromCartesian()` - transformation from 3D point to `Spherical` type"
 struct SphericalFromCartesian <: Transformation; end
@@ -135,7 +135,7 @@ transform_deriv_params(::SphericalFromCartesian, x::AbstractVector) = error("Sph
 function (::CartesianFromSpherical)(x::Spherical)
     SVector(x.r * cos(x.θ) * cos(x.ϕ), x.r * sin(x.θ) * cos(x.ϕ), x.r * sin(x.ϕ))
 end
-function transform_deriv{T}(::CartesianFromSpherical, x::Spherical{T})
+function transform_deriv(::CartesianFromSpherical, x::Spherical{T}) where T
     sθ = sin(x.θ)
     cθ = cos(x.θ)
     sϕ = sin(x.ϕ)
