@@ -2,7 +2,7 @@
 # A transformation for testing the local affine mapping
 struct SquareMe <: Transformation; end
 (::SquareMe)(x) = x.^2
-CoordinateTransformations.transform_deriv(::SquareMe, x0) = diagm(2*x0)
+CoordinateTransformations.transform_deriv(::SquareMe, x0) = Matrix(Diagonal(2*x0))
 
 
 @testset "Common Transformations" begin
@@ -80,12 +80,12 @@ CoordinateTransformations.transform_deriv(::SquareMe, x0) = diagm(2*x0)
         # Transform derivative
         m1 = transform_deriv(trans, x)
         m2 = [m1[i,j] for i=1:2, j=1:2] # m1 might be a UniformScaling
-        @test m2 == eye(2)
+        @test m2 == Matrix(I, 2, 2)  # in v0.7 and above, this can just be `== I`
 
         # Transform parameter derivative
         m1 = transform_deriv_params(trans, x)
         m2 = [m1[i,j] for i=1:2, j=1:2] # m1 might be a UniformScaling
-        @test m2 == eye(2)
+        @test m2 == Matrix(I, 2, 2)  # In v0.7 and above, this can just be `== I`
     end
 
     @testset "Recenter" begin
