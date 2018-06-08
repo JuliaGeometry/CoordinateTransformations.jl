@@ -14,7 +14,7 @@ end
 Translation(x::Tuple) = Translation(SVector(x))
 Translation(x,y) = Translation(SVector(x,y))
 Translation(x,y,z) = Translation(SVector(x,y,z))
-Base.show(io::IO, trans::Translation) = print(io, "Translation$((trans.v...))")
+Base.show(io::IO, trans::Translation) = print(io, "Translation$((trans.v...,))")
 
 function (trans::Translation{V})(x) where {V}
     x + trans.v

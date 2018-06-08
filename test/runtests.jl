@@ -1,5 +1,6 @@
+using Compat.Test
+using Compat.LinearAlgebra
 using CoordinateTransformations
-using Base.Test
 using ForwardDiff: Dual, partials
 using StaticArrays
 
