@@ -9,28 +9,28 @@ Construct the `Translation` transformation for translating Cartesian points by
 an offset `v = (dx, dy, ...)`
 """
 struct Translation{V} <: AbstractAffineMap
-    v::V
+    translation::V
 end
 Translation(x::Tuple) = Translation(SVector(x))
 Translation(x,y) = Translation(SVector(x,y))
 Translation(x,y,z) = Translation(SVector(x,y,z))
-Base.show(io::IO, trans::Translation) = print(io, "Translation$((trans.v...,))")
+Base.show(io::IO, trans::Translation) = print(io, "Translation$((trans.translation...,))")
 
 function (trans::Translation{V})(x) where {V}
-    x + trans.v
+    x + trans.translation
 end
 
-Base.inv(trans::Translation) = Translation(-trans.v)
+Base.inv(trans::Translation) = Translation(-trans.translation)
 
 function compose(trans1::Translation, trans2::Translation)
-    Translation(trans1.v + trans2.v)
+    Translation(trans1.translation + trans2.translation)
 end
 
 transform_deriv(trans::Translation, x) = I
 transform_deriv_params(trans::Translation, x) = I
 
 function Base.isapprox(t1::Translation, t2::Translation; kwargs...)
-    isapprox(t1.v, t2.v; kwargs...)
+    isapprox(t1.translation, t2.translation; kwargs...)
 end
 
 
@@ -42,43 +42,43 @@ A general linear transformation, constructed using `LinearMap(M)`
 for any matrix-like object `M`.
 """
 struct LinearMap{M} <: AbstractAffineMap
-    m::M
+    linear::M
 end
-Base.show(io::IO, trans::LinearMap) = print(io, "LinearMap($(trans.m))") # TODO make this output more petite
+Base.show(io::IO, trans::LinearMap) = print(io, "LinearMap($(trans.linear))") # TODO make this output more petite
 
 function (trans::LinearMap{M})(x) where {M}
-    trans.m * x
+    trans.linear * x
 end
 
-Base.inv(trans::LinearMap) = LinearMap(inv(trans.m))
+Base.inv(trans::LinearMap) = LinearMap(inv(trans.linear))
 
-compose(t1::LinearMap, t2::LinearMap) = LinearMap(t1.m * t2.m)
+compose(t1::LinearMap, t2::LinearMap) = LinearMap(t1.linear * t2.linear)
 
 function Base.isapprox(t1::LinearMap, t2::LinearMap; kwargs...)
-    isapprox(t1.m, t2.m; kwargs...)
+    isapprox(t1.linear, t2.linear; kwargs...)
 end
 
 function Base.isapprox(t1::LinearMap, t2::Translation; kwargs...)
-    isapprox(vecnorm(t1.m), 0; kwargs...) &&
-        isapprox(vecnorm(t2.v),0; kwargs...)
+    isapprox(vecnorm(t1.linear), 0; kwargs...) &&
+        isapprox(vecnorm(t2.translation),0; kwargs...)
 end
 
 function Base.isapprox(t1::Translation, t2::LinearMap; kwargs...)
-    isapprox(vecnorm(t1.v), 0; kwargs...) &&
-        isapprox(vecnorm(t2.m),0; kwargs...)
+    isapprox(vecnorm(t1.translation), 0; kwargs...) &&
+        isapprox(vecnorm(t2.linear),0; kwargs...)
 end
 
 function Base.:(==)(t1::LinearMap, t2::Translation)
-    vecnorm(t1.m) == 0 &&
-        0 == vecnorm(t2.v)
+    vecnorm(t1.linear) == 0 &&
+        0 == vecnorm(t2.translation)
 end
 
 function Base.:(==)(t1::Translation, t2::LinearMap)
-    vecnorm(t1.v) == 0 &&
-        vecnorm(t2.m) == 0
+    vecnorm(t1.translation) == 0 &&
+        vecnorm(t2.linear) == 0
 end
 
-transform_deriv(trans::LinearMap, x) = trans.m
+transform_deriv(trans::LinearMap, x) = trans.linear
 # TODO transform_deriv_params
 
 """
@@ -96,12 +96,12 @@ converted into an affine approximation by linearizing about a point `x` using
 For transformations which are already affine, `x` may be omitted.
 """
 struct AffineMap{M, V} <: AbstractAffineMap
-    m::M
-    v::V
+    linear::M
+    translation::V
 end
 
 function (trans::AffineMap{M, V})(x) where {M, V}
-    trans.m * x + trans.v
+    trans.linear * x + trans.translation
 end
 
 # Note: the expression `Tx - dT*Tx` will have large cancellation error for
@@ -121,88 +121,88 @@ function AffineMap(trans::Transformation, x0)
     AffineMap(dT, Tx - dT*x0)
 end
 
-Base.show(io::IO, trans::AffineMap) = print(io, "AffineMap($(trans.m), $(trans.v))") # TODO make this output more petite
+Base.show(io::IO, trans::AffineMap) = print(io, "AffineMap($(trans.linear), $(trans.translation))") # TODO make this output more petite
 
 function compose(t1::Translation, t2::LinearMap)
-    AffineMap(t2.m, t1.v)
+    AffineMap(t2.linear, t1.translation)
 end
 
 function compose(t1::LinearMap, t2::Translation)
-    AffineMap(t1.m, t1.m * t2.v)
+    AffineMap(t1.linear, t1.linear * t2.translation)
 end
 
 function compose(t1::AffineMap, t2::AffineMap)
-    AffineMap(t1.m * t2.m, t1.v + t1.m * t2.v)
+    AffineMap(t1.linear * t2.linear, t1.translation + t1.linear * t2.translation)
 end
 
 function compose(t1::AffineMap, t2::LinearMap)
-    AffineMap(t1.m * t2.m, t1.v)
+    AffineMap(t1.linear * t2.linear, t1.translation)
 end
 
 function compose(t1::LinearMap, t2::AffineMap)
-    AffineMap(t1.m * t2.m, t1.m * t2.v)
+    AffineMap(t1.linear * t2.linear, t1.linear * t2.translation)
 end
 
 function compose(t1::AffineMap, t2::Translation)
-    AffineMap(t1.m, t1.v + t1.m * t2.v)
+    AffineMap(t1.linear, t1.translation + t1.linear * t2.translation)
 end
 
 function compose(t1::Translation, t2::AffineMap)
-    AffineMap(t2.m, t1.v + t2.v)
+    AffineMap(t2.linear, t1.translation + t2.translation)
 end
 
 function Base.inv(trans::AffineMap)
-    m_inv = inv(trans.m)
-    AffineMap(m_inv, m_inv * (-trans.v))
+    m_inv = inv(trans.linear)
+    AffineMap(m_inv, m_inv * (-trans.translation))
 end
 
 function Base.isapprox(t1::AffineMap, t2::AffineMap; kwargs...)
-    isapprox(t1.m, t2.m; kwargs...) &&
-        isapprox(t1.v, t2.v; kwargs...)
+    isapprox(t1.linear, t2.linear; kwargs...) &&
+        isapprox(t1.translation, t2.translation; kwargs...)
 end
 
 function Base.isapprox(t1::AffineMap, t2::Translation; kwargs...)
-    isapprox(vecnorm(t1.m), 0; kwargs...) &&
-        isapprox(t1.v, t2.v; kwargs...)
+    isapprox(vecnorm(t1.linear), 0; kwargs...) &&
+        isapprox(t1.translation, t2.translation; kwargs...)
 end
 
 function Base.isapprox(t1::Translation, t2::AffineMap; kwargs...)
-    isapprox(vecnorm(t2.m), 0; kwargs...) &&
-        isapprox(t1.v, t2.v; kwargs...)
+    isapprox(vecnorm(t2.linear), 0; kwargs...) &&
+        isapprox(t1.translation, t2.translation; kwargs...)
 end
 
 function Base.isapprox(t1::AffineMap, t2::LinearMap; kwargs...)
-    isapprox(t1.m, t2.m; kwargs...) &&
-        isapprox(vecnorm(t1.v), 0; kwargs...)
+    isapprox(t1.linear, t2.linear; kwargs...) &&
+        isapprox(vecnorm(t1.translation), 0; kwargs...)
 end
 
 function Base.isapprox(t1::LinearMap, t2::AffineMap; kwargs...)
-    isapprox(t1.m, t2.m; kwargs...) &&
-        isapprox(0, vecnorm(t2.v); kwargs...)
+    isapprox(t1.linear, t2.linear; kwargs...) &&
+        isapprox(0, vecnorm(t2.translation); kwargs...)
 end
 
 
 function Base.:(==)(t1::AffineMap, t2::Translation)
-    vecnorm(t1.m) == 0 &&
-        t1.v == t2.v
+    vecnorm(t1.linear) == 0 &&
+        t1.translation == t2.translation
 end
 
 function Base.:(==)(t1::Translation, t2::AffineMap)
-    vecnorm(t2.m) == 0 &&
-        t1.v == t2.v
+    vecnorm(t2.linear) == 0 &&
+        t1.translation == t2.translation
 end
 
 function Base.:(==)(t1::AffineMap, t2::LinearMap)
-    t1.m == t2.m &&
-        vecnorm(t1.v) == 0
+    t1.linear == t2.linear &&
+        vecnorm(t1.translation) == 0
 end
 
 function Base.:(==)(t1::LinearMap, t2::AffineMap)
-    t1.m == t2.m &&
-        0 == vecnorm(t2.v)
+    t1.linear == t2.linear &&
+        0 == vecnorm(t2.translation)
 end
 
 recenter(trans::AbstractMatrix, origin::AbstractVector) = recenter(LinearMap(trans), origin)
 
-transform_deriv(trans::AffineMap, x) = trans.m
+transform_deriv(trans::AffineMap, x) = trans.linear
 # TODO transform_deriv_params
