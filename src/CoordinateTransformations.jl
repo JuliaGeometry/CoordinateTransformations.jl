@@ -3,7 +3,7 @@ __precompile__()
 module CoordinateTransformations
 
 using StaticArrays
-using Compat.LinearAlgebra
+using Compat: LinearAlgebra, atan2
 
 using Rotations
 export RotMatrix, Quat, SpQuat, AngleAxis, RodriguesVec,

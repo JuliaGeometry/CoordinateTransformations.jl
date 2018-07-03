@@ -24,7 +24,7 @@ Base.show(io::IO, trans::CartesianFromPolar) = print(io, "CartesianFromPolar()")
 function (::PolarFromCartesian)(x::AbstractVector)
     length(x) == 2 || error("Polar transform takes a 2D coordinate")
 
-    Polar(sqrt(x[1]*x[1] + x[2]*x[2]), atan(x[2], x[1]))
+    Polar(sqrt(x[1]*x[1] + x[2]*x[2]), atan2(x[2], x[1]))
 end
 
 function transform_deriv(::PolarFromCartesian, x::AbstractVector)
@@ -114,7 +114,7 @@ Base.show(io::IO, trans::SphericalFromCylindrical) = print(io, "SphericalFromCyl
 function (::SphericalFromCartesian)(x::AbstractVector)
     length(x) == 3 || error("Spherical transform takes a 3D coordinate")
 
-    Spherical(sqrt(x[1]*x[1] + x[2]*x[2] + x[3]*x[3]), atan(x[2],x[1]), atan(x[3]/sqrt(x[1]*x[1] + x[2]*x[2])))
+    Spherical(sqrt(x[1]*x[1] + x[2]*x[2] + x[3]*x[3]), atan2(x[2],x[1]), atan(x[3]/sqrt(x[1]*x[1] + x[2]*x[2])))
 end
 function transform_deriv(::SphericalFromCartesian, x::AbstractVector)
     length(x) == 3 || error("Spherical transform takes a 3D coordinate")
@@ -151,7 +151,7 @@ transform_deriv_params(::CartesianFromSpherical, x::Spherical) = error("Cartesia
 function (::CylindricalFromCartesian)(x::AbstractVector)
     length(x) == 3 || error("Cylindrical transform takes a 3D coordinate")
 
-    Cylindrical(sqrt(x[1]*x[1] + x[2]*x[2]), atan(x[2],x[1]), x[3])
+    Cylindrical(sqrt(x[1]*x[1] + x[2]*x[2]), atan2(x[2],x[1]), x[3])
 end
 
 function transform_deriv(::CylindricalFromCartesian, x::AbstractVector)
