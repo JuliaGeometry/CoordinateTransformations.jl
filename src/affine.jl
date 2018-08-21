@@ -100,8 +100,10 @@ struct AffineMap{M, V} <: AbstractAffineMap
     translation::V
 end
 
-function (trans::AffineMap{M, V})(x) where {M, V}
-    trans.linear * x + trans.translation
+function (trans::AffineMap)(x)
+    l = LinearMap(trans.linear)
+    t = Translation(trans.translation)
+    t(l(x))
 end
 
 # Note: the expression `Tx - dT*Tx` will have large cancellation error for
