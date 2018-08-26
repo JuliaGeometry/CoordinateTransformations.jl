@@ -4,6 +4,18 @@ struct SquareMe <: Transformation; end
 (::SquareMe)(x) = x.^2
 CoordinateTransformations.transform_deriv(::SquareMe, x0) = Matrix(Diagonal(2*x0))
 
+struct Ray37
+    origin::Vector
+    direction::Vector
+end
+function (m::LinearMap)(r::Ray37)
+    Ray37(m(r.origin),
+          m(r.direction))
+end
+function (t::Translation)(r::Ray37)
+    Ray37(t(r.origin),
+          r.direction)
+end
 
 @testset "Common Transformations" begin
     @testset "AffineMap" begin
@@ -95,6 +107,18 @@ CoordinateTransformations.transform_deriv(::SquareMe, x0) = Matrix(Diagonal(2*x0
             @test c(origin) == origin
             @test c(zero(origin)) == [6,-6]
         end
+    end
+
+    @testset "application of AffineMap in terms of LinearMap and Translation" begin
+        origin = randn(3)
+        direction = randn(3)
+        linear = randn(3,3)
+        trans = randn(3)
+        r = Ray37(origin, direction)
+        expected = Ray37(linear*origin+trans, linear*direction)
+        result   = AffineMap(linear, trans)(r)
+        @test expected.origin ≈ result.origin
+        @test expected.direction ≈ result.direction
     end
 
 #=
