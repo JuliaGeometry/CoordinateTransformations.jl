@@ -39,11 +39,11 @@ end
 transform_deriv_params(::PolarFromCartesian, x::AbstractVector) = error("PolarFromCartesian has no parameters")
 
 function (::CartesianFromPolar)(x::Polar)
-    SVector(x.r * cos(x.θ), x.r * sin(x.θ))
+    s,c = sincos(x.θ)
+    SVector(x.r * c, x.r * s)
 end
 function transform_deriv(::CartesianFromPolar, x::Polar)
-    sθ = sin(x.θ)
-    cθ = cos(x.θ)
+    sθ, cθ = sincos(x.θ)
     @SMatrix [cθ  -x.r*sθ ;
               sθ   x.r*cθ ]
 end
@@ -133,14 +133,13 @@ end
 transform_deriv_params(::SphericalFromCartesian, x::AbstractVector) = error("SphericalFromCartesian has no parameters")
 
 function (::CartesianFromSpherical)(x::Spherical)
-    SVector(x.r * cos(x.θ) * cos(x.ϕ), x.r * sin(x.θ) * cos(x.ϕ), x.r * sin(x.ϕ))
+    sθ, cθ = sincos(x.θ)
+    sϕ, cϕ = sincos(x.ϕ)
+    SVector(x.r * cθ * cϕ, x.r * sθ * cϕ, x.r * sϕ)
 end
 function transform_deriv(::CartesianFromSpherical, x::Spherical{T}) where T
-    sθ = sin(x.θ)
-    cθ = cos(x.θ)
-    sϕ = sin(x.ϕ)
-    cϕ = cos(x.ϕ)
-
+    sθ, cθ = sincos(x.θ)
+    sϕ, cϕ = sincos(x.ϕ)
     @SMatrix [cθ*cϕ -x.r*sθ*cϕ -x.r*cθ*sϕ ;
               sθ*cϕ  x.r*cθ*cϕ -x.r*sθ*sϕ ;
               sϕ     zero(T)    x.r * cϕ  ]
@@ -168,11 +167,11 @@ end
 transform_deriv_params(::CylindricalFromCartesian, x::AbstractVector) = error("CylindricalFromCartesian has no parameters")
 
 function (::CartesianFromCylindrical)(x::Cylindrical)
-    SVector(x.r * cos(x.θ), x.r * sin(x.θ), x.z)
+    sθ, cθ = sincos(x.θ)
+    SVector(x.r * cθ, x.r * sθ, x.z)
 end
 function transform_deriv(::CartesianFromCylindrical, x::Cylindrical{T}) where {T}
-    sθ = sin(x.θ)
-    cθ = cos(x.θ)
+    sθ, cθ = sincos(x.θ)
     @SMatrix [cθ      -x.r*sθ  zero(T) ;
               sθ       x.r*cθ  zero(T) ;
               zero(T)  zero(T) one(T)  ]
