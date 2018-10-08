@@ -1,5 +1,9 @@
 VERSION < v"0.7.0-beta2.199" && __precompile__()
 
+if VERSION < v"0.7-"
+    sincos(x) = (sin(x), cos(x))
+end
+
 module CoordinateTransformations
 
 using StaticArrays
