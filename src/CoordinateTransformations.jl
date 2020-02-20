@@ -1,10 +1,7 @@
-VERSION < v"0.7.0-beta2.199" && __precompile__()
-
 module CoordinateTransformations
 
 using StaticArrays
-using Compat.LinearAlgebra
-using Compat
+using LinearAlgebra
 
 using Rotations
 export RotMatrix, Quat, SpQuat, AngleAxis, RodriguesVec,
