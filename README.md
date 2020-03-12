@@ -1,6 +1,6 @@
 # CoordinateTransformations
 
-[![Build Status](https://travis-ci.org/FugroRoames/CoordinateTransformations.jl.svg?branch=master)](https://travis-ci.org/FugroRoames/CoordinateTransformations.jl)
+[![Build Status](https://github.com/JuliaGeometry/CoordinateTransformations.jl/workflows/CI/badge.svg)](https://github.com/JuliaGeometry/CoordinateTransformations.jl/actions?query=workflow%3ACI)
 
 **CoordinateTransformations** is a Julia package to manage simple or complex
 networks of coordinate system transformations. Transformations can be easily
