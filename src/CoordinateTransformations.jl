@@ -4,11 +4,21 @@ using StaticArrays
 using LinearAlgebra
 
 using Rotations
-export RotMatrix, Quat, SpQuat, AngleAxis, RodriguesVec,
+
+# Re-export useful rotation types from Rotations.jl
+export RotMatrix, AngleAxis,
        RotX, RotY, RotZ,
        RotXY, RotYX, RotZX, RotXZ, RotYZ, RotZY,
        RotXYX, RotYXY, RotZXZ, RotXZX, RotYZY, RotZYZ,
        RotXYZ, RotYXZ, RotZXY, RotXZY, RotYZX, RotZYX
+
+# Export quaternion and rotation vector types for Rotations.jl < v1.0
+# Note: it's ok to have these `export` commands even for later versions
+# of Rotations.jl`. Doing `export foo` is allowed when `foo` is undefined.
+export Quat, SpQuat, RodriguesVec
+
+# Export quaternion and rotation vector types for Rotations.jl 1.0
+export UnitQuaternion, MRP, RotationVector
 
 # Core methods
 export compose, ∘, transform_deriv, transform_deriv_params, recenter
