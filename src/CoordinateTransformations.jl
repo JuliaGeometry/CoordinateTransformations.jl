@@ -3,13 +3,6 @@ module CoordinateTransformations
 using StaticArrays
 using LinearAlgebra
 
-using Rotations
-export RotMatrix, Quat, SpQuat, AngleAxis, RodriguesVec,
-       RotX, RotY, RotZ,
-       RotXY, RotYX, RotZX, RotXZ, RotYZ, RotZY,
-       RotXYX, RotYXY, RotZXZ, RotXZX, RotYZY, RotZYZ,
-       RotXYZ, RotYXZ, RotZXY, RotXZY, RotYZX, RotZYX
-
 # Core methods
 export compose, ∘, transform_deriv, transform_deriv_params, recenter
 export Transformation, IdentityTransformation
@@ -33,10 +26,5 @@ include("core.jl")
 include("coordinatesystems.jl")
 include("affine.jl")
 include("perspective.jl")
-
-# Deprecations
-export transform
-Base.@deprecate_binding AbstractTransformation Transformation
-Base.@deprecate transform(transformation::Transformation, x) transformation(x)
 
 end # module
