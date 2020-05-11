@@ -3,6 +3,7 @@ using LinearAlgebra
 using CoordinateTransformations
 using ForwardDiff: Dual, partials
 using StaticArrays
+using Unitful
 
 @testset "CoordinateTransformations" begin
 
