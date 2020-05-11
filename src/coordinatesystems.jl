@@ -24,13 +24,13 @@ Base.show(io::IO, trans::CartesianFromPolar) = print(io, "CartesianFromPolar()")
 function (::PolarFromCartesian)(x::AbstractVector)
     length(x) == 2 || error("Polar transform takes a 2D coordinate")
 
-    Polar(sqrt(x[1]*x[1] + x[2]*x[2]), atan(x[2], x[1]))
+    Polar(hypot(x[1], x[2]), atan(x[2], x[1]))
 end
 
 function transform_deriv(::PolarFromCartesian, x::AbstractVector)
     length(x) == 2 || error("Polar transform takes a 2D coordinate")
 
-    r = sqrt(x[1]*x[1] + x[2]*x[2])
+    r = hypot(x[1], x[2])
     f = x[2] / x[1]
     c = one(eltype(x))/(x[1]*(one(eltype(x)) + f*f))
     @SMatrix [ x[1]/r    x[2]/r ;
@@ -114,14 +114,14 @@ Base.show(io::IO, trans::SphericalFromCylindrical) = print(io, "SphericalFromCyl
 function (::SphericalFromCartesian)(x::AbstractVector)
     length(x) == 3 || error("Spherical transform takes a 3D coordinate")
 
-    Spherical(sqrt(x[1]*x[1] + x[2]*x[2] + x[3]*x[3]), atan(x[2],x[1]), atan(x[3]/sqrt(x[1]*x[1] + x[2]*x[2])))
+    Spherical(hypot(x[1], x[2], x[3]), atan(x[2], x[1]), atan(x[3], hypot(x[1], x[2])))
 end
 function transform_deriv(::SphericalFromCartesian, x::AbstractVector)
     length(x) == 3 || error("Spherical transform takes a 3D coordinate")
     T = eltype(x)
 
-    r = sqrt(x[1]*x[1] + x[2]*x[2] + x[3]*x[3])
-    rxy = sqrt(x[1]*x[1] + x[2]*x[2])
+    r = hypot(x[1], x[2], x[3])
+    rxy = hypot(x[1], x[2])
     fxy = x[2] / x[1]
     cxy = one(T)/(x[1]*(one(T) + fxy*fxy))
     f = -x[3]/(rxy*r*r)
@@ -150,14 +150,14 @@ transform_deriv_params(::CartesianFromSpherical, x::Spherical) = error("Cartesia
 function (::CylindricalFromCartesian)(x::AbstractVector)
     length(x) == 3 || error("Cylindrical transform takes a 3D coordinate")
 
-    Cylindrical(sqrt(x[1]*x[1] + x[2]*x[2]), atan(x[2],x[1]), x[3])
+    Cylindrical(hypot(x[1], x[2]), atan(x[2], x[1]), x[3])
 end
 
 function transform_deriv(::CylindricalFromCartesian, x::AbstractVector)
     length(x) == 3 || error("Cylindrical transform takes a 3D coordinate")
     T = eltype(x)
 
-    r = sqrt(x[1]*x[1] + x[2]*x[2])
+    r = hypot(x[1], x[2])
     f = x[2] / x[1]
     c = one(T)/(x[1]*(one(T) + f*f))
     @SMatrix [ x[1]/r   x[2]/r   zero(T) ;
