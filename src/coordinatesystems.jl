@@ -12,8 +12,6 @@ Polar(r::T, θ::A) where {T<:AbstractFloat, A<:Integer} = Polar(promote(r, θ)..
 Polar(r::T, θ::A) where {T<:Integer, A<:AbstractFloat} = Polar(promote(r, θ)...)
 Base.show(io::IO, x::Polar) = print(io, "Polar(r=$(x.r), θ=$(x.θ) rad)")
 Base.isapprox(p1::Polar, p2::Polar; kwargs...) = isapprox(p1.r, p2.r; kwargs...) && isapprox(p1.θ, p2.θ; kwargs...)
-Base.eltype(::Polar{T,A}) where {T,A} = promote_type(T, A)
-Base.eltype(::Type{Polar{T,A}}) where {T,A} = promote_type(T, A)
 
 "`PolarFromCartesian()` - transformation from `AbstractVector` of length 2 to `Polar` type"
 struct PolarFromCartesian <: Transformation; end
@@ -78,8 +76,6 @@ Spherical(r::T, θ::A, ϕ::A) where {T<:AbstractFloat, A<:Integer} = Spherical(p
 Spherical(r::T, θ::A, ϕ::A) where {T<:Integer, A<:AbstractFloat} = Spherical(promote(r, θ, ϕ)...)
 Base.show(io::IO, x::Spherical) = print(io, "Spherical(r=$(x.r), θ=$(x.θ) rad, ϕ=$(x.ϕ) rad)")
 Base.isapprox(p1::Spherical, p2::Spherical; kwargs...) = isapprox(p1.r, p2.r; kwargs...) && isapprox(p1.θ, p2.θ; kwargs...) && isapprox(p1.ϕ, p2.ϕ; kwargs...)
-Base.eltype(::Spherical{T,A}) where {T,A} = promote_type(T, A)
-Base.eltype(::Type{Spherical{T,A}}) where {T,A} = promote_type(T, A)
 
 """
 Cylindrical(r, θ, z) - 3D cylindrical coordinates
@@ -95,8 +91,6 @@ Cylindrical(r::T1, θ::A, z::T2) where {T1<:AbstractFloat, T2<:Integer, A<:Abstr
 Cylindrical(r::T1, θ::A, z::T2) where {T1<:Integer, T2<:AbstractFloat, A<:AbstractFloat} = Cylindrical(promote(r, θ, z)...)
 Base.show(io::IO, x::Cylindrical) = print(io, "Cylindrical(r=$(x.r), θ=$(x.θ) rad, z=$(x.z))")
 Base.isapprox(p1::Cylindrical, p2::Cylindrical; kwargs...) = isapprox(p1.r, p2.r; kwargs...) && isapprox(p1.θ, p2.θ; kwargs...) && isapprox(p1.z, p2.z; kwargs...)
-Base.eltype(::Cylindrical{T,A}) where {T,A} = promote_type(T, A)
-Base.eltype(::Type{Cylindrical{T,A}}) where {T,A} = promote_type(T, A)
 
 "`SphericalFromCartesian()` - transformation from 3D point to `Spherical` type"
 struct SphericalFromCartesian <: Transformation; end
