@@ -7,9 +7,16 @@
 struct Polar{T,A}
     r::T
     θ::A
+
+    Polar{T, A}(r, θ) where {T, A} = new(r, θ)
 end
-Polar(r::T, θ::A) where {T<:AbstractFloat, A<:Integer} = Polar(promote(r, θ)...)
-Polar(r::T, θ::A) where {T<:Integer, A<:AbstractFloat} = Polar(promote(r, θ)...)
+
+function Polar(r, θ)
+    r2, θ2 = promote(r, θ)
+
+    return Polar{typeof(r2), typeof(θ2)}(r2, θ2)
+end
+
 Base.show(io::IO, x::Polar) = print(io, "Polar(r=$(x.r), θ=$(x.θ) rad)")
 Base.isapprox(p1::Polar, p2::Polar; kwargs...) = isapprox(p1.r, p2.r; kwargs...) && isapprox(p1.θ, p2.θ; kwargs...)
 
@@ -71,9 +78,16 @@ struct Spherical{T,A}
     r::T
     θ::A
     ϕ::A
+
+    Spherical{T, A}(r, θ, ϕ) where {T, A} = new(r, θ, ϕ)
 end
-Spherical(r::T, θ::A, ϕ::A) where {T<:AbstractFloat, A<:Integer} = Spherical(promote(r, θ, ϕ)...)
-Spherical(r::T, θ::A, ϕ::A) where {T<:Integer, A<:AbstractFloat} = Spherical(promote(r, θ, ϕ)...)
+
+function Spherical(r, θ, ϕ)
+    r2, θ2, ϕ2 = promote(r, θ, ϕ)
+
+    return Spherical{typeof(r2), typeof(θ2)}(r2, θ2, ϕ2)
+end
+
 Base.show(io::IO, x::Spherical) = print(io, "Spherical(r=$(x.r), θ=$(x.θ) rad, ϕ=$(x.ϕ) rad)")
 Base.isapprox(p1::Spherical, p2::Spherical; kwargs...) = isapprox(p1.r, p2.r; kwargs...) && isapprox(p1.θ, p2.θ; kwargs...) && isapprox(p1.ϕ, p2.ϕ; kwargs...)
 
@@ -84,11 +98,16 @@ struct Cylindrical{T,A}
     r::T
     θ::A
     z::T
+
+    Cylindrical{T, A}(r, θ, z) where {T, A} = new(r, θ, z)
 end
-Cylindrical(r::T1, θ::A, z::T2) where {T1<:AbstractFloat, T2<:Integer, A<:Integer} = Cylindrical(promote(r, θ, z)...)
-Cylindrical(r::T1, θ::A, z::T2) where {T1<:Integer, T2<:AbstractFloat, A<:Integer} = Cylindrical(promote(r, θ, z)...)
-Cylindrical(r::T1, θ::A, z::T2) where {T1<:AbstractFloat, T2<:Integer, A<:AbstractFloat} = Cylindrical(promote(r, θ, z)...)
-Cylindrical(r::T1, θ::A, z::T2) where {T1<:Integer, T2<:AbstractFloat, A<:AbstractFloat} = Cylindrical(promote(r, θ, z)...)
+
+function Cylindrical(r, θ, z)
+    r2, θ2, z2 = promote(r, θ, z)
+
+    return Cylindrical{typeof(r2), typeof(θ2)}(r2, θ2, z2)
+end
+
 Base.show(io::IO, x::Cylindrical) = print(io, "Cylindrical(r=$(x.r), θ=$(x.θ) rad, z=$(x.z))")
 Base.isapprox(p1::Cylindrical, p2::Cylindrical; kwargs...) = isapprox(p1.r, p2.r; kwargs...) && isapprox(p1.θ, p2.θ; kwargs...) && isapprox(p1.z, p2.z; kwargs...)
 
