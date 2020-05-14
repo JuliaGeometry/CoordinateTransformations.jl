@@ -2,16 +2,23 @@
 ### 2D Coordinate systems ###
 #############################
 """
-`Polar{T}(r::T, θ::T)` - 2D polar coordinates
+`Polar{T,A}(r::T, θ::A)` - 2D polar coordinates
 """
-struct Polar{T}
+struct Polar{T,A}
     r::T
-    θ::T
+    θ::A
+
+    Polar{T, A}(r, θ) where {T, A} = new(r, θ)
 end
+
+function Polar(r, θ)
+    r2, θ2 = promote(r, θ)
+
+    return Polar{typeof(r2), typeof(θ2)}(r2, θ2)
+end
+
 Base.show(io::IO, x::Polar) = print(io, "Polar(r=$(x.r), θ=$(x.θ) rad)")
 Base.isapprox(p1::Polar, p2::Polar; kwargs...) = isapprox(p1.r, p2.r; kwargs...) && isapprox(p1.θ, p2.θ; kwargs...)
-Base.eltype(::Polar{T}) where {T} = T
-Base.eltype(::Type{Polar{T}}) where {T} = T
 
 "`PolarFromCartesian()` - transformation from `AbstractVector` of length 2 to `Polar` type"
 struct PolarFromCartesian <: Transformation; end
@@ -67,28 +74,42 @@ Base.convert(::Type{Polar}, v::AbstractVector) = PolarFromCartesian()(v)
 """
 Spherical(r, θ, ϕ) - 3D spherical coordinates
 """
-struct Spherical{T}
+struct Spherical{T,A}
     r::T
-    θ::T
-    ϕ::T
+    θ::A
+    ϕ::A
+
+    Spherical{T, A}(r, θ, ϕ) where {T, A} = new(r, θ, ϕ)
 end
+
+function Spherical(r, θ, ϕ)
+    r2, θ2, ϕ2 = promote(r, θ, ϕ)
+
+    return Spherical{typeof(r2), typeof(θ2)}(r2, θ2, ϕ2)
+end
+
 Base.show(io::IO, x::Spherical) = print(io, "Spherical(r=$(x.r), θ=$(x.θ) rad, ϕ=$(x.ϕ) rad)")
 Base.isapprox(p1::Spherical, p2::Spherical; kwargs...) = isapprox(p1.r, p2.r; kwargs...) && isapprox(p1.θ, p2.θ; kwargs...) && isapprox(p1.ϕ, p2.ϕ; kwargs...)
-Base.eltype(::Spherical{T}) where {T} = T
-Base.eltype(::Type{Spherical{T}}) where {T} = T
 
 """
 Cylindrical(r, θ, z) - 3D cylindrical coordinates
 """
-struct Cylindrical{T}
+struct Cylindrical{T,A}
     r::T
-    θ::T
+    θ::A
     z::T
+
+    Cylindrical{T, A}(r, θ, z) where {T, A} = new(r, θ, z)
 end
+
+function Cylindrical(r, θ, z)
+    r2, θ2, z2 = promote(r, θ, z)
+
+    return Cylindrical{typeof(r2), typeof(θ2)}(r2, θ2, z2)
+end
+
 Base.show(io::IO, x::Cylindrical) = print(io, "Cylindrical(r=$(x.r), θ=$(x.θ) rad, z=$(x.z))")
 Base.isapprox(p1::Cylindrical, p2::Cylindrical; kwargs...) = isapprox(p1.r, p2.r; kwargs...) && isapprox(p1.θ, p2.θ; kwargs...) && isapprox(p1.z, p2.z; kwargs...)
-Base.eltype(::Cylindrical{T}) where {T} = T
-Base.eltype(::Type{Cylindrical{T}}) where {T} = T
 
 "`SphericalFromCartesian()` - transformation from 3D point to `Spherical` type"
 struct SphericalFromCartesian <: Transformation; end
