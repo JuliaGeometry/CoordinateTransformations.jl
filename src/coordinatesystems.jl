@@ -73,6 +73,26 @@ Base.convert(::Type{Polar}, v::AbstractVector) = PolarFromCartesian()(v)
 #############################
 """
 Spherical(r, θ, ϕ) - 3D spherical coordinates
+
+This uses the so called mathematics convention as opposed to the physics convention.
+Given the cartesian coordinates `x,y,z` of a vector `v`, the polar coordinates are:
+
+* `r` is the radius. It is given by `norm(v, 2)`.
+* `θ` is the azimuthal angle. It is the angle from the x-axis to the project of `v` onto the xy-plane.
+* `ϕ` is the polar angle. It is the angle from the z-axis to `v`.
+
+
+```jldoctest
+julia> using CoordinateTransformations
+
+julia> v = randn(3);
+
+julia> sph = SphericalFromCartesian()(v);
+
+julia> r = sph.r; θ=sph.θ; ϕ=sph.ϕ;
+
+julia> v ≈ [r * cos(θ) * cos(ϕ), r * sin(θ) * cos(ϕ), r*sin(ϕ)]
+true
 """
 struct Spherical{T,A}
     r::T
