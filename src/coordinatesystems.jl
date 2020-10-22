@@ -74,7 +74,7 @@ Base.convert(::Type{Polar}, v::AbstractVector) = PolarFromCartesian()(v)
 """
 Spherical(r, θ, ϕ) - 3D spherical coordinates
 
-This uses the so called mathematics convention as opposed to the physics convention.
+This uses the so-called mathematics convention as opposed to the physics convention.
 Given the cartesian coordinates `x,y,z` of a vector `v`, the polar coordinates are:
 
 * `r` is the radius. It is given by `norm(v, 2)`.
