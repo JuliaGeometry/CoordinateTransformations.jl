@@ -78,7 +78,7 @@ This uses the so-called mathematics convention as opposed to the physics convent
 Given the Cartesian coordinates `x,y,z` of a vector `v`, the polar coordinates are:
 
 * `r` is the radius. It is given by `norm(v, 2)`.
-* `θ` is the azimuthal angle. It is the angle from the x-axis to the project of `v` onto the xy-plane.
+* `θ` is the azimuthal angle. It is the angle from the x-axis to the projection of `v` onto the xy-plane.
 * `ϕ` is the polar angle. It is the angle from the z-axis to `v`.
 
 
