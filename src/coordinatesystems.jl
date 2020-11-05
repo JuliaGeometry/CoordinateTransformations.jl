@@ -74,13 +74,12 @@ Base.convert(::Type{Polar}, v::AbstractVector) = PolarFromCartesian()(v)
 """
 Spherical(r, θ, ϕ) - 3D spherical coordinates
 
-This uses the so called mathematics convention as opposed to the physics convention.
-Given the cartesian coordinates `x,y,z` of a vector `v`, the polar coordinates are:
+There are many Spherical coordinate conventions and this library uses a somewhat exotic one.
+Given a vector `v` with cartesian coordinates `xyz`, let `v_xy = [x,y,0]` be the orthogonal projection on the `xy` plane.
 
 * `r` is the radius. It is given by `norm(v, 2)`.
-* `θ` is the azimuthal angle. It is the angle from the x-axis to the project of `v` onto the xy-plane.
-* `ϕ` is the polar angle. It is the angle from the z-axis to `v`.
-
+* `θ` is the azimuth. It is the angle from the x-axis to `v_xy`
+* `ϕ` is the latitude. It is the angle from `v_xy` to `v`.
 
 ```jldoctest
 julia> using CoordinateTransformations
