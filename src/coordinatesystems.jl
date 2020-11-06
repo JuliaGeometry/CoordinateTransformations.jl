@@ -75,7 +75,7 @@ Base.convert(::Type{Polar}, v::AbstractVector) = PolarFromCartesian()(v)
 Spherical(r, θ, ϕ) - 3D spherical coordinates
 
 There are many Spherical coordinate conventions and this library uses a somewhat exotic one.
-Given a vector `v` with cartesian coordinates `xyz`, let `v_xy = [x,y,0]` be the orthogonal projection on the `xy` plane.
+Given a vector `v` with Cartesian coordinates `xyz`, let `v_xy = [x,y,0]` be the orthogonal projection of `v` on the `xy` plane.
 
 * `r` is the radius. It is given by `norm(v, 2)`.
 * `θ` is the azimuth. It is the angle from the x-axis to `v_xy`
