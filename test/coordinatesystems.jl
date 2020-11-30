@@ -73,7 +73,7 @@
         @test CoordinateTransformations.angle(rθ) ≈ CoordinateTransformations.angle(rθd)
 
         test_jacobian(xy, rθ, p_from_c)
-        # test_jacobian(xy, rθd, pd_from_c)
+        test_jacobian(xy, rθd, pd_from_c)
 
 
         # 2nd quadrant
@@ -88,7 +88,7 @@
         @test c_from_p(rθd) ≈ xy
 
         test_jacobian(xy, rθ, p_from_c)
-        # test_jacobian(xy, rθd, pd_from_c)
+        test_jacobian(xy, rθd, pd_from_c)
 
         # 3rd quadrant
         xy = SVector(1.0, -2.0)
@@ -102,7 +102,7 @@
         @test c_from_p(rθd) ≈ xy
 
         test_jacobian(xy, rθ, p_from_c)
-        # test_jacobian(xy, rθd, pd_from_c)
+        test_jacobian(xy, rθd, pd_from_c)
 
         # 4th quadrant
         xy = SVector(-1.0, -2.0)
@@ -116,7 +116,7 @@
         @test c_from_p(rθd) ≈ xy
 
         test_jacobian(xy, rθ, p_from_c)
-        # test_jacobian(xy, rθd, pd_from_c)
+        test_jacobian(xy, rθd, pd_from_c)
 
         @testset "Common types - Polar" begin
             xy = SVector(1.0, 2.0)

@@ -105,7 +105,7 @@ function transform_deriv(::CartesianFromPolar, x::Polar)
 end
 function transform_deriv(::CartesianFromPolar, x::Polard)
     sθ, cθ = sincos(angle(x))
-    a = rad2deg(x.r)
+    a = deg2rad(x.r)
     @SMatrix [cθ  -a*sθ ;
               sθ   a*cθ ]
 end
