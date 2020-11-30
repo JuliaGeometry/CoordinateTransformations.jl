@@ -8,7 +8,7 @@ export compose, ∘, transform_deriv, transform_deriv_params, recenter
 export Transformation, IdentityTransformation
 
 # 2D coordinate systems and their transformations
-export Polar
+export Polar, Polard
 export PolarFromCartesian, CartesianFromPolar
 
 # 3D coordinate systems and their transformations
