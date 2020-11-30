@@ -1,10 +1,10 @@
 @testset "Coordinate Systems" begin
-    function gradient(xy)
+    function jacobian(xy)
         SA[ partials(xy[1], 1) partials(xy[1], 2);
             partials(xy[2], 1) partials(xy[2], 2) ]
     end
 
-    function gradient(rθ::CoordinateTransformations.PolarType)
+    function jacobian(rθ::CoordinateTransformations.PolarType)
         SA[ partials(rθ.r, 1) partials(rθ.r, 2);
             partials(rθ.θ, 1) partials(rθ.θ, 2) ]
     end
@@ -12,20 +12,20 @@
     get_PT(::Polar) = Polar
     get_PT(::Polard) = Polard
 
-    function test_gradient(xy, rθ, tform)
+    function test_jacobian(xy, rθ, tform)
         # create dual vector
         xy_gn = SA[Dual(xy[1], (1.0, 0.0)), Dual(xy[2], (0.0, 1.0))]
 
         # forward transform
         rθ_gn = tform(xy_gn)
-        m_gn = gradient(rθ_gn)
+        m_gn = jacobian(rθ_gn)
         m = transform_deriv(tform, xy)
         @test m ≈ m_gn
 
         # inverse transform
         rθ_gn = get_PT(rθ)(Dual(rθ.r, (1.0, 0.0)), Dual(rθ.θ, (0.0, 1.0)))
         xy_gn = inv(tform)(rθ_gn)
-        m_gn = gradient(xy_gn)
+        m_gn = jacobian(xy_gn)
         m = transform_deriv(inv(tform), rθ)
         @test m ≈ m_gn
     end
@@ -71,8 +71,8 @@
         @test rθ ≈ rθd
         @test CoordinateTransformations.angle(rθ) ≈ CoordinateTransformations.angle(rθd)
 
-        test_gradient(xy, rθ, p_from_c)
-        # test_gradient(xy, rθd, pd_from_c)
+        test_jacobian(xy, rθ, p_from_c)
+        # test_jacobian(xy, rθd, pd_from_c)
 
 
         # 2nd quadrant
@@ -86,8 +86,8 @@
         @test c_from_p(rθ) ≈ xy
         @test c_from_p(rθd) ≈ xy
 
-        test_gradient(xy, rθ, p_from_c)
-        # test_gradient(xy, rθd, pd_from_c)
+        test_jacobian(xy, rθ, p_from_c)
+        # test_jacobian(xy, rθd, pd_from_c)
 
         # 3rd quadrant
         xy = SVector(1.0, -2.0)
@@ -100,8 +100,8 @@
         @test c_from_p(rθ) ≈ xy
         @test c_from_p(rθd) ≈ xy
 
-        test_gradient(xy, rθ, p_from_c)
-        # test_gradient(xy, rθd, pd_from_c)
+        test_jacobian(xy, rθ, p_from_c)
+        # test_jacobian(xy, rθd, pd_from_c)
 
         # 4th quadrant
         xy = SVector(-1.0, -2.0)
@@ -114,8 +114,8 @@
         @test c_from_p(rθ) ≈ xy
         @test c_from_p(rθd) ≈ xy
 
-        test_gradient(xy, rθ, p_from_c)
-        # test_gradient(xy, rθd, pd_from_c)
+        test_jacobian(xy, rθ, p_from_c)
+        # test_jacobian(xy, rθd, pd_from_c)
 
         @testset "Common types - Polar" begin
             xy = SVector(1.0, 2.0)

@@ -100,10 +100,16 @@ function (::CartesianFromPolar)(x::PolarType)
     s,c = sincos(angle(x))
     SVector(x.r * c, x.r * s)
 end
-function transform_deriv(::CartesianFromPolar, x::PolarType)
+function transform_deriv(::CartesianFromPolar, x::Polar)
     sθ, cθ = sincos(angle(x))
     @SMatrix [cθ  -x.r*sθ ;
               sθ   x.r*cθ ]
+end
+function transform_deriv(::CartesianFromPolar, x::Polard)
+    sθ, cθ = sincos(angle(x))
+    a = rad2deg(x.r)
+    @SMatrix [cθ  -a*sθ ;
+              sθ   a*cθ ]
 end
 transform_deriv_params(::CartesianFromPolar, x::PolarType) = error("CartesianFromPolar has no parameters")
 
