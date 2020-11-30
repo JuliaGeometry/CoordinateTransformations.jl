@@ -9,7 +9,7 @@ export Transformation, IdentityTransformation
 
 # 2D coordinate systems and their transformations
 export Polar, Polard
-export PolarFromCartesian, CartesianFromPolar
+export PolarFromCartesian, PolardFromCartesian, CartesianFromPolar
 
 # 3D coordinate systems and their transformations
 export Spherical, Cylindrical

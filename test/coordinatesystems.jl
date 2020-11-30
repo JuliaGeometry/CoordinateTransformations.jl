@@ -34,7 +34,8 @@
         c_from_p = CartesianFromPolar()
         p_from_c = PolarFromCartesian()
         @test p_from_c isa PolarFromCartesian{Polar} # test defaults to Polar
-        pd_from_c = PolarFromCartesian{Polard}()
+        pd_from_c = PolardFromCartesian()
+        @test pd_from_c isa PolarFromCartesian{Polard}
         identity_c = IdentityTransformation()
         identity_p = IdentityTransformation()
 

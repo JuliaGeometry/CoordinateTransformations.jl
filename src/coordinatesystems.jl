@@ -50,13 +50,11 @@ Base.show(io::IO, x::Polard) = print(io, "Polard(r=$(x.r), θ=$(x.θ)°)")
 @inline Base.convert(::Type{Polard}, p::Polar) = Polard(p.r, rad2deg(angle(p)))
 
 
-"""
-`PolarFromCartesian()` - transformation from `AbstractVector` of length 2 to `Polar` type
-`PolarFromCartesian{Polar}()` - transformation from `AbstractVector` of length 2 to `Polar` type
-`PolarFromCartesian{Polard}()` - transformation from `AbstractVector` of length 2 to `Polar` type
-"""
+"`PolarFromCartesian()` - transformation from `AbstractVector` of length 2 to `Polar` type"
 struct PolarFromCartesian{PT<:PolarType} <: Transformation; end
 PolarFromCartesian() = PolarFromCartesian{Polar}() # default is Polar
+"`PolardFromCartesian()` - transformation from `AbstractVector` of length 2 to `Polar` type"
+const PolardFromCartesian = PolarFromCartesian{Polard}
 
 "`CartesianFromPolar()` - transformation from `Polar` or `Polard` type to `SVector{2}` type"
 struct CartesianFromPolar <: Transformation; end
