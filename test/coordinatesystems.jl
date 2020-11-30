@@ -1,19 +1,56 @@
 @testset "Coordinate Systems" begin
+    function gradient(xy)
+        SA[ partials(xy[1], 1) partials(xy[1], 2);
+            partials(xy[2], 1) partials(xy[2], 2) ]
+    end
+
+    function gradient(rθ::CoordinateTransformations.PolarType)
+        SA[ partials(rθ.r, 1) partials(rθ.r, 2);
+            partials(rθ.θ, 1) partials(rθ.θ, 2) ]
+    end
+
+    get_PT(::Polar) = Polar
+    get_PT(::Polard) = Polard
+
+    function test_gradient(xy, rθ, tform)
+        # create dual vector
+        xy_gn = SA[Dual(xy[1], (1.0, 0.0)), Dual(xy[2], (0.0, 1.0))]
+
+        rθ_gn = tform(xy_gn)
+        m_gn = gradient(rθ_gn)
+        m = transform_deriv(tform, xy)
+        @test m ≈ m_gn
+
+        rθ_gn = get_PT(rθ)(Dual(rθ.r, (1.0, 0.0)), Dual(rθ.θ, (0.0, 1.0)))
+        xy_gn = inv(tform)(rθ_gn)
+        m_gn = gradient(xy_gn)
+        m = transform_deriv(inv(tform), rθ)
+        @test m ≈ m_gn
+    end
+
     @testset "2D" begin
         c_from_p = CartesianFromPolar()
         p_from_c = PolarFromCartesian()
+        @test p_from_c isa PolarFromCartesian{Polar} # test defaults to Polar
+        pd_from_c = PolarFromCartesian{Polard}()
         identity_c = IdentityTransformation()
         identity_p = IdentityTransformation()
 
         @test inv(c_from_p) == p_from_c
         @test inv(p_from_c) == c_from_p
+        @test inv(pd_from_c) == c_from_p
 
         @test p_from_c ∘ c_from_p == identity_p
         @test c_from_p ∘ p_from_c == identity_c
 
+        @test pd_from_c ∘ c_from_p == identity_p
+        @test c_from_p ∘ pd_from_c == identity_c
+
         # test identity
         @test p_from_c ∘ identity_c == p_from_c
+        @test pd_from_c ∘ identity_c == pd_from_c
         @test identity_p ∘ p_from_c == p_from_c
+        @test identity_p ∘ pd_from_c == pd_from_c
 
         # Test all four quadrants of the plane (for consistency of branch-cut)
         # Include derivative tests... compare with automatic differentiation (forward mode from ForwardDiff.Dual)
@@ -21,86 +58,60 @@
         # 1st quadrant
         xy = SVector(1.0, 2.0)
         rθ = Polar(2.23606797749979, 1.1071487177940904)
+        rθd = Polard(2.23606797749979, rad2deg(1.1071487177940904))
         @test p_from_c(xy) ≈ rθ
+        @test pd_from_c(xy) ≈ rθd
         @test p_from_c(collect(xy)) ≈ rθ
+        @test pd_from_c(collect(xy)) ≈ rθd
         @test c_from_p(rθ) ≈ xy
+        @test c_from_p(rθd) ≈ xy
 
-        # TODO - define some convenience functions to create the gradient numbers and unpack the arrays.
-        xy_gn = SVector(Dual(1.0, (1.0,0.0)), Dual(2.0, (0.0,1.0)))
-        rθ_gn = p_from_c(xy_gn)
-        m_gn = @SMatrix [partials(rθ_gn.r, 1) partials(rθ_gn.r, 2);
-                    partials(rθ_gn.θ, 1) partials(rθ_gn.θ, 2) ]
-        m = transform_deriv(p_from_c, xy)
-        @test m ≈ m_gn
+        @test rθ ≈ rθd
+        @test CoordinateTransformations.angle(rθ) ≈ CoordinateTransformations.angle(rθd)
 
-        rθ_gn = Polar(Dual(2.23606797749979, (1.0, 0.0)), Dual(1.1071487177940904, (0.0, 1.0)))
-        xy_gn = c_from_p(rθ_gn)
-        m_gn = @SMatrix [partials(xy_gn[1], 1) partials(xy_gn[1], 2);
-                    partials(xy_gn[2], 1) partials(xy_gn[2], 2) ]
-        m = transform_deriv(c_from_p, rθ)
-        @test m ≈ m_gn
+        test_gradient(xy, rθ, p_from_c)
+
 
         # 2nd quadrant
         xy = SVector(-1.0, 2.0)
         rθ = Polar(2.23606797749979, 2.0344439357957027)
+        rθd = Polard(2.23606797749979, rad2deg(2.0344439357957027))
         @test p_from_c(xy) ≈ rθ
+        @test pd_from_c(xy) ≈ rθd
+        @test p_from_c(collect(xy)) ≈ rθ
+        @test pd_from_c(collect(xy)) ≈ rθd
         @test c_from_p(rθ) ≈ xy
+        @test c_from_p(rθd) ≈ xy
 
-        xy_gn = SVector(Dual(-1.0, (1.0,0.0)), Dual(2.0, (0.0,1.0)))
-        rθ_gn = p_from_c(xy_gn)
-        m_gn = @SMatrix [partials(rθ_gn.r, 1) partials(rθ_gn.r, 2);
-                    partials(rθ_gn.θ, 1) partials(rθ_gn.θ, 2) ]
-        m = transform_deriv(p_from_c, xy)
-        @test m ≈ m_gn
-
-        rθ_gn = Polar(Dual(2.23606797749979, (1.0, 0.0)), Dual(2.0344439357957027, (0.0, 1.0)))
-        xy_gn = c_from_p(rθ_gn)
-        m_gn = @SMatrix [partials(xy_gn[1], 1) partials(xy_gn[1], 2);
-                    partials(xy_gn[2], 1) partials(xy_gn[2], 2) ]
-        m = transform_deriv(c_from_p, rθ)
-        @test m ≈ m_gn
+        test_gradient(xy, rθ, p_from_c)
 
         # 3rd quadrant
         xy = SVector(1.0, -2.0)
         rθ = Polar(2.23606797749979, -1.1071487177940904)
+        rθd = Polard(2.23606797749979, rad2deg(-1.1071487177940904))
         @test p_from_c(xy) ≈ rθ
+        @test pd_from_c(xy) ≈ rθd
+        @test p_from_c(collect(xy)) ≈ rθ
+        @test pd_from_c(collect(xy)) ≈ rθd
         @test c_from_p(rθ) ≈ xy
+        @test c_from_p(rθd) ≈ xy
 
-        xy_gn = SVector(Dual(1.0, (1.0,0.0)), Dual(-2.0, (0.0,1.0)))
-        rθ_gn = p_from_c(xy_gn)
-        m_gn = @SMatrix [partials(rθ_gn.r, 1) partials(rθ_gn.r, 2);
-                    partials(rθ_gn.θ, 1) partials(rθ_gn.θ, 2) ]
-        m = transform_deriv(p_from_c, xy)
-        @test m ≈ m_gn
-
-        rθ_gn = Polar(Dual(2.23606797749979, (1.0, 0.0)), Dual(-1.1071487177940904, (0.0, 1.0)))
-        xy_gn = c_from_p(rθ_gn)
-        m_gn = @SMatrix [partials(xy_gn[1], 1) partials(xy_gn[1], 2);
-                    partials(xy_gn[2], 1) partials(xy_gn[2], 2) ]
-        m = transform_deriv(c_from_p, rθ)
-        @test m ≈ m_gn
+        test_gradient(xy, rθ, p_from_c)
 
         # 4th quadrant
         xy = SVector(-1.0, -2.0)
         rθ = Polar(2.23606797749979, -2.0344439357957027)
+        rθd = Polard(2.23606797749979, rad2deg(-2.0344439357957027))
         @test p_from_c(xy) ≈ rθ
+        @test pd_from_c(xy) ≈ rθd
+        @test p_from_c(collect(xy)) ≈ rθ
+        @test pd_from_c(collect(xy)) ≈ rθd
         @test c_from_p(rθ) ≈ xy
+        @test c_from_p(rθd) ≈ xy
 
-        xy_gn = SVector(Dual(-1.0, (1.0,0.0)), Dual(-2.0, (0.0,1.0)))
-        rθ_gn = p_from_c(xy_gn)
-        m_gn = @SMatrix [partials(rθ_gn.r, 1) partials(rθ_gn.r, 2);
-                    partials(rθ_gn.θ, 1) partials(rθ_gn.θ, 2) ]
-        m = transform_deriv(p_from_c, xy)
-        @test m ≈ m_gn
+        test_gradient(xy, rθ, p_from_c)
 
-        rθ_gn = Polar(Dual(2.23606797749979, (1.0, 0.0)), Dual(-2.0344439357957027, (0.0, 1.0)))
-        xy_gn = c_from_p(rθ_gn)
-        m_gn = @SMatrix [partials(xy_gn[1], 1) partials(xy_gn[1], 2);
-                    partials(xy_gn[2], 1) partials(xy_gn[2], 2) ]
-        m = transform_deriv(c_from_p, rθ)
-        @test m ≈ m_gn
-
-        @testset "Common types" begin
+        @testset "Common types - Polar" begin
             xy = SVector(1.0, 2.0)
             xy_i = SVector(1,2)
             p1 = Polar(1, 2.0f0)
@@ -119,12 +130,40 @@
             @test c_from_p(rθ) ≈ xy
         end
 
-        @testset "Units" begin
+        @testset "Common types - Polard" begin
+            xy = SVector(1.0, 2.0)
+            xy_i = SVector(1,2)
+            p1 = Polard(1, rad2deg(2.0f0))
+            p2 = Polard(1.0, rad2deg(2))
+            p3 = Polard{Int, Float64}(1, rad2deg(2.0))
+            rθ = Polard(2.23606797749979, rad2deg(1.1071487177940904))
+
+            @test typeof(p1.r) == typeof(p1.θ)
+            @test typeof(p2.r) == typeof(p2.θ)
+            @test typeof(p3.r) == Int
+            @test typeof(p3.θ) == Float64
+
+            @test pd_from_c(xy_i) ≈ rθ
+            @test pd_from_c(xy) ≈ rθ
+            @test pd_from_c(collect(xy)) ≈ rθ
+            @test c_from_p(rθ) ≈ xy
+        end
+
+        @testset "Units - Polar" begin
             xy = SVector(1.0, 2.0)u"m"
             rθ = Polar(2.23606797749979u"m", 1.1071487177940904)
 
             @test_broken p_from_c(xy) ≈ rθ
             @test_broken p_from_c(collect(xy)) ≈ rθ
+            @test c_from_p(rθ) ≈ xy
+        end
+
+        @testset "Units - Polard" begin
+            xy = SVector(1.0, 2.0)u"m"
+            rθ = Polard(2.23606797749979u"m", rad2deg(1.1071487177940904))
+
+            @test pd_from_c(xy) ≈ rθ
+            @test pd_from_c(collect(xy)) ≈ rθ
             @test c_from_p(rθ) ≈ xy
         end
     end
