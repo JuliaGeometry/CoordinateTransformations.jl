@@ -16,11 +16,13 @@
         # create dual vector
         xy_gn = SA[Dual(xy[1], (1.0, 0.0)), Dual(xy[2], (0.0, 1.0))]
 
+        # forward transform
         rθ_gn = tform(xy_gn)
         m_gn = gradient(rθ_gn)
         m = transform_deriv(tform, xy)
         @test m ≈ m_gn
 
+        # inverse transform
         rθ_gn = get_PT(rθ)(Dual(rθ.r, (1.0, 0.0)), Dual(rθ.θ, (0.0, 1.0)))
         xy_gn = inv(tform)(rθ_gn)
         m_gn = gradient(xy_gn)
@@ -70,6 +72,7 @@
         @test CoordinateTransformations.angle(rθ) ≈ CoordinateTransformations.angle(rθd)
 
         test_gradient(xy, rθ, p_from_c)
+        # test_gradient(xy, rθd, pd_from_c)
 
 
         # 2nd quadrant
@@ -84,6 +87,7 @@
         @test c_from_p(rθd) ≈ xy
 
         test_gradient(xy, rθ, p_from_c)
+        # test_gradient(xy, rθd, pd_from_c)
 
         # 3rd quadrant
         xy = SVector(1.0, -2.0)
@@ -97,6 +101,7 @@
         @test c_from_p(rθd) ≈ xy
 
         test_gradient(xy, rθ, p_from_c)
+        # test_gradient(xy, rθd, pd_from_c)
 
         # 4th quadrant
         xy = SVector(-1.0, -2.0)
@@ -110,6 +115,7 @@
         @test c_from_p(rθd) ≈ xy
 
         test_gradient(xy, rθ, p_from_c)
+        # test_gradient(xy, rθd, pd_from_c)
 
         @testset "Common types - Polar" begin
             xy = SVector(1.0, 2.0)

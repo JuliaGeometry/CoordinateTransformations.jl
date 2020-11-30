@@ -47,7 +47,7 @@ angle(x::Polard) = deg2rad(x.θ)
 Base.show(io::IO, x::Polard) = print(io, "Polard(r=$(x.r), θ=$(x.θ)°)")
 
 @inline Base.convert(::Type{Polar}, p::PolarType) = Polar(p.r, angle(p))
-@inline Base.convert(::Type{Polard}, p::PolarType) = Polard(p.r, rad2deg(angle(p)))
+@inline Base.convert(::Type{Polard}, p::Polar) = Polard(p.r, rad2deg(angle(p)))
 
 
 """
@@ -58,7 +58,7 @@ Base.show(io::IO, x::Polard) = print(io, "Polard(r=$(x.r), θ=$(x.θ)°)")
 struct PolarFromCartesian{PT<:PolarType} <: Transformation; end
 PolarFromCartesian() = PolarFromCartesian{Polar}() # default is Polar
 
-"`CartesianFromPolar()` - transformation from `Polar` type to `SVector{2}` type"
+"`CartesianFromPolar()` - transformation from `Polar` or `Polard` type to `SVector{2}` type"
 struct CartesianFromPolar <: Transformation; end
 
 Base.show(io::IO, trans::PolarFromCartesian{P}) where {P} = print(io, "PolarFromCartesian{$P}()")
@@ -71,7 +71,7 @@ function (::PolarFromCartesian{Polar})(x::AbstractVector)
 end
 
 function (::PolarFromCartesian{Polard})(x::AbstractVector)
-    length(x) == 2 || error("Polar transform takes a 2D coordinate")
+    length(x) == 2 || error("Polard transform takes a 2D coordinate")
 
     Polard(hypot(x[1], x[2]), rad2deg(atan(x[2], x[1])))
 end
@@ -81,7 +81,7 @@ function transform_deriv(::PolarFromCartesian{Polar}, x::AbstractVector{T}) wher
 
     r = hypot(x[1], x[2])
     f = x[2] / x[1]
-    c = one(T)/(x[1]*(one(T) + f*f))
+    c = one(T) / (x[1] * (one(T) + f*f))
     @SMatrix [ x[1]/r    x[2]/r ;
               -f*c       c      ]
 end
@@ -90,7 +90,7 @@ function transform_deriv(::PolarFromCartesian{Polard}, x::AbstractVector{T}) whe
 
     r = hypot(x[1], x[2])
     f = x[2] / x[1]
-    c = rad2deg(one(T))/(x[1]*(one(T) + f*f))
+    c = rad2deg(one(T)) / (x[1] * (one(T) + f*f))
     @SMatrix [ x[1]/r    x[2]/r ;
               -f*c       c      ]
 end
