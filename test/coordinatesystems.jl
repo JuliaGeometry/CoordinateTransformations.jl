@@ -1,10 +1,10 @@
 @testset "Coordinate Systems" begin
-    function jacobian(xy)
+    function jacobian(xy::AbstractVector)
         SA[ partials(xy[1], 1) partials(xy[1], 2);
             partials(xy[2], 1) partials(xy[2], 2) ]
     end
 
-    function jacobian(rθ::CoordinateTransformations.PolarType)
+    function jacobian(rθ::PolarType)
         SA[ partials(rθ.r, 1) partials(rθ.r, 2);
             partials(rθ.θ, 1) partials(rθ.θ, 2) ]
     end
