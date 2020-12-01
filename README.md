@@ -113,7 +113,7 @@ well as *FixedSizeArrays* types in Julia v0.4 only). For speed, we recommend
 using a statically-sized container such as `SVector{N}` from *StaticArrays*.
 
 We do provide a few specialist coordinate types. The `Polar(r, θ)` and `Polard(r, θ)` types are 2D
-polar representations of a point (using radians and degrees, respectively). In 3D we have defined
+polar representations of a point (using radians and degrees, respectively). They share the exported abstract type `PolarType`. In 3D we have defined
 `Spherical(r, θ, ϕ)` and `Cylindrical(r, θ, z)`.
 
 #### Coordinate system transformations
