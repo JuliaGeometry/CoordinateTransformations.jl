@@ -1,12 +1,12 @@
 #############################
 ### 2D Coordinate systems ###
 #############################
-abstract type PolarType end
+abstract type AbstractPolar end
 
 """
 `Polar{T,A}(r::T, θ::A)` - 2D polar coordinates
 """
-struct Polar{T,A} <: PolarType
+struct Polar{T,A} <: AbstractPolar
     r::T
     θ::A
 
@@ -21,14 +21,15 @@ end
 
 # get angle in radians
 angle(x::Polar) = x.θ
+angle_scaling(::Type{<:Polar}, angle) = angle
 
 Base.show(io::IO, x::Polar) = print(io, "Polar(r=$(x.r), θ=$(x.θ) rad)")
-Base.isapprox(p1::PolarType, p2::PolarType; kwargs...) = isapprox(p1.r, p2.r; kwargs...) && isapprox(angle(p1), angle(p2); kwargs...)
+Base.isapprox(p1::AbstractPolar, p2::AbstractPolar; kwargs...) = isapprox(p1.r, p2.r; kwargs...) && isapprox(angle(p1), angle(p2); kwargs...)
 
 """
 `Polard{T,A}(r::T, θ::A)` - 2D polar coordinates (using degrees)
 """
-struct Polard{T,A} <: PolarType
+struct Polard{T,A} <: AbstractPolar
     r::T
     θ::A
 
@@ -43,73 +44,55 @@ end
 
 # get angle in radians
 angle(x::Polard) = deg2rad(x.θ)
+angle_scaling(::Type{<:Polard}, angle) = rad2deg(angle)
 
 Base.show(io::IO, x::Polard) = print(io, "Polard(r=$(x.r), θ=$(x.θ)°)")
 
-@inline Base.convert(::Type{Polar}, p::PolarType) = Polar(p.r, angle(p))
+@inline Base.convert(::Type{Polar}, p::AbstractPolar) = Polar(p.r, angle(p))
 @inline Base.convert(::Type{Polard}, p::Polar) = Polard(p.r, rad2deg(angle(p)))
 
 
 "`PolarFromCartesian()` - transformation from `AbstractVector` of length 2 to `Polar` type"
-struct PolarFromCartesian{PT<:PolarType} <: Transformation; end
+struct PolarFromCartesian{PT<:AbstractPolar} <: Transformation; end
 PolarFromCartesian() = PolarFromCartesian{Polar}() # default is Polar
-"`PolardFromCartesian()` - transformation from `AbstractVector` of length 2 to `Polar` type"
+"`PolardFromCartesian()` - transformation from `AbstractVector` of length 2 to `Polard` type"
 const PolardFromCartesian = PolarFromCartesian{Polard}
 
 "`CartesianFromPolar()` - transformation from `Polar` or `Polard` type to `SVector{2}` type"
 struct CartesianFromPolar <: Transformation; end
 
-Base.show(io::IO, trans::PolarFromCartesian{P}) where {P} = print(io, "PolarFromCartesian{$P}()")
+Base.show(io::IO, trans::PolarFromCartesian{<:Polar}) = print(io, "PolarFromCartesian()")
+Base.show(io::IO, trans::PolarFromCartesian{<:Polard}) = print(io, "PolardFromCartesian()")
 Base.show(io::IO, trans::CartesianFromPolar) = print(io, "CartesianFromPolar()")
 
-function (::PolarFromCartesian{Polar})(x::AbstractVector)
-    length(x) == 2 || error("Polar transform takes a 2D coordinate")
-
-    Polar(hypot(x[1], x[2]), atan(x[2], x[1]))
+function (::PolarFromCartesian{P})(x::AbstractVector) where {P}
+    length(x) == 2 || error("$P transform takes a 2D coordinate")
+    P(hypot(x[1], x[2]), angle_scaling(P, atan(x[2], x[1])))
 end
 
-function (::PolarFromCartesian{Polard})(x::AbstractVector)
-    length(x) == 2 || error("Polard transform takes a 2D coordinate")
-
-    Polard(hypot(x[1], x[2]), rad2deg(atan(x[2], x[1])))
-end
-
-function transform_deriv(::PolarFromCartesian{Polar}, x::AbstractVector{T}) where {T}
-    length(x) == 2 || error("Polar transform takes a 2D coordinate")
+function transform_deriv(::PolarFromCartesian{P}, x::AbstractVector{T}) where {T,P}
+    length(x) == 2 || error("$P transform takes a 2D coordinate")
 
     r = hypot(x[1], x[2])
     f = x[2] / x[1]
-    c = one(T) / (x[1] * (one(T) + f*f))
+    c = angle_scaling(P, one(T)) / (x[1] * (one(T) + f*f))
     @SMatrix [ x[1]/r    x[2]/r ;
               -f*c       c      ]
 end
-function transform_deriv(::PolarFromCartesian{Polard}, x::AbstractVector{T}) where {T}
-    length(x) == 2 || error("Polard transform takes a 2D coordinate")
 
-    r = hypot(x[1], x[2])
-    f = x[2] / x[1]
-    c = rad2deg(one(T)) / (x[1] * (one(T) + f*f))
-    @SMatrix [ x[1]/r    x[2]/r ;
-              -f*c       c      ]
-end
 transform_deriv_params(::PolarFromCartesian, x::AbstractVector) = error("PolarFromCartesian has no parameters")
 
-function (::CartesianFromPolar)(x::PolarType)
+function (::CartesianFromPolar)(x::AbstractPolar)
     s,c = sincos(angle(x))
     SVector(x.r * c, x.r * s)
 end
-function transform_deriv(::CartesianFromPolar, x::Polar)
+function transform_deriv(::CartesianFromPolar, x::P) where {P<:AbstractPolar}
     sθ, cθ = sincos(angle(x))
-    @SMatrix [cθ  -x.r*sθ ;
-              sθ   x.r*cθ ]
-end
-function transform_deriv(::CartesianFromPolar, x::Polard)
-    sθ, cθ = sincos(angle(x))
-    a = deg2rad(x.r)
+    a = x.r / angle_scaling(P, one(x.r))
     @SMatrix [cθ  -a*sθ ;
               sθ   a*cθ ]
 end
-transform_deriv_params(::CartesianFromPolar, x::PolarType) = error("CartesianFromPolar has no parameters")
+transform_deriv_params(::CartesianFromPolar, x::AbstractPolar) = error("CartesianFromPolar has no parameters")
 
 Base.inv(::PolarFromCartesian) = CartesianFromPolar()
 Base.inv(::CartesianFromPolar) = PolarFromCartesian()
@@ -118,9 +101,9 @@ compose(::PolarFromCartesian, ::CartesianFromPolar) = IdentityTransformation()
 compose(::CartesianFromPolar, ::PolarFromCartesian) = IdentityTransformation()
 
 # For convenience
-Base.convert(::Type{PT}, v::AbstractVector) where {PT<:PolarType} = PolarFromCartesian{PT}()(v)
-@inline Base.convert(::Type{V}, p::PolarType) where {V <: AbstractVector} = convert(V, CartesianFromPolar()(p))
-@inline Base.convert(::Type{V}, p::PolarType) where {V <: StaticVector} = convert(V, CartesianFromPolar()(p))
+Base.convert(::Type{PT}, v::AbstractVector) where {PT<:AbstractPolar} = PolarFromCartesian{PT}()(v)
+@inline Base.convert(::Type{V}, p::AbstractPolar) where {V <: AbstractVector} = convert(V, CartesianFromPolar()(p))
+@inline Base.convert(::Type{V}, p::AbstractPolar) where {V <: StaticVector} = convert(V, CartesianFromPolar()(p))
 
 #############################
 ### 3D Coordinate Systems ###

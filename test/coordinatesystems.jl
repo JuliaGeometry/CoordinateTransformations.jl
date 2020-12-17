@@ -4,7 +4,7 @@
             partials(xy[2], 1) partials(xy[2], 2) ]
     end
 
-    function jacobian(rθ::PolarType)
+    function jacobian(rθ::AbstractPolar)
         SA[ partials(rθ.r, 1) partials(rθ.r, 2);
             partials(rθ.θ, 1) partials(rθ.θ, 2) ]
     end
