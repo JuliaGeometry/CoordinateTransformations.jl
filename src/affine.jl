@@ -49,6 +49,7 @@ Base.show(io::IO, trans::LinearMap) = print(io, "LinearMap($(trans.linear))") # 
 function (trans::LinearMap{M})(x) where {M}
     trans.linear * x
 end
+(trans::LinearMap{M})(x::Tuple) where {M} = trans(SVector(x))
 
 Base.inv(trans::LinearMap) = LinearMap(inv(trans.linear))
 
@@ -204,7 +205,7 @@ function Base.:(==)(t1::LinearMap, t2::AffineMap)
         0 == vecnorm(t2.translation)
 end
 
-recenter(trans::AbstractMatrix, origin::AbstractVector) = recenter(LinearMap(trans), origin)
+recenter(trans::AbstractMatrix, origin::Union{AbstractVector, Tuple}) = recenter(LinearMap(trans), origin)
 
 transform_deriv(trans::AffineMap, x) = trans.linear
 # TODO transform_deriv_params

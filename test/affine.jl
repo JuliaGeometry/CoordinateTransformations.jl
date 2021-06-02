@@ -107,6 +107,13 @@ end
             @test c(origin) == origin
             @test c(zero(origin)) == [6,-6]
         end
+
+        # Tuple is converted to SVector first
+        origin = (5, -3)
+        new_origin = SVector(origin)
+        c = recenter(M, origin)
+        @test c(origin) == new_origin
+        @test c(zero(new_origin)) == [6, -6]
     end
 
     @testset "application of AffineMap in terms of LinearMap and Translation" begin
