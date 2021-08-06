@@ -79,7 +79,7 @@ Base.inv(trans::ComposedTransformation) = inv(trans.t2) ∘ inv(trans.t1)
 Base.inv(trans::IdentityTransformation) = trans
 
 """
-    recenter(trans::Union{AbstractMatrix,Transformation}, origin::AbstractVector) -> ctrans
+    recenter(trans::Union{AbstractMatrix,Transformation}, origin::Union{AbstractVector, Tuple}) -> ctrans
 
 Return a new transformation `ctrans` such that point `origin` serves
 as the origin-of-coordinates for `trans`. Translation by `±origin`
@@ -97,6 +97,7 @@ space around `origin`.
 function recenter(trans::Transformation, origin::AbstractVector)
     Translation(origin) ∘ trans ∘ Translation(-origin)
 end
+recenter(trans::Transformation, origin::Tuple) = recenter(trans, SVector(origin))
 
 
 """
