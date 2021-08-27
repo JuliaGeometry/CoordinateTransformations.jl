@@ -102,7 +102,7 @@ techniques, and can be parameterized by *DualNumbers*' `DualNumber` or *ForwardD
 ### Built-in transformations
 
 A small number of 2D and 3D coordinate systems and transformations are included.
-We also have `IdentityTransform` and `ComposedTransformation`, which allows us
+We also have `IdentityTransformation` and `ComposedTransformation`, which allows us
 to nest together arbitrary transformations to create a complex yet efficient
 transformation chain.
 
