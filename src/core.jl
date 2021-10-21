@@ -31,6 +31,18 @@ struct ComposedTransformation{T1 <: Transformation, T2 <: Transformation} <: Tra
     t2::T2
 end
 
+#---------------------------------
+struct TransformColumns{T <: Transformation} <: Transformation
+    t::T
+end
+Base.show(io::IO, trans::TransformColumns) = print(io, "Transform Columns of $(trans.t)")
+
+(trans::TransformColumns)(x::AbstractVector) = trans.t(x)
+function (trans::TransformColumns)(x::AbstractMatrix)
+    hcat([trans.t(ci) for ci in eachcol(x)]...)
+end
+#---------------------------------
+
 Base.show(io::IO, trans::ComposedTransformation) = print(io, "($(trans.t1) ∘ $(trans.t2))")
 
 @inline function (trans::ComposedTransformation)(x)
