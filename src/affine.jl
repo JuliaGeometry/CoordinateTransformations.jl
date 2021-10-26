@@ -20,10 +20,6 @@ function (trans::Translation{V})(x) where {V}
     x + trans.translation
 end
 
-function (trans::Translation{V})(x::AbstractMatrix) where {V}
-    x .+ trans.translation
-end
-
 Base.inv(trans::Translation) = Translation(-trans.translation)
 
 function compose(trans1::Translation, trans2::Translation)
