@@ -139,8 +139,6 @@
         identity_cart = IdentityTransformation()
         identity_s = IdentityTransformation()
         identity_cyl = IdentityTransformation()
-        s_from_cyl_naive = s_from_cart ∘ cart_from_cyl
-        cyl_from_s_naive = cyl_from_cart ∘ cart_from_s
 
         # inverses
         @test inv(s_from_cart) == cart_from_s
@@ -444,16 +442,6 @@
         rθz = Cylindrical(2.23606797749979, 1.1071487177940904, 3.0)
         @test cyl_from_s(rθϕ) ≈ rθz
         @test s_from_cyl(rθz) ≈ rθϕ
-
-        @test cyl_from_s(rθϕ) ≈ cyl_from_s_naive(rθϕ)
-        @test s_from_cyl(rθz) ≈ s_from_cyl_naive(rθz)
-
-        println("sph <-> cyl")
-        @btime $cyl_from_s($rθϕ) 
-        @btime $s_from_cyl($rθz) 
-        println("sph <-> cart <-> cyl")
-        @btime $cyl_from_s_naive($rθϕ)
-        @btime $s_from_cyl_naive($rθz)
 
         rθϕ_gn = Spherical(Dual(3.7416573867739413, (1.0, 0.0, 0.0)), Dual(1.1071487177940904, (0.0, 1.0, 0.0)), Dual(0.9302740141154721, (0.0, 0.0, 1.0)))
         rθz_gn = cyl_from_s(rθϕ_gn)
