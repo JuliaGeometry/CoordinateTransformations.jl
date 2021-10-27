@@ -218,7 +218,6 @@ function transform_deriv(::CartesianFromCylindrical, x::Cylindrical{T}) where {T
 end
 transform_deriv_params(::CartesianFromPolar, x::Cylindrical) = error("CartesianFromCylindrical has no parameters")
 
-# Spherical <-> Cylindrical (TODO direct would be faster)
 function (::CylindricalFromSpherical)(x::Spherical)
     Cylindrical(x.r*cos(x.ϕ),x.θ,x.r*sin(x.ϕ))
 end
