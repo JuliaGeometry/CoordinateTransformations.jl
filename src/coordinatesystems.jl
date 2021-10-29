@@ -219,7 +219,8 @@ end
 transform_deriv_params(::CartesianFromPolar, x::Cylindrical) = error("CartesianFromCylindrical has no parameters")
 
 function (::CylindricalFromSpherical)(x::Spherical)
-    Cylindrical(x.r*cos(x.ϕ),x.θ,x.r*sin(x.ϕ))
+    sϕ, cϕ = sincos(x.ϕ)
+    Cylindrical(x.r*cϕ,x.θ,x.r*sϕ)
 end
 function transform_deriv(::CylindricalFromSpherical, x::Spherical)
     M1 = transform_deriv(CylindricalFromCartesian(), CartesianFromSpherical()(x))
