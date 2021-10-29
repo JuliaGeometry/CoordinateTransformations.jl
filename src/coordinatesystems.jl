@@ -218,9 +218,9 @@ function transform_deriv(::CartesianFromCylindrical, x::Cylindrical{T}) where {T
 end
 transform_deriv_params(::CartesianFromPolar, x::Cylindrical) = error("CartesianFromCylindrical has no parameters")
 
-# Spherical <-> Cylindrical (TODO direct would be faster)
 function (::CylindricalFromSpherical)(x::Spherical)
-    CylindricalFromCartesian()(CartesianFromSpherical()(x))
+    sϕ, cϕ = sincos(x.ϕ)
+    Cylindrical(x.r*cϕ,x.θ,x.r*sϕ)
 end
 function transform_deriv(::CylindricalFromSpherical, x::Spherical)
     M1 = transform_deriv(CylindricalFromCartesian(), CartesianFromSpherical()(x))
@@ -230,7 +230,7 @@ end
 transform_deriv_params(::CylindricalFromSpherical, x::Spherical) = error("CylindricalFromSpherical has no parameters")
 
 function (::SphericalFromCylindrical)(x::Cylindrical)
-    SphericalFromCartesian()(CartesianFromCylindrical()(x))
+    Spherical(hypot(x.r,x.z),x.θ,atan(x.z,x.r))
 end
 function transform_deriv(::SphericalFromCylindrical, x::Cylindrical)
     M1 = transform_deriv(SphericalFromCartesian(), CartesianFromCylindrical()(x))
