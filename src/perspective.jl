@@ -1,7 +1,7 @@
 """
     PerspectiveMap()
 
-Construct a perspective transformation. The persepective transformation takes,
+Construct a perspective transformation. The perspective transformation takes,
 e.g., a point in 3D space and "projects" it onto a 2D virtual screen of an ideal
 pinhole camera (at distance `1` away from the camera). The camera is oriented
 towards the positive-Z axis (or in general, along the final dimension) and the
