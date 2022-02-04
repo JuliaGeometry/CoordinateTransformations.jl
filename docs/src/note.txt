@@ -1,1 +1,0 @@
-this directory must exist for running doctests
