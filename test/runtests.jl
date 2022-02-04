@@ -9,7 +9,7 @@ using Documenter: doctest
 
 @testset "CoordinateTransformations" begin
 
-    doctest(CoordinateTransformations)
+    doctest(CoordinateTransformations, manual=false)
     include("core.jl")
     include("coordinatesystems.jl")
     include("affine.jl")
