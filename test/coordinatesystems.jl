@@ -123,8 +123,8 @@
             xy = SVector(1.0, 2.0)u"m"
             rθ = Polar(2.23606797749979u"m", 1.1071487177940904)
 
-            @test_broken p_from_c(xy) ≈ rθ
-            @test_broken p_from_c(collect(xy)) ≈ rθ
+            @test p_from_c(xy) ≈ rθ
+            @test p_from_c(collect(xy)) ≈ rθ
             @test c_from_p(rθ) ≈ xy
         end
     end
@@ -510,17 +510,17 @@
             @testset "Shperical" begin
                 rθϕ = Spherical(3.7416573867739413u"m", 1.1071487177940904, 0.9302740141154721)
 
-                @test_broken s_from_cart(xyz) ≈ rθϕ
+                @test s_from_cart(xyz) ≈ rθϕ
                 @test typeof(s_from_cart(xyz)) == typeof(rθϕ)
-                @test_broken s_from_cart(collect(xyz)) ≈ rθϕ
+                @test s_from_cart(collect(xyz)) ≈ rθϕ
                 @test cart_from_s(rθϕ) ≈ xyz
             end
             @testset "Cylindrical" begin
                 rθz = Cylindrical(2.23606797749979u"m", 1.1071487177940904, 3.0u"m")
 
-                @test_broken cyl_from_cart(xyz) ≈ rθz
+                @test cyl_from_cart(xyz) ≈ rθz
                 @test typeof(cyl_from_cart(xyz)) == typeof(rθz)
-                @test_broken cyl_from_cart(collect(xyz)) ≈ rθz
+                @test cyl_from_cart(collect(xyz)) ≈ rθz
                 @test cart_from_cyl(rθz) ≈ xyz
             end
         end
