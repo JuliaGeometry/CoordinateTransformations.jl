@@ -127,6 +127,15 @@
             @test p_from_c(collect(xy)) ≈ rθ
             @test c_from_p(rθ) ≈ xy
         end
+
+        @testset "Convenience Polar() constructor" begin
+            @test typeof(Polar(SVector(1.0,2.0))) == typeof(Polar(1.0, 1.0))
+            @test typeof(Polar(SVector(1.0f0,2.0f0))) == typeof(Polar(1.0f0, 1.0f0))
+            @test Polar(SVector(0,2)) ≈ Polar(2,π/2)
+            @test Polar(SVector(1,1)) ≈ Polar(sqrt(2),π/4)
+            @test Polar([1,1]) ≈ Polar(sqrt(2),π/4)
+            @test_throws "Polar transform takes a 2D coordinate" Polar([1,1,1])
+        end
     end
 
     @testset "3D" begin
