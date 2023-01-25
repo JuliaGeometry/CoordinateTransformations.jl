@@ -73,11 +73,13 @@ end
         @test inv(L)(L(x)) ≈ x
         @test inv(L)(L(y)) ≈ y
         @test (L∘L)(x) == (M*M)*x
+        @test L == AffineMap(M, [0, 0])
     end
 
     @testset "Translation" begin
         x = SVector(1.0, 2.0)
         trans = Translation(2.0, -1.0)
+        @test trans == AffineMap([1 0; 0 1], [2.0, -1.0])
 
         # Inverse
         @test inv(trans) == Translation(-2.0, 1.0)
