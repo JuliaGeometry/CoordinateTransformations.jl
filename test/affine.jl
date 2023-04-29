@@ -127,4 +127,14 @@ end
         @test expected.origin ≈ result.origin
         @test expected.direction ≈ result.direction
     end
+
+    @testset "construction from points" begin
+        M = [1.0 2.0; 3.0 4.0]
+        v = [-1.0, 1.0]
+        A = AffineMap(M,v)
+        froms = [[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]
+        mappedpoints = [from => A(from) for from in froms]
+        A2 = AffineMap(mappedpoints)
+        @test A2 ≈ A
+    end
 end
