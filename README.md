@@ -171,6 +171,13 @@ defined by a composition of a translation and a linear transformation. An
 and a translation, e.g. `Translation(v) ∘ LinearMap(v)` (or any combination of
 `LinearMap`, `Translation` and `AffineMap`).
 
+`AffineMap`s can be constructed to fit a list of point pairs `from => to`:
+
+```julia
+julia> AffineMap([[0, 0] => [1, 1], [1, 0] => [3, 1], [0, 1] => [1.5, 3]])
+AffineMap([1.9999999999999996 0.4999999999999999; -5.551115123125783e-16 2.0], [0.9999999999999999, 1.0000000000000002])
+```
+
 #### Perspective transformations
 
 The perspective transformation maps real-space coordinates to those on a virtual
