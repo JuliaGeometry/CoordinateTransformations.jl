@@ -134,7 +134,11 @@
             @test Polar(SVector(0,2)) ≈ Polar(2,π/2)
             @test Polar(SVector(1,1)) ≈ Polar(sqrt(2),π/4)
             @test Polar([1,1]) ≈ Polar(sqrt(2),π/4)
-            @test_throws "Polar transform takes a 2D coordinate" Polar([1,1,1])
+            if Base.VERSION >= v"1.7"
+                @test_throws "Polar transform takes a 2D coordinate" Polar([1,1,1])
+            else
+                @test_throws ErrorException("Polar transform takes a 2D coordinate") Polar([1,1,1])
+            end
         end
     end
 
