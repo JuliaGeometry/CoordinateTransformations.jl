@@ -17,6 +17,13 @@ function Polar(r, θ)
     return Polar{typeof(r2), typeof(θ2)}(r2, θ2)
 end
 
+"""
+`Polar{T,T}(x::AbstractVector)` - 2D polar coordinates from an AbstractVector of length 2
+"""
+function Polar(x::AbstractVector)
+    return PolarFromCartesian()(x)
+end
+
 Base.show(io::IO, x::Polar) = print(io, "Polar(r=$(x.r), θ=$(x.θ) rad)")
 Base.isapprox(p1::Polar, p2::Polar; kwargs...) = isapprox(p1.r, p2.r; kwargs...) && isapprox(p1.θ, p2.θ; kwargs...)
 
