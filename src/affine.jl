@@ -60,23 +60,23 @@ function Base.isapprox(t1::LinearMap, t2::LinearMap; kwargs...)
 end
 
 function Base.isapprox(t1::LinearMap, t2::Translation; kwargs...)
-    isapprox(vecnorm(t1.linear), 0; kwargs...) &&
-        isapprox(vecnorm(t2.translation),0; kwargs...)
+    isapprox(t1.linear, one(t1.linear); kwargs...) &&
+        isapprox(norm(t2.translation),0; kwargs...)
 end
 
 function Base.isapprox(t1::Translation, t2::LinearMap; kwargs...)
-    isapprox(vecnorm(t1.translation), 0; kwargs...) &&
-        isapprox(vecnorm(t2.linear),0; kwargs...)
+    isapprox(norm(t1.translation), 0; kwargs...) &&
+        isapprox(t2.linear, one(t2.linear); kwargs...)
 end
 
 function Base.:(==)(t1::LinearMap, t2::Translation)
-    vecnorm(t1.linear) == 0 &&
-        0 == vecnorm(t2.translation)
+    isone(t1.linear) &&
+        0 == norm(t2.translation)
 end
 
 function Base.:(==)(t1::Translation, t2::LinearMap)
-    vecnorm(t1.translation) == 0 &&
-        vecnorm(t2.linear) == 0
+    norm(t1.translation) == 0 &&
+        isone(t2.linear)
 end
 
 transform_deriv(trans::LinearMap, x) = trans.linear
@@ -165,44 +165,44 @@ function Base.isapprox(t1::AffineMap, t2::AffineMap; kwargs...)
 end
 
 function Base.isapprox(t1::AffineMap, t2::Translation; kwargs...)
-    isapprox(vecnorm(t1.linear), 0; kwargs...) &&
+    isapprox(t1.linear, one(t1.linear); kwargs...) &&
         isapprox(t1.translation, t2.translation; kwargs...)
 end
 
 function Base.isapprox(t1::Translation, t2::AffineMap; kwargs...)
-    isapprox(vecnorm(t2.linear), 0; kwargs...) &&
+    isapprox(t2.linear, one(t2.linear); kwargs...) &&
         isapprox(t1.translation, t2.translation; kwargs...)
 end
 
 function Base.isapprox(t1::AffineMap, t2::LinearMap; kwargs...)
     isapprox(t1.linear, t2.linear; kwargs...) &&
-        isapprox(vecnorm(t1.translation), 0; kwargs...)
+        isapprox(norm(t1.translation), 0; kwargs...)
 end
 
 function Base.isapprox(t1::LinearMap, t2::AffineMap; kwargs...)
     isapprox(t1.linear, t2.linear; kwargs...) &&
-        isapprox(0, vecnorm(t2.translation); kwargs...)
+        isapprox(0, norm(t2.translation); kwargs...)
 end
 
 
 function Base.:(==)(t1::AffineMap, t2::Translation)
-    vecnorm(t1.linear) == 0 &&
+    isone(t1.linear) &&
         t1.translation == t2.translation
 end
 
 function Base.:(==)(t1::Translation, t2::AffineMap)
-    vecnorm(t2.linear) == 0 &&
+    isone(t2.linear) &&
         t1.translation == t2.translation
 end
 
 function Base.:(==)(t1::AffineMap, t2::LinearMap)
     t1.linear == t2.linear &&
-        vecnorm(t1.translation) == 0
+        norm(t1.translation) == 0
 end
 
 function Base.:(==)(t1::LinearMap, t2::AffineMap)
     t1.linear == t2.linear &&
-        0 == vecnorm(t2.translation)
+        0 == norm(t2.translation)
 end
 
 recenter(trans::AbstractMatrix, origin::Union{AbstractVector, Tuple}) = recenter(LinearMap(trans), origin)
