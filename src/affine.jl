@@ -209,3 +209,22 @@ recenter(trans::AbstractMatrix, origin::Union{AbstractVector, Tuple}) = recenter
 
 transform_deriv(trans::AffineMap, x) = trans.linear
 # TODO transform_deriv_params
+
+"""
+    AffineMap(from_points => to_points) → trans
+
+Create an Affine transformation that approximately maps the `from` points to the `to` points.
+At least `n+1` non-degenerate points are required to map an `n`-dimensional space.
+If there are more points than this, the transformation will be over-determined and a least-squares
+solution will be computed.
+"""
+function AffineMap((from_points,to_points)::Pair)
+    M = column_matrix(to_points) * pinv(column_matrix(from_points, 1))
+    AffineMap(M[:, 1:end-1], M[:, end])
+end
+
+column_matrix(points::AbstractMatrix) = points
+column_matrix(points) = reduce(hcat, points)
+
+column_matrix(points::AbstractMatrix, lastval) = vcat(points, fill(lastval, 1, axes(points, 2)))
+column_matrix(points, lastval) = reduce(hcat, [vcat(point, lastval) for point in points])
