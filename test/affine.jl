@@ -132,9 +132,13 @@ end
         M = [1.0 2.0; 3.0 4.0]
         v = [-1.0, 1.0]
         A = AffineMap(M,v)
-        froms = [[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]
-        mappedpoints = [from => A(from) for from in froms]
-        A2 = AffineMap(mappedpoints)
+        from_points = [[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]
+        to_points = map(A, from_points)
+        A2 = AffineMap(from_points => to_points)
+        @test A2 ≈ A
+        from_points = ([0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0])
+        to_points = map(A, from_points)
+        A2 = AffineMap(from_points => to_points)
         @test A2 ≈ A
     end
 end
