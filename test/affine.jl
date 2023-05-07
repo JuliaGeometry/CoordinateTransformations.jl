@@ -136,6 +136,8 @@ end
         to_points = map(A, from_points)
         A2 = AffineMap(from_points => to_points)
         @test A2 ≈ A
+        A2 = AffineMap(reduce(hcat, from_points) => reduce(hcat, to_points))
+        @test A2 ≈ A
         from_points = ([0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0])
         to_points = map(A, from_points)
         A2 = AffineMap(from_points => to_points)
