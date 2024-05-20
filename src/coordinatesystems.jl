@@ -2,7 +2,9 @@
 ### 2D Coordinate systems ###
 #############################
 """
-`Polar{T,A}(r::T, θ::A)` - 2D polar coordinates
+    Polar{T,A}(r::T, θ::A)
+
+2D polar coordinates
 """
 struct Polar{T,A}
     r::T
@@ -18,7 +20,9 @@ function Polar(r, θ)
 end
 
 """
-`Polar{T,T}(x::AbstractVector)` - 2D polar coordinates from an AbstractVector of length 2
+    Polar{T,T}(x::AbstractVector)
+
+2D polar coordinates from an AbstractVector of length 2
 """
 function Polar(x::AbstractVector)
     return PolarFromCartesian()(x)
@@ -27,9 +31,17 @@ end
 Base.show(io::IO, x::Polar) = print(io, "Polar(r=$(x.r), θ=$(x.θ) rad)")
 Base.isapprox(p1::Polar, p2::Polar; kwargs...) = isapprox(p1.r, p2.r; kwargs...) && isapprox(p1.θ, p2.θ; kwargs...)
 
-"`PolarFromCartesian()` - transformation from `AbstractVector` of length 2 to `Polar` type"
+"""
+    PolarFromCartesian()
+
+Transformation from `AbstractVector` of length 2 to `Polar` type
+"""
 struct PolarFromCartesian <: Transformation; end
-"`CartesianFromPolar()` - transformation from `Polar` type to `SVector{2}` type"
+"""
+    CartesianFromPolar()
+
+Transformation from `Polar` type to `SVector{2}` type
+"""
 struct CartesianFromPolar <: Transformation; end
 
 Base.show(io::IO, trans::PolarFromCartesian) = print(io, "PolarFromCartesian()")
@@ -79,10 +91,13 @@ Base.convert(::Type{Polar}, v::AbstractVector) = PolarFromCartesian()(v)
 ### 3D Coordinate Systems ###
 #############################
 """
-Spherical(r, θ, ϕ) - 3D spherical coordinates
+    Spherical(r, θ, ϕ)
+
+3D spherical coordinates
 
 There are many Spherical coordinate conventions and this library uses a somewhat exotic one.
-Given a vector `v` with Cartesian coordinates `xyz`, let `v_xy = [x,y,0]` be the orthogonal projection of `v` on the `xy` plane.
+Given a vector `v` with Cartesian coordinates `xyz`, let `v_xy = [x,y,0]` be the
+orthogonal projection of `v` on the `xy` plane.
 
 * `r` is the radius. It is given by `norm(v, 2)`.
 * `θ` is the azimuth. It is the angle from the x-axis to `v_xy`
@@ -95,10 +110,11 @@ julia> v = randn(3);
 
 julia> sph = SphericalFromCartesian()(v);
 
-julia> r = sph.r; θ=sph.θ; ϕ=sph.ϕ;
+julia> r = sph.r; θ = sph.θ; ϕ = sph.ϕ;
 
-julia> v ≈ [r * cos(θ) * cos(ϕ), r * sin(θ) * cos(ϕ), r*sin(ϕ)]
+julia> v ≈ [r * cos(θ) * cos(ϕ), r * sin(θ) * cos(ϕ), r * sin(ϕ)]
 true
+```
 """
 struct Spherical{T,A}
     r::T
@@ -118,7 +134,9 @@ Base.show(io::IO, x::Spherical) = print(io, "Spherical(r=$(x.r), θ=$(x.θ) rad,
 Base.isapprox(p1::Spherical, p2::Spherical; kwargs...) = isapprox(p1.r, p2.r; kwargs...) && isapprox(p1.θ, p2.θ; kwargs...) && isapprox(p1.ϕ, p2.ϕ; kwargs...)
 
 """
-Cylindrical(r, θ, z) - 3D cylindrical coordinates
+    Cylindrical(r, θ, z)
+
+3D cylindrical coordinates
 """
 struct Cylindrical{T,A}
     r::T
@@ -137,17 +155,41 @@ end
 Base.show(io::IO, x::Cylindrical) = print(io, "Cylindrical(r=$(x.r), θ=$(x.θ) rad, z=$(x.z))")
 Base.isapprox(p1::Cylindrical, p2::Cylindrical; kwargs...) = isapprox(p1.r, p2.r; kwargs...) && isapprox(p1.θ, p2.θ; kwargs...) && isapprox(p1.z, p2.z; kwargs...)
 
-"`SphericalFromCartesian()` - transformation from 3D point to `Spherical` type"
+"""
+    SphericalFromCartesian()
+
+Transformation from 3D point to `Spherical` type
+"""
 struct SphericalFromCartesian <: Transformation; end
-"`CartesianFromSpherical()` - transformation from `Spherical` type to `SVector{3}` type"
+"""
+    CartesianFromSpherical()
+
+Transformation from `Spherical` type to `SVector{3}` type
+"""
 struct CartesianFromSpherical <: Transformation; end
-"`CylindricalFromCartesian()` - transformation from 3D point to `Cylindrical` type"
+"""
+    CylindricalFromCartesian()
+
+Transformation from 3D point to `Cylindrical` type
+"""
 struct CylindricalFromCartesian <: Transformation; end
-"`CartesianFromCylindrical()` - transformation from `Cylindrical` type to `SVector{3}` type"
+"""
+    CartesianFromCylindrical()
+
+Transformation from `Cylindrical` type to `SVector{3}` type
+"""
 struct CartesianFromCylindrical <: Transformation; end
-"`CylindricalFromSpherical()` - transformation from `Spherical` type to `Cylindrical` type"
+"""
+    CylindricalFromSpherical()
+
+Transformation from `Spherical` type to `Cylindrical` type
+"""
 struct CylindricalFromSpherical <: Transformation; end
-"`SphericalFromCylindrical()` - transformation from `Cylindrical` type to `Spherical` type"
+"""
+    SphericalFromCylindrical()
+
+Transformation from `Cylindrical` type to `Spherical` type
+"""
 struct SphericalFromCylindrical <: Transformation; end
 
 Base.show(io::IO, trans::SphericalFromCartesian) = print(io, "SphericalFromCartesian()")
