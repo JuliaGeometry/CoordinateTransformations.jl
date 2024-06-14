@@ -5,7 +5,7 @@ using ForwardDiff: Dual, partials
 using StaticArrays
 using Unitful
 using Documenter: doctest
-
+using Aqua
 
 @testset "CoordinateTransformations" begin
 
@@ -14,5 +14,5 @@ using Documenter: doctest
     include("coordinatesystems.jl")
     include("affine.jl")
     include("perspective.jl")
-
+    Aqua.test_all(CoordinateTransformations)
 end
