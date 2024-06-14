@@ -13,10 +13,12 @@ This transformation is designed to be used in composition with other coordinate
 transformations, defining e.g. the position and orientation of the camera. For
 example:
 
-    cam_transform = PerspectiveMap() ∘ inv(AffineMap(cam_rotation, cam_position))
-    screen_points = map(cam_transform, points)
+```julia
+cam_transform = PerspectiveMap() ∘ inv(AffineMap(cam_rotation, cam_position))
+screen_points = map(cam_transform, points)
+```
 
-(see also `cameramap`)
+(see also [`cameramap`](@ref))
 """
 struct PerspectiveMap <: Transformation
 end
@@ -55,7 +57,7 @@ plane. For instance, you may wish to have the point (0,0) represent the top-left
 corner of your imaging sensor. This measurement is in the units after applying
 `scale` (e.g. pixels).
 
-(see also `PerspectiveMap`)
+(see also [`PerspectiveMap`](@ref))
 """
 cameramap() = PerspectiveMap()
 cameramap(scale::Number) =
@@ -66,4 +68,3 @@ cameramap(scale::Number, offset::Tuple{Number,Number}) =
     AffineMap(UniformScaling(scale), SVector(-offset[1], -offset[2])) ∘ PerspectiveMap()
 cameramap(scale::Tuple{Number, Number}, offset::Tuple{Number,Number}) =
     AffineMap(@SMatrix([scale[1] 0; 0 scale[2]]), SVector(-offset[1], -offset[2])) ∘ PerspectiveMap()
-

@@ -2,8 +2,8 @@ abstract type AbstractAffineMap <: Transformation end
 
 """
     Translation(v) <: AbstractAffineMap
-    Translation(dx, dy)       (2D)
-    Translation(dx, dy, dz)   (3D)
+    Translation(dx, dy)         # 2D
+    Translation(dx, dy, dz)     # 3D
 
 Construct the `Translation` transformation for translating Cartesian points by
 an offset `v = (dx, dy, ...)`
@@ -215,8 +215,8 @@ transform_deriv(trans::AffineMap, x) = trans.linear
 
 Create an Affine transformation that approximately maps the `from` points to the `to` points.
 At least `n+1` non-degenerate points are required to map an `n`-dimensional space.
-If there are more points than this, the transformation will be over-determined and a least-squares
-solution will be computed.
+If there are more points than this, the transformation will be over-determined
+and a least-squares solution will be computed.
 """
 function AffineMap((from_points,to_points)::Pair)
     M = column_matrix(to_points) * pinv(column_matrix(from_points, 1))
