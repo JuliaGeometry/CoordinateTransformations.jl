@@ -108,8 +108,7 @@ transformation chain.
 
 #### Coordinate types
 
-The package accepts any `AbstractVector` type for Cartesian coordinates (as
-well as *FixedSizeArrays* types in Julia v0.4 only). For speed, we recommend
+The package accepts any `AbstractVector` type for Cartesian coordinates. For speed, we recommend
 using a statically-sized container such as `SVector{N}` from *StaticArrays*.
 
 We do provide a few specialist coordinate types. The `Polar(r, θ)` type is a 2D
