@@ -18,3 +18,7 @@ makedocs(
         "API" => "api.md",
     ],
 )
+
+deploydocs(
+    repo = "github.com/JuliaGeometry/CoordinateTransformations.jl.git"
+)
