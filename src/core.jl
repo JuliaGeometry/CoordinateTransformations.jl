@@ -112,7 +112,8 @@ recenter(trans::Transformation, origin::Tuple) = recenter(trans, SVector(origin)
 A matrix describing how differentials on the parameters of `x` flow through to
 the output of transformation `trans`.
 """
-transform_deriv(trans::Transformation, x) = error("Differential matrix of transform $trans with input $x not defined")
+transform_deriv(trans::Transformation, x) =
+    error("Differential matrix of transform $trans with input $x not defined")
 
 transform_deriv(::IdentityTransformation, x) = I
 
@@ -130,9 +131,11 @@ end
 A matrix describing how differentials on the parameters of `trans` flow through
 to the output of transformation `trans` given input `x`.
 """
-transform_deriv_params(trans::Transformation, x) = error("Differential matrix of parameters of transform $trans with input $x not defined")
+transform_deriv_params(trans::Transformation, x) =
+    error("Differential matrix of parameters of transform $trans with input $x not defined")
 
-transform_deriv_params(::IdentityTransformation, x) = error("IdentityTransformation has no parameters")
+transform_deriv_params(::IdentityTransformation, x) =
+    error("IdentityTransformation has no parameters")
 
 function transform_deriv_params(trans::ComposedTransformation, x)
     x2 = trans.t2(x)
