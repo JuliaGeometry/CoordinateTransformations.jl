@@ -104,8 +104,6 @@ orthogonal projection of `v` on the `xy` plane.
 * `ϕ` is the latitude. It is the angle from `v_xy` to `v`.
 
 ```jldoctest
-julia> using CoordinateTransformations
-
 julia> v = randn(3);
 
 julia> sph = SphericalFromCartesian()(v);
