@@ -1,5 +1,12 @@
-using Documenter
 using CoordinateTransformations
+using Documenter
+
+DocMeta.setdocmeta!(
+    CoordinateTransformations,
+    :DocTestSetup,
+    :(using CoordinateTransformations),
+    recursive = true,
+)
 
 makedocs(
     sitename = "CoordinateTransformations.jl",
