@@ -6,6 +6,8 @@
 # transform_deriv() and transform_deriv_params()
 
 """
+    abstract type Transformation
+
 The `Transformation` supertype defines a simple interface for performing
 transformations. Subtypes should be able to apply a coordinate system
 transformation on the correct data types by overloading the call method, and
@@ -15,6 +17,8 @@ Efficient compositions can optionally be defined by `compose()` (equivalently `â
 abstract type Transformation end
 
 """
+    IdentityTransformation <: Transformation
+
 The `IdentityTransformation` is a singleton `Transformation` that returns the
 input unchanged, similar to `identity`.
 """
@@ -23,8 +27,10 @@ struct IdentityTransformation <: Transformation; end
 @inline (::IdentityTransformation)(x) = x
 
 """
-A `ComposedTransformation` simply executes two transformations successively, and
-is the fallback output type of `compose()`.
+    ComposedTransformation{T1, T2} <: Transformation
+
+A `ComposedTransformation` simply executes two transformations `T2` and `T1`
+successively, and is the fallback output type of `compose()`.
 """
 struct ComposedTransformation{T1 <: Transformation, T2 <: Transformation} <: Transformation
     t1::T1
@@ -106,7 +112,8 @@ recenter(trans::Transformation, origin::Tuple) = recenter(trans, SVector(origin)
 A matrix describing how differentials on the parameters of `x` flow through to
 the output of transformation `trans`.
 """
-transform_deriv(trans::Transformation, x) = error("Differential matrix of transform $trans with input $x not defined")
+transform_deriv(trans::Transformation, x) =
+    error("Differential matrix of transform $trans with input $x not defined")
 
 transform_deriv(::IdentityTransformation, x) = I
 
@@ -124,9 +131,11 @@ end
 A matrix describing how differentials on the parameters of `trans` flow through
 to the output of transformation `trans` given input `x`.
 """
-transform_deriv_params(trans::Transformation, x) = error("Differential matrix of parameters of transform $trans with input $x not defined")
+transform_deriv_params(trans::Transformation, x) =
+    error("Differential matrix of parameters of transform $trans with input $x not defined")
 
-transform_deriv_params(::IdentityTransformation, x) = error("IdentityTransformation has no parameters")
+transform_deriv_params(::IdentityTransformation, x) =
+    error("IdentityTransformation has no parameters")
 
 function transform_deriv_params(trans::ComposedTransformation, x)
     x2 = trans.t2(x)
