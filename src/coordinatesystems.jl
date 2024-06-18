@@ -104,8 +104,6 @@ orthogonal projection of `v` on the `xy` plane.
 * `ϕ` is the latitude. It is the angle from `v_xy` to `v`.
 
 ```jldoctest
-julia> using CoordinateTransformations
-
 julia> v = randn(3);
 
 julia> sph = SphericalFromCartesian()(v);
@@ -131,7 +129,8 @@ function Spherical(r, θ, ϕ)
 end
 
 Base.show(io::IO, x::Spherical) = print(io, "Spherical(r=$(x.r), θ=$(x.θ) rad, ϕ=$(x.ϕ) rad)")
-Base.isapprox(p1::Spherical, p2::Spherical; kwargs...) = isapprox(p1.r, p2.r; kwargs...) && isapprox(p1.θ, p2.θ; kwargs...) && isapprox(p1.ϕ, p2.ϕ; kwargs...)
+Base.isapprox(p1::Spherical, p2::Spherical; kwargs...) =
+    isapprox(p1.r, p2.r; kwargs...) && isapprox(p1.θ, p2.θ; kwargs...) && isapprox(p1.ϕ, p2.ϕ; kwargs...)
 
 """
     Cylindrical(r, θ, z)
@@ -153,7 +152,8 @@ function Cylindrical(r, θ, z)
 end
 
 Base.show(io::IO, x::Cylindrical) = print(io, "Cylindrical(r=$(x.r), θ=$(x.θ) rad, z=$(x.z))")
-Base.isapprox(p1::Cylindrical, p2::Cylindrical; kwargs...) = isapprox(p1.r, p2.r; kwargs...) && isapprox(p1.θ, p2.θ; kwargs...) && isapprox(p1.z, p2.z; kwargs...)
+Base.isapprox(p1::Cylindrical, p2::Cylindrical; kwargs...) =
+    isapprox(p1.r, p2.r; kwargs...) && isapprox(p1.θ, p2.θ; kwargs...) && isapprox(p1.z, p2.z; kwargs...)
 
 """
     SphericalFromCartesian()
@@ -219,7 +219,8 @@ function transform_deriv(::SphericalFromCartesian, x::AbstractVector)
           -fxy*cxy  cxy     zero(T);
            f*x[1]   f*x[2]  rxy/(r*r) ]
 end
-transform_deriv_params(::SphericalFromCartesian, x::AbstractVector) = error("SphericalFromCartesian has no parameters")
+transform_deriv_params(::SphericalFromCartesian, x::AbstractVector) =
+    error("SphericalFromCartesian has no parameters")
 
 function (::CartesianFromSpherical)(x::Spherical)
     sθ, cθ = sincos(x.θ)
@@ -233,7 +234,8 @@ function transform_deriv(::CartesianFromSpherical, x::Spherical{T}) where T
               sθ*cϕ  x.r*cθ*cϕ -x.r*sθ*sϕ ;
               sϕ     zero(T)    x.r * cϕ  ]
 end
-transform_deriv_params(::CartesianFromSpherical, x::Spherical) = error("CartesianFromSpherical has no parameters")
+transform_deriv_params(::CartesianFromSpherical, x::Spherical) =
+    error("CartesianFromSpherical has no parameters")
 
 # Cartesian <-> Cylindrical
 function (::CylindricalFromCartesian)(x::AbstractVector)
@@ -253,7 +255,8 @@ function transform_deriv(::CylindricalFromCartesian, x::AbstractVector)
               -f*c      c        zero(T) ;
                zero(T)  zero(T)  one(T)  ]
 end
-transform_deriv_params(::CylindricalFromCartesian, x::AbstractVector) = error("CylindricalFromCartesian has no parameters")
+transform_deriv_params(::CylindricalFromCartesian, x::AbstractVector) =
+    error("CylindricalFromCartesian has no parameters")
 
 function (::CartesianFromCylindrical)(x::Cylindrical)
     sθ, cθ = sincos(x.θ)
@@ -265,7 +268,8 @@ function transform_deriv(::CartesianFromCylindrical, x::Cylindrical{T}) where {T
               sθ       x.r*cθ  zero(T) ;
               zero(T)  zero(T) one(T)  ]
 end
-transform_deriv_params(::CartesianFromPolar, x::Cylindrical) = error("CartesianFromCylindrical has no parameters")
+transform_deriv_params(::CartesianFromPolar, x::Cylindrical) =
+    error("CartesianFromCylindrical has no parameters")
 
 function (::CylindricalFromSpherical)(x::Spherical)
     sϕ, cϕ = sincos(x.ϕ)
@@ -276,7 +280,8 @@ function transform_deriv(::CylindricalFromSpherical, x::Spherical)
     M2 = transform_deriv(CartesianFromSpherical(), x)
     return M1*M2
 end
-transform_deriv_params(::CylindricalFromSpherical, x::Spherical) = error("CylindricalFromSpherical has no parameters")
+transform_deriv_params(::CylindricalFromSpherical, x::Spherical) =
+    error("CylindricalFromSpherical has no parameters")
 
 function (::SphericalFromCylindrical)(x::Cylindrical)
     Spherical(hypot(x.r,x.z),x.θ,atan(x.z,x.r))
@@ -286,7 +291,8 @@ function transform_deriv(::SphericalFromCylindrical, x::Cylindrical)
     M2 = transform_deriv(CartesianFromCylindrical(), x)
     return M1*M2
 end
-transform_deriv_params(::SphericalFromCylindrical, x::Cylindrical) = error("SphericalFromCylindrical has no parameters")
+transform_deriv_params(::SphericalFromCylindrical, x::Cylindrical) =
+    error("SphericalFromCylindrical has no parameters")
 
 Base.inv(::SphericalFromCartesian)   = CartesianFromSpherical()
 Base.inv(::CartesianFromSpherical)   = SphericalFromCartesian()
