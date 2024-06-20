@@ -50,7 +50,9 @@ for any matrix-like object `M`.
 struct LinearMap{M} <: AbstractAffineMap
     linear::M
 end
-Base.show(io::IO, trans::LinearMap) = print(io, "LinearMap($(trans.linear))") # TODO make this output more petite
+function Base.show(io::IO, trans::LinearMap)
+    print(io, "LinearMap(", trans.linear, ")")
+end
 
 function (trans::LinearMap{M})(x) where {M}
     trans.linear * x
@@ -130,7 +132,9 @@ function AffineMap(trans::Transformation, x0)
     AffineMap(dT, Tx - dT*x0)
 end
 
-Base.show(io::IO, trans::AffineMap) = print(io, "AffineMap($(trans.linear), $(trans.translation))") # TODO make this output more petite
+function Base.show(io::IO, trans::AffineMap)
+    print(io, "AffineMap(", trans.linear, ", ", trans.translation, ")")
+end
 
 function compose(t1::Translation, t2::LinearMap)
     AffineMap(t2.linear, t1.translation)
