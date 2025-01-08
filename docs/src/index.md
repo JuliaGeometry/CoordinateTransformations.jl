@@ -179,16 +179,16 @@ and a translation, e.g. `Translation(v) ∘ LinearMap(v)` (or any combination of
 
 `AffineMap`s can be constructed to fit point pairs `from_points => to_points`:
 
-```jldoctest
+```jldoctest; filter=[r"(2\.0|1\.9999\d+)" => "2.0", r"(0\.5|0\.49999\d+)" => "0.5", r"(0\.0|[ -]\d\.\d+e-\d\d)" => "0.0", r"(1\.0(?!0)|1\.0000\d+|0\.9999\d+)" => "1.0"]
 julia> from_points = [[0, 0], [1, 0], [0, 1]];
 
 julia> to_points   = [[1, 1], [3, 1], [1.5, 3]];
 
 julia> AffineMap(from_points => to_points)
-AffineMap([1.9999999999999996 0.5; -5.551115123125783e-16 2.0], [0.9999999999999999, 1.0000000000000002])
+AffineMap([2.0 0.5; 0.0 2.0], [1.0, 1.0])
 ```
 
-The points can be supplied as a collection of vectors or as a matrix with points as columns.
+(You may get slightly different numerical values due to roundoff errors.) The points can be supplied as a collection of vectors or as a matrix with points as columns.
 
 ### Perspective transformations
 
