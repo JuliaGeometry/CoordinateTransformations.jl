@@ -144,5 +144,46 @@ end
         to_points = map(A, from_points)
         A2 = AffineMap(from_points => to_points)
         @test A2 ≈ A
+
+        ## Rigid transformations
+        θ = π / 7
+        R = [cos(θ) -sin(θ); sin(θ) cos(θ)]
+        v = [0.87, 0.15]
+        A = AffineMap(R, v)
+        from_points = [[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]
+        to_points = map(A, from_points)
+        A2 = @inferred(kabsch(from_points => to_points))
+        @test A2 ≈ A
+        # with weights
+        A2 = kabsch(from_points => to_points, [0.2, 0.7, 0.9, 0.3])
+        @test A2 ≈ A
+        A2 = kabsch(reduce(hcat, from_points) => reduce(hcat, to_points))
+        @test A2 ≈ A
+        from_points = ([0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0])
+        to_points = map(A, from_points)
+        A2 = kabsch(from_points => to_points)
+        @test A2 ≈ A
+        # with user-specified SVD
+        A2 = @inferred(kabsch(from_points => to_points; svd=LinearAlgebra.svd))
+        @test A2 ≈ A
+        # when a rigid transformation is not possible
+        A2 = kabsch(from_points => 1.1 .* from_points)
+        @test A2.linear' * A2.linear ≈ I
+
+        @test_throws "weights must be non-negative" kabsch(from_points => to_points, [0.2, -0.7, 0.9, 0.3])
+        @test_throws "weights must not all be zero" kabsch(from_points => to_points, [0.0, 0.0, 0.0, 0.0])
+
+        # Similarity transformations
+        θ = π / 7
+        R = [cos(θ) -sin(θ); sin(θ) cos(θ)]
+        v = [0.87, 0.15]
+        c = 1.15
+        A = AffineMap(c * R, v)
+        from_points = [[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]
+        to_points = map(A, from_points)
+        A2 = @inferred(kabsch(from_points => to_points; scale=true))
+        @test A2 ≈ A
+        A2 = @inferred(kabsch(from_points => to_points, [0.2, 0.7, 0.9, 0.3]; scale=true))
+        @test A2 ≈ A
     end
 end
