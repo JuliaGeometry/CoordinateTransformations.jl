@@ -22,6 +22,7 @@ AffineMap(::Transformation, ::Any)
 AffineMap(::Pair)
 LinearMap
 Translation
+kabsch
 ```
 
 ## 2D Coordinates
