@@ -1,6 +1,8 @@
 # CoordinateTransformations
 
 [![Build Status](https://github.com/JuliaGeometry/CoordinateTransformations.jl/workflows/CI/badge.svg)](https://github.com/JuliaGeometry/CoordinateTransformations.jl/actions?query=workflow%3ACI)
+[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://USER_NAME.github.io/PACKAGE_NAME.jl/stable)
+[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://USER_NAME.github.io/PACKAGE_NAME.jl/dev)
 
 **CoordinateTransformations** is a Julia package to manage simple or complex
 networks of coordinate system transformations. Transformations can be easily
@@ -12,7 +14,7 @@ and automatic differentiation makes it easy to perform optimization and
 therefore ideal for computer vision applications such as SLAM (simultaneous
 localization and mapping).
 
-The package provide two main pieces of functionality
+The package provides two main pieces of functionality
 
 1. Primarily, an interface for defining `Transformation`s and applying
    (by calling), inverting (`inv()`), composing (`∘` or `compose()`) and
