@@ -1,8 +1,8 @@
 # CoordinateTransformations
 
 [![Build Status](https://github.com/JuliaGeometry/CoordinateTransformations.jl/workflows/CI/badge.svg)](https://github.com/JuliaGeometry/CoordinateTransformations.jl/actions?query=workflow%3ACI)
-[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://USER_NAME.github.io/PACKAGE_NAME.jl/stable)
-[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://USER_NAME.github.io/PACKAGE_NAME.jl/dev)
+[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaGeometry.github.io/CoordinateTransformations.jl/stable)
+[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://JuliaGeometry.github.io/CoordinateTransformations.jl/dev)
 
 **CoordinateTransformations** is a Julia package to manage simple or complex
 networks of coordinate system transformations. Transformations can be easily
