@@ -178,10 +178,18 @@ julia> from_points = [[0, 0], [1, 0], [0, 1]];
 julia> to_points   = [[1, 1], [3, 1], [1.5, 3]];
 
 julia> AffineMap(from_points => to_points)
-AffineMap([1.9999999999999996 0.4999999999999999; -5.551115123125783e-16 2.0], [0.9999999999999999, 1.0000000000000002])
+AffineMap([2.0 0.5; 0.0 2.0], [1.0, 1.0])
 ```
 
 The points can be supplied as a collection of vectors or as a matrix with points as columns.
+
+If you want to restrict the transformation to be rigid (rotation + translation)
+or similar (rotation, translation, and scaling), use `kabsch` instead:
+
+```julia
+julia> rigid = kabsch(from_points => to_points)
+AffineMap([0.9912279006826346 0.132163720091018; -0.1321637200910178 0.9912279006826348], [1.4588694597421157, 1.380311939802794])
+```
 
 #### Perspective transformations
 
